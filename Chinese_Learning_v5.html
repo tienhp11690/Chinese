@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Tiếng Trung Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.16.0/dist/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+
+    <style>
+        :root { --p: #667eea; --pd: #764ba2; --s: #48bb78; --d: #f56565; --w: #f59e0b; --g1: #f8f9fa; --g2: #e2e8f0; --g6: #4a5568; --g8: #2d3748; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: system-ui; background: linear-gradient(135deg, var(--p), var(--pd)); min-height:100vh; color:var(--g8); }
+        .c { max-width:1200px; margin:auto; padding:16px; }
+        .h1 { text-align:center; color:white; font-size:2.5rem; margin-bottom:8px; text-shadow:0 2px 4px rgba(0,0,0,.3); }
+        .nav { display:flex; background:white; border-radius:16px; padding:8px; margin-bottom:32px; box-shadow:0 10px 25px rgba(0,0,0,.15); gap:8px; flex-wrap:wrap; }
+        .tab { flex:1; min-width:110px; padding:14px; text-align:center; border:none; border-radius:12px; font-weight:600; color:var(--g6); cursor:pointer; transition:all .3s; }
+        .tab.active { background:linear-gradient(135deg,var(--p),var(--pd)); color:white; }
+        .page { display:none; background:white; border-radius:16px; padding:32px; box-shadow:0 10px 25px rgba(0,0,0,.15); animation:f .4s; }
+        .page.active { display:block; } @keyframes f { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
+
+        .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+        .fc-grid-3, .fc-grid-6, .fc-grid-9 { display:grid; gap:20px; }
+        .fc-grid-3 { grid-template-columns:repeat(3,1fr); }
+        .fc-grid-6 { grid-template-columns:repeat(3,1fr); }
+        .fc-grid-9 { grid-template-columns:repeat(3,1fr); }
+
+        .stats { display:flex; gap:20px; font-size:.95rem; color:var(--g6); margin-bottom:24px; flex-wrap:wrap; }
+        .stat { display:flex; align-items:center; gap:6px; background:var(--g1); padding:8px 14px; border-radius:20px; font-weight:500; }
+        .n { font-weight:700; color:var(--p); }
+
+        .filters { display:flex; flex-wrap:wrap; gap:10px; padding:16px; background:var(--g1); border-radius:12px; margin-bottom:24px; }
+        .fbtn { padding:8px 16px; border:2px solid var(--g2); background:white; border-radius:20px; font-size:.9rem; cursor:pointer; transition:all .3s; }
+        .fbtn.active { background:var(--p); color:white; border-color:var(--p); }
+
+        .card { background:white; border:1px solid var(--g2); border-radius:16px; padding:20px; position:relative; transition:all .3s; display:flex; flex-direction:column; justify-content:space-between; min-height:140px; }
+        .card:hover { transform:translateY(-4px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
+        .card .play { background:rgba(102,126,234,.1); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .3s; }
+        .card .play:hover { background:var(--p); color:white; }
+        .card .badge { position:absolute; top:12px; right:12px; padding:4px 10px; border-radius:12px; font-size:.75rem; font-weight:600; }
+        .card .badge.easy { background:#d4edda; color:#155724; }
+        .card .badge.medium { background:#fff3cd; color:#856404; }
+        .card .badge.hard { background:#f8d7da; color:#721c24; }
+
+        .btn { padding:12px 24px; border:none; border-radius:12px; font-weight:600; cursor:pointer; display:inline-flex; gap:8px; align-items:center; transition:all .3s; background:linear-gradient(135deg,var(--p),var(--pd)); color:white; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(102,126,234,.3); }
+        .btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+        .fc { background:linear-gradient(135deg,var(--p),var(--pd)); color:white; border-radius:20px; padding:32px; cursor:pointer; min-height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,.15); transition:all .3s; position:relative; }
+        .fc:hover { transform:scale(1.02); }
+        .fc.showing-answer { background:linear-gradient(135deg,var(--s),#38a169); }
+        .fc-chinese { font-size:2.2rem; font-weight:700; margin-bottom:8px; }
+        .fc-pinyin { font-size:1.1rem; font-style:italic; margin-bottom:16px; opacity:0.9; }
+        .fc-viet, .fc-meaning { display:none; font-size:1.1rem; margin-top:12px; }
+
+        .search-input { width:100%; padding:14px 16px; border:2px solid var(--g2); border-radius:12px; font-size:1rem; }
+        .search-suggestions { margin:12px 0; display:flex; gap:8px; flex-wrap:wrap; }
+        .search-tag { padding:6px 12px; background:var(--g1); border-radius:16px; font-size:0.85rem; cursor:pointer; transition:all .3s; }
+        .search-tag:hover { background:var(--p); color:white; }
+
+        .status { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:12px 24px; border-radius:50px; box-shadow:0 10px 25px rgba(0,0,0,.15); font-weight:500; opacity:0; transition:all .3s; z-index:999; }
+        .status.show { opacity:1; }
+        .status.success { color:var(--s); }
+        .status.error { color:var(--d); }
+        .spin { width:18px; height:18px; border:2px solid #f3f3f3; border-top:2px solid currentColor; border-radius:50%; animation:s 1s linear infinite; display:none; }
+        @keyframes s { to{transform:rotate(360deg)} }
+
+        .config-section { background:#e0e7ff; padding:20px; border-radius:12px; margin:20px 0; }
+
+        /* Stroke order modal */
+        .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); }
+        .modal.show { display:flex; align-items:center; justify-content:center; }
+        .modal-content { background:white; padding:40px; border-radius:20px; max-width:600px; width:90%; }
+        .stroke-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin:20px 0; }
+        .stroke-char { width:200px; height:200px; }
+
+        @media (max-width:768px) { 
+            .grid, .fc-grid-3, .fc-grid-6, .fc-grid-9 { grid-template-columns:1fr; } 
+            .stroke-char { width:150px; height:150px; }
+        }
+    </style>
+</head>
+<body>
+<div class="c">
+    <h1 class="h1">📚 Học Tiếng Trung Pro</h1>
+    <div class="nav">
+        <button class="tab active" onclick="show('lib')">📖 Thư viện</button>
+        <button class="tab" onclick="show('add')">➕ Thêm từ</button>
+        <button class="tab" onclick="show('fc')">🎴 Flashcard</button>
+        <button class="tab" onclick="show('config')">⚙️ Cấu hình</button>
+    </div>
+
+    <div id="lib" class="page active">
+        <div class="stats">
+            <div class="stat">📊 <span class="n" id="total">0</span> Tổng</div>
+            <div class="stat">✅ <span class="n" id="learned">0</span> Đã học</div>
+            <div class="stat">📂 <span class="n" id="topics">0</span> Chủ đề</div>
+        </div>
+        <input type="text" id="lib-search" class="search-input" placeholder="🔍 Tìm kiếm..." style="margin-bottom:20px">
+        <div class="filters" id="filters"></div>
+        <div class="grid" id="list"></div>
+    </div>
+
+    <div id="add" class="page">
+        <h2>🔎 Tra cứu & Thêm từ</h2>
+        <input type="text" id="search-input" class="search-input" placeholder="Nhập từ tiếng Việt hoặc tiếng Anh...">
+        <div class="search-suggestions" id="search-suggestions"></div>
+        <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
+            <button class="btn" onclick="searchWord('vi')">🇻🇳 Tiếng Việt</button>
+            <button class="btn" onclick="searchWord('en')">🇬🇧 Tiếng Anh</button>
+        </div>
+        <div id="sugg"></div>
+        <div style="margin-top:20px">
+            <select id="topic" style="width:100%;padding:12px;border:2px solid var(--g2);border-radius:12px;margin-bottom:8px">
+                <option value="">Chọn chủ đề...</option>
+            </select>
+            <div style="display:flex;gap:8px">
+                <input type="text" id="newti" placeholder="Tên chủ đề mới..." style="flex:1;padding:12px;border:2px solid var(--g2);border-radius:12px">
+                <button class="btn" onclick="createTopic()">Tạo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="fc" class="page">
+        <h2>🎴 Flashcard</h2>
+        <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+            <select id="fc-topic" onchange="fcTopic=this.value;updateFlashcards()" style="padding:12px;border:2px solid var(--g2);border-radius:12px;flex:1"></select>
+            <button class="btn" onclick="nextCards()">🔄 Thẻ mới</button>
+        </div>
+        <div id="fc-container" class="fc-grid-6"></div>
+    </div>
+
+    <div id="config" class="page">
+        <h2>⚙️ Cấu hình</h2>
+        
+        <!-- GitHub Sync -->
+        <div class="config-section">
+            <h3>📦 GitHub Sync (Auto-save to vocab.json)</h3>
+            <p style="margin:10px 0;color:var(--g6);font-size:0.9rem">
+                Khi thêm từ mới, tự động commit vào repo GitHub
+            </p>
+            <input type="text" id="github-token" placeholder="GitHub Personal Access Token" style="width:100%;padding:12px;border:2px solid var(--g2);border-radius:12px;margin:8px 0">
+            <input type="text" id="github-repo" placeholder="username/repo-name" style="width:100%;padding:12px;border:2px solid var(--g2);border-radius:12px;margin:8px 0">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn" onclick="saveGitHubConfig()">💾 Lưu cấu hình</button>
+                <button class="btn" onclick="syncToGitHub()">☁️ Sync ngay</button>
+            </div>
+            <div style="margin-top:12px;padding:12px;background:#fef3c7;border-radius:8px;font-size:0.85rem">
+                <strong>💡 Hướng dẫn:</strong>
+                <ol style="margin:8px 0 0 20px">
+                    <li>Tạo Personal Access Token: <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Tokens</a></li>
+                    <li>Permissions: repo (full control)</li>
+                    <li>Paste token và repo name</li>
+                    <li>Mỗi lần thêm từ sẽ tự động commit</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="config-section">
+            <h3>📊 Google Sheets</h3>
+            <input type="text" id="default-sheet-id" placeholder="Sheet ID..." style="width:100%;padding:12px;border:2px solid var(--g2);border-radius:12px;margin:8px 0">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn" onclick="saveDefaultSheet()">💾 Lưu</button>
+                <button class="btn" onclick="loadFromSheet()">📥 Load</button>
+                <button class="btn" onclick="testSheet()">🔍 Test</button>
+            </div>
+            <p style="margin-top:12px;font-size:0.85rem;color:var(--g6)">
+                Sheet hiện tại: <span id="current-sheet">Chưa cấu hình</span>
+            </p>
+        </div>
+        
+        <div style="background:#ecfdf5;padding:20px;border-radius:12px;margin:20px 0">
+            <h3>💾 Dữ liệu</h3>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                <button class="btn" onclick="exportCSV()">💾 Export CSV</button>
+                <button class="btn" onclick="exportJSON()">📦 Export JSON</button>
+                <button class="btn" onclick="downloadVocabJSON()">📥 Download vocab.json</button>
+                <button class="btn" style="background:var(--d)" onclick="clearAll()">🗑️ Xóa tất cả</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stroke Order Modal -->
+<div id="stroke-modal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h2>✍️ Cách viết chữ Hán</h2>
+            <button class="btn" onclick="closeStrokeModal()" style="padding:8px 16px">✕</button>
+        </div>
+        <div id="stroke-word" style="font-size:1.5rem;text-align:center;margin-bottom:20px;color:var(--g6)"></div>
+        <div class="stroke-container" id="stroke-container"></div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:20px">
+            <button class="btn" onclick="animateStrokes()">▶️ Chạy lại</button>
+            <button class="btn" onclick="quizStrokes()">✏️ Luyện viết</button>
+        </div>
+    </div>
+</div>
+
+<div id="status" class="status">
+    <div class="spin"></div>
+    <span id="status-msg"></span>
+</div>
+
+<script>
+// === CONFIG ===
+const SEARCH_SUGGESTIONS = ['bệnh viện', 'máy bay', 'máy tính', 'điện thoại', 'nhà hàng'];
+
+let vocab = [];
+let defaultSheetId = localStorage.getItem('default_sheet_id') || '';
+let githubToken = localStorage.getItem('github_token') || '';
+let githubRepo = localStorage.getItem('github_repo') || '';
+let filterTopic = 'all', filterDiff = 'all', filterLearned = 'all';
+let fcTopic = 'all', layout = 6;
+let currentCards = [], prevCards = [], currentCardIndex = 0;
+let currentStrokeWord = '';
+
+const $ = id => document.getElementById(id);
+
+function status(msg, type = 'loading') {
+    const s = $('status'), spin = s.querySelector('.spin');
+    $('status-msg').textContent = msg;
+    s.className = `status show ${type}`;
+    spin.style.display = type === 'loading' ? 'inline-block' : 'none';
+    if (type !== 'loading') setTimeout(() => s.classList.remove('show'), 3000);
+}
+
+function save() {
+    localStorage.setItem('vocab', JSON.stringify(vocab));
+    // Auto-sync to GitHub if configured
+    if (githubToken && githubRepo) {
+        syncToGitHub();
+    }
+}
+
+function show(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    $(page).classList.add('active');
+    event.target.classList.add('active');
+    if (page === 'lib') renderLibrary();
+    if (page === 'add') { updateAddTopicList(); renderSearchSuggestions(); }
+    if (page === 'fc') updateFlashcards();
+    if (page === 'config') { updateSheetDisplay(); updateGitHubDisplay(); }
+}
+
+// === GITHUB SYNC ===
+function saveGitHubConfig() {
+    githubToken = $('github-token').value.trim();
+    githubRepo = $('github-repo').value.trim();
+    
+    if (!githubToken || !githubRepo) return status('⚠️ Nhập đầy đủ thông tin', 'error');
+    
+    localStorage.setItem('github_token', githubToken);
+    localStorage.setItem('github_repo', githubRepo);
+    status('✅ Đã lưu cấu hình GitHub!', 'success');
+}
+
+function updateGitHubDisplay() {
+    $('github-token').value = githubToken ? '***' + githubToken.slice(-4) : '';
+    $('github-repo').value = githubRepo;
+}
+
+async function syncToGitHub() {
+    if (!githubToken || !githubRepo) return;
+    
+    try {
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify({
+            version: '1.0',
+            updated: new Date().toISOString(),
+            vocab: vocab
+        }, null, 2))));
+        
+        // Get current file SHA
+        let sha = '';
+        try {
+            const getRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/data/vocab.json`, {
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            if (getRes.ok) {
+                const getData = await getRes.json();
+                sha = getData.sha;
+            }
+        } catch (e) {
+            console.log('File chưa tồn tại, sẽ tạo mới');
+        }
+        
+        // Update or create file
+        const res = await fetch(`https://api.github.com/repos/${githubRepo}/contents/data/vocab.json`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${githubToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({
+                message: `Update vocab: ${vocab.length} words`,
+                content: content,
+                sha: sha || undefined
+            })
+        });
+        
+        if (res.ok) {
+            console.log('✅ Synced to GitHub');
+        }
+    } catch (e) {
+        console.error('GitHub sync error:', e);
+    }
+}
+
+// === SHEETS ===
+function saveDefaultSheet() {
+    const id = $('default-sheet-id').value.trim();
+    if (!id) return status('⚠️ Nhập Sheet ID', 'error');
+    localStorage.setItem('default_sheet_id', id);
+    defaultSheetId = id;
+    updateSheetDisplay();
+    status('✅ Đã lưu!', 'success');
+}
+
+function updateSheetDisplay() {
+    $('current-sheet').textContent = defaultSheetId || 'Chưa cấu hình';
+    $('default-sheet-id').value = defaultSheetId;
+}
+
+async function testSheet() {
+    const id = $('default-sheet-id').value.trim() || defaultSheetId;
+    if (!id) return status('⚠️ Nhập Sheet ID', 'error');
+    
+    status('🔍 Testing...');
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
+        const res = await fetch(url);
+        const text = await res.text();
+        const lines = text.split('\n').length;
+        status(`✅ OK! ${lines} dòng`, 'success');
+    } catch (e) {
+        status('❌ Lỗi: ' + e.message, 'error');
+    }
+}
+
+async function loadFromSheet() {
+    const id = defaultSheetId;
+    if (!id) return status('⚠️ Chưa cấu hình Sheet', 'error');
+    
+    status('📥 Đang load...');
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
+        const res = await fetch(url);
+        const csv = await res.text();
+        
+        const rows = parseCSV(csv).slice(1);
+        let added = 0;
+        
+        rows.forEach(r => {
+            if (r.length < 2) return;
+            const chi = r[1].trim();
+            if (chi && !vocab.some(v => v.chinese === chi)) {
+                vocab.push({
+                    id: Date.now() + added++,
+                    vietnamese: r[0].trim(),
+                    chinese: chi,
+                    pinyin: r[2] ? r[2].trim() : pinyinPro.pinyin(chi, { toneType: 'num' }),
+                    meaning: r[3] ? r[3].trim() : '',
+                    topic: r[4] ? r[4].trim() : 'Sheet',
+                    difficulty: 'easy',
+                    learned: false,
+                    reviewCount: 0,
+                    nextReview: Date.now()
+                });
+            }
+        });
+        
+        save();
+        renderLibrary();
+        status(`✅ Đã thêm ${added} từ!`, 'success');
+    } catch (e) {
+        status('❌ Lỗi: ' + e.message, 'error');
+    }
+}
+
+// === SEARCH ===
+function renderSearchSuggestions() {
+    $('search-suggestions').innerHTML = SEARCH_SUGGESTIONS.map(s => 
+        `<div class="search-tag" onclick="$('search-input').value='${s}';searchWord('vi')">${s}</div>`
+    ).join('');
+}
+
+async function searchWord(lang) {
+    const q = $('search-input').value.trim();
+    if (!q) return status('Nhập từ', 'error');
+
+    status('🔍 Đang tra...');
+    const btn = event.target;
+    btn.disabled = true;
+    
+    try {
+        // Use LibreTranslate API (free, no CORS, no auth)
+        const res = await fetch('https://libretranslate.com/translate', {
+            method: 'POST',
+            body: JSON.stringify({
+                q: q,
+                source: lang === 'auto' ? 'auto' : lang,
+                target: 'zh',
+                format: 'text'
+            }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await res.json();
+        const chinese = data.translatedText;
+        const pinyin = pinyinPro.pinyin(chinese, { toneType: 'num' });
+        
+        // Get English meaning
+        const enRes = await fetch('https://libretranslate.com/translate', {
+            method: 'POST',
+            body: JSON.stringify({
+                q: chinese,
+                source: 'zh',
+                target: 'en',
+                format: 'text'
+            }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const enData = await enRes.json();
+        const meaning = enData.translatedText;
+
+        $('sugg').innerHTML = `
+            <div class="card" style="max-width:100%;background:linear-gradient(135deg, #f0f9ff, #e0f2fe);margin-top:20px">
+                <div style="font-size:2rem;font-weight:700;margin-bottom:8px">${chinese}</div>
+                <div style="color:var(--g6);font-style:italic;margin-bottom:12px">${pinyin}</div>
+                <div style="font-weight:600;margin-bottom:4px">🇻🇳 ${q}</div>
+                <div style="color:var(--g6);margin-bottom:16px">🇬🇧 ${meaning}</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn" onclick="addWord('${chinese.replace(/'/g, "\\'")}','${pinyin}','${meaning.replace(/'/g, "\\'")}','${q.replace(/'/g, "\\'")}')">➕ Thêm</button>
+                    <button class="btn" onclick="showStrokeOrder('${chinese.replace(/'/g, "\\'")}', '${q.replace(/'/g, "\\'")}')">✍️ Xem cách viết</button>
+                </div>
+            </div>
+        `;
+        status('✅ Thành công!', 'success');
+    } catch (e) {
+        status('❌ Lỗi tra cứu. Thử lại sau.', 'error');
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function addWord(c, p, m, v) {
+    const t = $('topic').value || prompt('Chủ đề:');
+    if (!t) return status('Chọn chủ đề', 'error');
+    if (vocab.some(w => w.chinese === c)) return status('Từ đã tồn tại', 'error');
+    
+    vocab.push({
+        id: Date.now(),
+        vietnamese: v,
+        chinese: c,
+        pinyin: p,
+        meaning: m,
+        topic: t,
+        difficulty: 'easy',
+        learned: false,
+        nextReview: Date.now(),
+        reviewCount: 0
+    });
+    
+    save();
+    renderLibrary();
+    show('lib');
+    status('✅ Đã thêm!', 'success');
+}
+
+function createTopic() {
+    const name = $('newti').value.trim();
+    if (!name) return status('Nhập tên', 'error');
+    
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    $('topic').appendChild(opt);
+    $('topic').value = name;
+    $('newti').value = '';
+    status('✅ Tạo chủ đề!', 'success');
+}
+
+function updateAddTopicList() {
+    const topics = [...new Set(vocab.map(w => w.topic))];
+    $('topic').innerHTML = '<option value="">Chọn chủ đề...</option>' + 
+        topics.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+// === STROKE ORDER ===
+function showStrokeOrder(chinese, vietnamese) {
+    currentStrokeWord = chinese;
+    $('stroke-word').textContent = `${chinese} (${vietnamese})`;
+    $('stroke-modal').classList.add('show');
+    
+    const container = $('stroke-container');
+    container.innerHTML = '';
+    
+    // Create writer for each character
+    const chars = chinese.split('');
+    chars.forEach((char, i) => {
+        const div = document.createElement('div');
+        div.id = `char-${i}`;
+        div.className = 'stroke-char';
+        container.appendChild(div);
+        
+        const writer = HanziWriter.create(`char-${i}`, char, {
+            width: 200,
+            height: 200,
+            padding: 5,
+            showOutline: true,
+            strokeAnimationSpeed: 2,
+            delayBetweenStrokes: 200
+        });
+        
+        window[`writer${i}`] = writer;
+        writer.animateCharacter();
+    });
+}
+
+function closeStrokeModal() {
+    $('stroke-modal').classList.remove('show');
+}
+
+function animateStrokes() {
+    const chars = currentStrokeWord.split('');
+    chars.forEach((char, i) => {
+        if (window[`writer${i}`]) {
+            window[`writer${i}`].animateCharacter();
+        }
+    });
+}
+
+function quizStrokes() {
+    const chars = currentStrokeWord.split('');
+    chars.forEach((char, i) => {
+        if (window[`writer${i}`]) {
+            window[`writer${i}`].quiz();
+        }
+    });
+    status('✍️ Hãy viết theo nét!', 'success');
+}
+
+// === LIBRARY ===
+$('lib-search').addEventListener('input', () => {
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(() => renderLibrary($('lib-search').value), 300);
+});
+
+function renderLibrary(searchQuery = '') {
+    let filtered = vocab;
+    
+    if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = vocab.filter(w => 
+            w.vietnamese.toLowerCase().includes(q) ||
+            w.chinese.includes(q) ||
+            w.pinyin.toLowerCase().includes(q)
+        );
+    }
+    
+    if (filterTopic !== 'all') filtered = filtered.filter(w => w.topic === filterTopic);
+    if (filterLearned === 'learned') filtered = filtered.filter(w => w.learned);
+    if (filterLearned === 'unlearned') filtered = filtered.filter(w => !w.learned);
+
+    const topics = [...new Set(vocab.map(w => w.topic))];
+    $('total').textContent = vocab.length;
+    $('learned').textContent = vocab.filter(w => w.learned).length;
+    $('topics').textContent = topics.length;
+
+    $('filters').innerHTML = `
+        <div class="fbtn ${filterTopic === 'all' ? 'active' : ''}" onclick="filterTopic='all';renderLibrary()">📂 Tất cả</div>
+        ${topics.map(t => `<div class="fbtn ${filterTopic === t ? 'active' : ''}" onclick="filterTopic='${t}';renderLibrary()">${t}</div>`).join('')}
+    `;
+
+    const list = $('list');
+    if (filtered.length === 0) {
+        list.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px">📭 Không có từ vựng</div>`;
+        return;
+    }
+
+    list.innerHTML = filtered.map(w => `
+        <div class="card">
+            <div>
+                <div style="font-size:1.8rem;font-weight:700;margin-bottom:4px;cursor:pointer" onclick="showStrokeOrder('${w.chinese.replace(/'/g, "\\'")}', '${w.vietnamese.replace(/'/g, "\\'")}')">
+                    ${w.chinese} ✍️
+                </div>
+                <div style="color:var(--g6);font-size:.9rem;font-style:italic;margin-bottom:8px">${w.pinyin}</div>
+                <div style="font-weight:600;margin-bottom:4px">${w.vietnamese}</div>
+                <div style="font-size:.9rem;color:var(--g6)">${w.meaning}</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+                <button class="play" onclick="speak('${w.chinese}')">🔊</button>
+                <button onclick="toggleLearned(${w.id})" style="background:none;border:none;cursor:pointer;font-size:1.2rem">
+                    ${w.learned ? '✅' : '⭕'}
+                </button>
+            </div>
+            <div class="badge ${w.difficulty}">${w.difficulty === 'easy' ? '😊' : '🤔'}</div>
+        </div>
+    `).join('');
+}
+
+function toggleLearned(id) {
+    const w = vocab.find(v => v.id === id);
+    if (w) {
+        w.learned = !w.learned;
+        save();
+        renderLibrary();
+        status(w.learned ? '✅ Đã học!' : '⭕ Chưa học', 'success');
+    }
+}
+
+function speak(text) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    speechSynthesis.speak(u);
+}
+
+// === FLASHCARD ===
+function updateFlashcards() {
+    const topics = ['all', ...new Set(vocab.map(w => w.topic))];
+    $('fc-topic').innerHTML = topics.map(t => 
+        `<option value="${t}">${t === 'all' ? '📚 Tất cả' : t}</option>`
+    ).join('');
+    
+    generateCards();
+    renderCards();
+}
+
+function generateCards() {
+    let pool = vocab.filter(w => !w.learned);
+    if (fcTopic !== 'all') pool = pool.filter(w => w.topic === fcTopic);
+    if (pool.length === 0) { currentCards = []; return; }
+    
+    currentCards = pool.slice(0, 6);
+}
+
+function renderCards() {
+    const c = $('fc-container');
+    if (currentCards.length === 0) {
+        c.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:white;background:var(--s);border-radius:20px">
+            🎉 Đã học hết!
+        </div>`;
+        return;
+    }
+    
+    c.innerHTML = currentCards.map((w, i) => `
+        <div class="fc" onclick="flipCard(${i})" id="fc-${i}">
+            <div class="fc-chinese">${w.chinese}</div>
+            <div class="fc-pinyin">${w.pinyin}</div>
+            <div class="fc-viet">${w.vietnamese}</div>
+            <div class="fc-meaning">${w.meaning}</div>
+        </div>
+    `).join('');
+}
+
+function flipCard(i) {
+    const f = $(`fc-${i}`);
+    const v = f.querySelector('.fc-viet');
+    const m = f.querySelector('.fc-meaning');
+    const show = v.style.display !== 'block';
+    
+    v.style.display = show ? 'block' : 'none';
+    m.style.display = show ? 'block' : 'none';
+    f.classList.toggle('showing-answer', show);
+    
+    if (show) speak(currentCards[i].chinese);
+}
+
+function nextCards() {
+    generateCards();
+    renderCards();
+    status('🔄 Thẻ mới!', 'success');
+}
+
+// === CSV ===
+function parseCSV(text) {
+    return text.split('\n').map(line => {
+        const result = [];
+        let field = '', inQuote = false;
+        for (let c of line) {
+            if (c === '"') inQuote = !inQuote;
+            else if (c === ',' && !inQuote) {
+                result.push(field);
+                field = '';
+            } else field += c;
+        }
+        result.push(field);
+        return result;
+    });
+}
+
+function exportCSV() {
+    const header = 'Vietnamese,Chinese,Pinyin,Meaning,Topic,Difficulty,Learned\n';
+    const rows = vocab.map(w => 
+        `"${w.vietnamese}","${w.chinese}","${w.pinyin}","${w.meaning}","${w.topic}","${w.difficulty}","${w.learned}"`
+    ).join('\n');
+    
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `vocab_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    status('💾 Đã export!', 'success');
+}
+
+function exportJSON() {
+    const blob = new Blob([JSON.stringify({vocab, defaultSheetId, githubRepo}, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    status('📦 Đã export!', 'success');
+}
+
+function downloadVocabJSON() {
+    const data = {
+        version: '1.0',
+        updated: new Date().toISOString(),
+        vocab: vocab
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'vocab.json';
+    link.click();
+    status('📥 Đã tải vocab.json!', 'success');
+}
+
+function clearAll() {
+    if (confirm('⚠️ XÓA TẤT CẢ?')) {
+        vocab = [];
+        save();
+        renderLibrary();
+        status('🗑️ Đã xóa', 'success');
+    }
+}
+
+// === INIT ===
+async function init() {
+    // Try load from vocab.json first (GitHub Pages)
+    try {
+        const res = await fetch('./data/vocab.json');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.vocab && Array.isArray(data.vocab)) {
+                vocab = data.vocab;
+                save();
+                renderLibrary();
+                status(`✅ Đã load ${vocab.length} từ!`, 'success');
+                return;
+            }
+        }
+    } catch (e) {
+        console.log('Không có vocab.json, dùng localStorage');
+    }
+    
+    // Fallback to localStorage
+    const stored = localStorage.getItem('vocab');
+    if (stored) {
+        vocab = JSON.parse(stored);
+    } else {
+        // Sample data
+        vocab = [
+            {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'ni3 hao3',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,reviewCount:0,nextReview:Date.now()},
+            {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xie4 xie4',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,reviewCount:0,nextReview:Date.now()},
+            {id:3,vietnamese:'tạm biệt',chinese:'再见',pinyin:'zai4 jian4',meaning:'goodbye',topic:'Cơ bản',difficulty:'easy',learned:false,reviewCount:0,nextReview:Date.now()}
+        ];
+        save();
+    }
+    
+    renderLibrary();
+    updateAddTopicList();
+    updateFlashcards();
+    updateSheetDisplay();
+    updateGitHubDisplay();
+}
+
+init();
+</script>
+</body>
+</html>
