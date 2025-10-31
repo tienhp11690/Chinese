@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Tiếng Trung Pro</title>
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22H%E1%BB%8Dc%20Ti%E1%BA%BFng%20Trung%22,%22short_name%22:%22Chinese%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#667eea%22,%22theme_color%22:%22#667eea%22}">
+    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.16.0/dist/index.umd.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        :root { --p: #667eea; --pd: #764ba2; --s: #48bb78; --d: #f56565; --w: #f59e0b; --g1: #f8f9fa; --g2: #e2e8f0; --g6: #4a5568; --g8: #2d3748; --r: 12px; --t: all .3s ease; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: system-ui; background: linear-gradient(135deg, var(--p), var(--pd)); min-height:100vh; color:var(--g8); }
+        .c { max-width:1200px; margin:auto; padding:16px; }
+        .h1 { text-align:center; color:white; font-size:2.5rem; margin-bottom:8px; text-shadow:0 2px 4px rgba(0,0,0,.3); }
+        .nav { display:flex; background:white; border-radius:16px; padding:8px; margin-bottom:32px; box-shadow:0 10px 25px rgba(0,0,0,.15); gap:8px; flex-wrap:wrap; }
+        .tab { flex:1; min-width:110px; padding:14px; text-align:center; border:none; border-radius:12px; font-weight:600; color:var(--g6); cursor:pointer; transition:var(--t); }
+        .tab.active { background:linear-gradient(135deg,var(--p),var(--pd)); color:white; }
+        .page { display:none; background:white; border-radius:16px; padding:32px; box-shadow:0 10px 25px rgba(0,0,0,.15); animation:f .4s; }
+        .page.active { display:block; } @keyframes f { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
+
+        .grid, .fc-grid-3, .fc-grid-6, .fc-grid-9 { display:grid; gap:20px; }
+        .grid { grid-template-columns:repeat(3,1fr); }
+        .fc-grid-3 { grid-template-columns:repeat(3,1fr); }
+        .fc-grid-6 { grid-template-columns:repeat(3,1fr); }
+        .fc-grid-9 { grid-template-columns:repeat(3,1fr); }
+
+        .stats { display:flex; gap:20px; font-size:.95rem; color:var(--g6); margin-bottom:24px; flex-wrap:wrap; }
+        .stat { display:flex; align-items:center; gap:6px; background:var(--g1); padding:8px 14px; border-radius:20px; font-weight:500; }
+        .n { font-weight:700; color:var(--p); }
+
+        .filters { display:flex; flex-wrap:wrap; gap:10px; padding:16px; background:var(--g1); border-radius:12px; margin-bottom:24px; }
+        .fbtn { padding:8px 16px; border:2px solid var(--g2); background:white; border-radius:20px; font-size:.9rem; cursor:pointer; display:flex; gap:6px; align-items:center; transition:var(--t); }
+        .fbtn.active { background:var(--p); color:white; border-color:var(--p); }
+        .fbtn:hover { transform:translateY(-2px); }
+
+        .card { background:white; border:1px solid var(--g2); border-radius:16px; padding:20px; position:relative; transition:var(--t); display:flex; flex-direction:column; justify-content:space-between; min-height:140px; }
+        .card:hover { transform:translateY(-4px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
+        .card .play { background:rgba(102,126,234,.1); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:var(--t); }
+        .card .play:hover { background:var(--p); color:white; }
+        .card .badge { position:absolute; top:12px; right:12px; padding:4px 10px; border-radius:12px; font-size:.75rem; font-weight:600; }
+        .card .badge.easy { background:#d4edda; color:#155724; }
+        .card .badge.medium { background:#fff3cd; color:#856404; }
+        .card .badge.hard { background:#f8d7da; color:#721c24; }
+
+        .btn { padding:12px 24px; border:none; border-radius:12px; font-weight:600; cursor:pointer; display:inline-flex; gap:8px; align-items:center; transition:var(--t); background:linear-gradient(135deg,var(--p),var(--pd)); color:white; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(102,126,234,.3); }
+        .btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+        .layout-btn { padding:10px 20px; border:2px solid var(--g2); background:white; color:var(--g6); border-radius:12px; font-weight:600; cursor:pointer; transition:var(--t); }
+        .layout-btn.active { background:var(--p); color:white; border-color:var(--p); transform:scale(1.05); }
+
+        .fc { background:linear-gradient(135deg,var(--p),var(--pd)); color:white; border-radius:20px; padding:32px; cursor:pointer; min-height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,.15); transition:var(--t); position:relative; }
+        .fc:hover { transform:scale(1.02); }
+        .fc.showing-answer { background:linear-gradient(135deg,var(--s),#38a169); }
+        .fc.fc-hard { background:linear-gradient(135deg,#f56565,#e53e3e); }
+        .fc.fc-medium { background:linear-gradient(135deg,#f59e0b,#d97706); }
+        .fc-chinese { font-size:2.2rem; font-weight:700; margin-bottom:8px; }
+        .fc-pinyin { font-size:1.1rem; font-style:italic; margin-bottom:16px; opacity:0.9; }
+        .fc-viet, .fc-meaning { display:none; font-size:1.1rem; margin-top:12px; }
+        .fc-counter { position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:12px; font-size:0.85rem; font-weight:600; }
+        .fc-progress { position:absolute; bottom:0; left:0; height:4px; background:rgba(255,255,255,0.3); border-radius:0 0 20px 20px; width:100%; }
+        .fc-progress-bar { height:100%; background:white; border-radius:0 0 20px 20px; transition:width 0.3s ease; }
+
+        .search-box { position:relative; margin-bottom:20px; }
+        .search-input { width:100%; padding:14px 50px 14px 16px; border:2px solid var(--g2); border-radius:12px; font-size:1rem; transition:var(--t); }
+        .search-input:focus { outline:none; border-color:var(--p); box-shadow:0 0 0 3px rgba(102,126,234,0.1); }
+        .search-clear { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--g6); font-size:1.2rem; padding:4px 8px; opacity:0; transition:var(--t); }
+        .search-clear.show { opacity:1; }
+        .search-suggestions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+        .search-tag { padding:6px 12px; background:var(--g1); border-radius:16px; font-size:0.85rem; cursor:pointer; transition:var(--t); }
+        .search-tag:hover { background:var(--p); color:white; }
+
+        .status { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:12px 24px; border-radius:50px; box-shadow:0 10px 25px rgba(0,0,0,.15); font-weight:500; display:flex; gap:10px; align-items:center; opacity:0; transition:var(--t); z-index:999; }
+        .status.show { opacity:1; }
+        .status.loading { color:var(--p); }
+        .status.success { color:var(--s); }
+        .status.error { color:var(--d); }
+        .spin { width:18px; height:18px; border:2px solid #f3f3f3; border-top:2px solid currentColor; border-radius:50%; animation:s 1s linear infinite; display:none; }
+        @keyframes s { to{transform:rotate(360deg)} }
+
+        .csv-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+        .csv-actions .upload { flex:1; min-width:200px; padding:16px; border:2px dashed var(--g2); border-radius:12px; text-align:center; cursor:pointer; transition:var(--t); }
+        .csv-actions .upload:hover, .csv-actions .upload.dragover { border-color:var(--p); background:rgba(102,126,234,0.05); }
+        .csv-actions button { flex:1; min-width:140px; }
+
+        .fc-controls { display:flex; gap:12px; justify-content:center; margin-top:24px; }
+        .fc-btn { padding:12px 24px; border-radius:12px; border:none; font-weight:600; cursor:pointer; transition:var(--t); }
+        .fc-btn.easy { background:var(--s); color:white; }
+        .fc-btn.medium { background:var(--w); color:white; }
+        .fc-btn.hard { background:var(--d); color:white; }
+        .fc-btn:hover { transform:scale(1.05); box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+
+        .config-section { background:#e0e7ff; padding:20px; border-radius:12px; margin:20px 0; }
+        .user-info { display:flex; align-items:center; gap:12px; }
+        .user-avatar { width:40px; height:40px; border-radius:50%; }
+
+        @media (max-width:1024px) { .grid, .fc-grid-3, .fc-grid-6, .fc-grid-9 { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width:768px) { .nav { flex-direction:column; } .grid, .fc-grid-3, .fc-grid-6, .fc-grid-9 { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<div class="c">
+    <h1 class="h1">📚 Học Tiếng Trung Pro</h1>
+    <div class="nav">
+        <button class="tab active" data-page="lib" onclick="show('lib')">📖 Thư viện</button>
+        <button class="tab" data-page="add" onclick="show('add')">➕ Thêm từ</button>
+        <button class="tab" data-page="fc" onclick="show('fc')">🎴 Flashcard</button>
+        <button class="tab" data-page="config" onclick="show('config')">⚙️ Cấu hình</button>
+    </div>
+
+    <!-- Library -->
+    <div id="lib" class="page active">
+        <div class="stats">
+            <div class="stat">📊 <span class="n" id="total">0</span> Tổng</div>
+            <div class="stat">✅ <span class="n" id="learned">0</span> Đã học</div>
+            <div class="stat">📂 <span class="n" id="topics">0</span> Chủ đề</div>
+            <div class="stat">🔥 <span class="n" id="streak">0</span> Ngày liên tục</div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="lib-search" class="search-input" placeholder="🔍 Tìm kiếm từ vựng...">
+            <button class="search-clear" id="search-clear" onclick="clearLibSearch()">✕</button>
+        </div>
+        
+        <div class="filters" id="filters"></div>
+        <div class="grid" id="list"></div>
+    </div>
+
+    <!-- Add Word -->
+    <div id="add" class="page">
+        <h2>🔎 Tra cứu & Thêm từ</h2>
+        <div class="search-box">
+            <input type="text" id="search-input" class="search-input" placeholder="Nhập từ tiếng Việt hoặc tiếng Anh...">
+        </div>
+        <div class="search-suggestions" id="search-suggestions"></div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="btn" onclick="searchWord('vi')">🇻🇳 Tiếng Việt</button>
+            <button class="btn" onclick="searchWord('en')">🇬🇧 Tiếng Anh</button>
+            <button class="btn" onclick="searchWord('auto')">🔄 Tự động</button>
+        </div>
+        <div id="sugg" style="margin-top:20px"></div>
+
+        <div style="margin-top:20px">
+            <select id="topic" style="width:100%;padding:12px;border:2px solid var(--g2);border-radius:12px;margin-bottom:8px">
+                <option value="">Chọn chủ đề...</option>
+            </select>
+            <div style="display:flex;gap:8px">
+                <input type="text" id="newti" placeholder="Tên chủ đề mới..." style="flex:1;padding:12px;border:2px solid var(--g2);border-radius:12px">
+                <button class="btn" onclick="createTopic()">Tạo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flashcard -->
+    <div id="fc" class="page">
+        <h2>🎴 Flashcard - Luyện tập thông minh</h2>
+        <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
+            <select id="fc-topic" onchange="fcTopic=this.value; localStorage.setItem('fc_topic',this.value); updateFlashcards()" style="padding:12px;border:2px solid var(--g2);border-radius:12px;flex:1;min-width:200px"></select>
+            <div style="display:flex;gap:8px">
+                <button class="layout-btn" onclick="setLayout(3)">3 thẻ</button>
+                <button class="layout-btn active" onclick="setLayout(6)">6 thẻ</button>
+                <button class="layout-btn" onclick="setLayout(9)">9 thẻ</button>
+            </div>
+            <button class="btn" onclick="nextCards()">🔄 Thẻ mới</button>
+        </div>
+        
+        <div id="fc-stats" style="background:var(--g1);padding:16px;border-radius:12px;margin-bottom:20px;display:flex;gap:20px;flex-wrap:wrap;font-size:0.9rem">
+            <div><strong>Hôm nay:</strong> <span id="today-studied">0</span> từ</div>
+            <div><strong>Tuần này:</strong> <span id="week-studied">0</span> từ</div>
+            <div><strong>Cần ôn:</strong> <span id="review-count">0</span> từ</div>
+        </div>
+        
+        <div id="fc-container" class="fc-grid-6"></div>
+        
+        <div class="fc-controls" id="fc-controls" style="display:none">
+            <button class="fc-btn easy" onclick="rateDifficulty('easy')">😊 Dễ (5 ngày)</button>
+            <button class="fc-btn medium" onclick="rateDifficulty('medium')">🤔 Vừa (3 ngày)</button>
+            <button class="fc-btn hard" onclick="rateDifficulty('hard')">😅 Khó (1 ngày)</button>
+        </div>
+    </div>
+
+    <!-- Config -->
+    <div id="config" class="page">
+        <h2>⚙️ Cấu hình & Quản lý dữ liệu</h2>
+        
+        <!-- Google Sheets Config -->
+        <div class="config-section">
+            <h3>📊 Google Sheets Integration</h3>
+            <p style="margin:10px 0;color:var(--g6);font-size:0.9rem">Cấu hình Google Sheet mặc định để đồng bộ từ vựng</p>
+            
+            <div style="margin-top:16px">
+                <label style="display:block;margin-bottom:8px;font-weight:600">Google Sheet ID:</label>
+                <input type="text" id="default-sheet-id" placeholder="Paste Sheet ID từ URL..." style="width:100%;padding:12px;border:2px solid var(--g2);border-radius:12px;margin-bottom:8px">
+                <button class="btn" onclick="saveDefaultSheet()">💾 Lưu Sheet mặc định</button>
+                <button class="btn" onclick="loadFromSheet()" style="background:#48bb78">📥 Load từ Sheet</button>
+                <button class="btn" onclick="testSheetConnection()" style="background:#f59e0b">🔍 Test kết nối</button>
+            </div>
+            
+            <div style="margin-top:16px;padding:12px;background:#fef3c7;border-radius:8px;font-size:0.9rem">
+                <strong>💡 Hướng dẫn:</strong>
+                <ol style="margin:8px 0 0 20px">
+                    <li>Tạo Google Sheet với format: Vietnamese, Chinese, Pinyin, Meaning, Topic, Difficulty, Learned</li>
+                    <li>Share sheet: "Anyone with the link can VIEW"</li>
+                    <li>Copy Sheet ID từ URL (giữa /d/ và /edit)</li>
+                    <li>Paste vào ô trên và click "Lưu"</li>
+                </ol>
+            </div>
+            
+            <div style="margin-top:12px">
+                <p style="font-size:0.9rem;color:var(--g6)">
+                    <strong>Sheet hiện tại:</strong> <span id="current-sheet-display">Chưa cấu hình</span>
+                </p>
+                <p style="font-size:0.85rem;color:var(--g6);margin-top:4px">
+                    ⚠️ Khi thêm từ mới, từ sẽ được tự động ghi vào Sheet này (nếu đã cấu hình)
+                </p>
+            </div>
+        </div>
+
+        <!-- CSV Upload/Export -->
+        <div style="background:#ecfdf5;padding:20px;border-radius:12px;margin:20px 0">
+            <h3>📁 Import/Export CSV</h3>
+            <div class="csv-actions">
+                <div class="upload" id="csv-drop">
+                    <p>📤 Kéo thả CSV hoặc <strong>chọn file</strong></p>
+                    <input type="file" id="csv-file" accept=".csv" style="display:none">
+                </div>
+                <button class="btn" onclick="$('csv-file').click()">📂 Chọn CSV</button>
+                <button class="btn" onclick="exportCSV()">💾 Export CSV</button>
+                <button class="btn" onclick="exportDatabase()">📦 Export JSON</button>
+            </div>
+        </div>
+
+        <!-- Local Database Info -->
+        <div style="background:#e0e7ff;padding:20px;border-radius:12px;margin:20px 0">
+            <h3>💾 Dữ liệu local</h3>
+            <div style="margin-top:12px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                    <span>Tổng từ vựng:</span>
+                    <strong id="db-total">0</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                    <span>Đã học:</span>
+                    <strong id="db-learned">0</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                    <span>Kích thước:</span>
+                    <strong id="db-size">0 KB</strong>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+                    <button class="btn" onclick="backupToFile()">💾 Backup</button>
+                    <button class="btn" onclick="restoreFromFile()">📂 Restore</button>
+                    <button class="btn" style="background:var(--d)" onclick="clearAllData()">🗑️ Xóa tất cả</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="status" class="status">
+    <div class="spin"></div>
+    <span id="status-msg"></span>
+</div>
+
+<script>
+// === CONFIG ===
+const DB_VERSION = '1.0';
+const SEARCH_SUGGESTIONS = ['bệnh viện', 'máy bay', 'máy tính', 'điện thoại', 'nhà hàng', 'sân bay', 'ga tàu', 'siêu thị'];
+
+// MyMemory Translation API (Free, no auth, 1000 req/day)
+const TRANSLATION_API = 'https://api.mymemory.translated.net/get';
+
+let vocab = JSON.parse(localStorage.getItem('vocab') || '[]');
+let defaultSheetId = localStorage.getItem('default_sheet_id') || '';
+let filterTopic = 'all';
+let filterDiff = 'all';
+let filterLearned = 'all';
+let fcTopic = localStorage.getItem('fc_topic') || 'all';
+let layout = parseInt(localStorage.getItem('fc_layout')) || 6;
+let currentCards = [];
+let prevCards = [];
+let currentCardIndex = 0;
+
+const $ = id => document.getElementById(id);
+const save = () => {
+    localStorage.setItem('vocab', JSON.stringify(vocab));
+    updateDatabaseInfo();
+};
+
+function status(msg, type = 'loading') {
+    const s = $('status'), spin = s.querySelector('.spin');
+    $('status-msg').textContent = msg;
+    s.className = `status show ${type}`;
+    spin.style.display = type === 'loading' ? 'inline-block' : 'none';
+    if (type !== 'loading') setTimeout(() => s.classList.remove('show'), 3000);
+}
+
+function show(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    $(page).classList.add('active');
+    document.querySelector(`[data-page="${page}"]`).classList.add('active');
+    if (page === 'lib') renderLibrary();
+    if (page === 'add') { updateAddTopicList(); renderSearchSuggestions(); }
+    if (page === 'fc') updateFlashcards();
+    if (page === 'config') { updateDatabaseInfo(); updateSheetDisplay(); }
+}
+
+// === SHEETS CONFIG ===
+function saveDefaultSheet() {
+    const sheetId = $('default-sheet-id').value.trim();
+    if (!sheetId) return status('⚠️ Nhập Sheet ID', 'error');
+    
+    localStorage.setItem('default_sheet_id', sheetId);
+    defaultSheetId = sheetId;
+    updateSheetDisplay();
+    status('✅ Đã lưu Sheet mặc định!', 'success');
+}
+
+function updateSheetDisplay() {
+    const display = $('current-sheet-display');
+    if (defaultSheetId) {
+        display.textContent = defaultSheetId.substring(0, 20) + '...';
+        display.style.color = 'var(--s)';
+    } else {
+        display.textContent = 'Chưa cấu hình';
+        display.style.color = 'var(--d)';
+    }
+    $('default-sheet-id').value = defaultSheetId;
+}
+
+async function testSheetConnection() {
+    const sheetId = $('default-sheet-id').value.trim() || defaultSheetId;
+    if (!sheetId) return status('⚠️ Nhập Sheet ID', 'error');
+    
+    status('🔍 Đang test kết nối...');
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        const res = await fetch(url);
+        
+        if (!res.ok) throw new Error('Không thể kết nối');
+        
+        const csv = await res.text();
+        const lines = csv.split('\n');
+        status(`✅ Kết nối OK! Sheet có ${lines.length - 1} dòng dữ liệu`, 'success');
+    } catch (e) {
+        status('❌ Lỗi kết nối: ' + e.message, 'error');
+    }
+}
+
+async function loadFromSheet() {
+    const sheetId = defaultSheetId;
+    if (!sheetId) return status('⚠️ Chưa cấu hình Sheet. Vào tab Cấu hình để setup.', 'error');
+    
+    status('📥 Đang load từ Sheet...');
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        const res = await fetch(url);
+        
+        if (!res.ok) throw new Error('Không thể truy cập sheet');
+        
+        const csv = await res.text();
+        const rows = parseCSV(csv).slice(1);
+        let added = 0, updated = 0;
+        
+        rows.forEach(r => {
+            if (r.length < 2) return;
+            const chi = r[1].trim();
+            if (!chi) return;
+            
+            const existing = vocab.find(v => v.chinese === chi);
+            if (existing) {
+                // Update existing
+                existing.vietnamese = r[0].trim() || existing.vietnamese;
+                existing.pinyin = r[2].trim() || existing.pinyin;
+                existing.meaning = r[3].trim() || existing.meaning;
+                existing.topic = r[4].trim() || existing.topic;
+                existing.difficulty = (r[5] || existing.difficulty).trim().toLowerCase();
+                existing.learned = (r[6] || existing.learned).toUpperCase() === 'TRUE';
+                updated++;
+            } else {
+                // Add new
+                const py = r[2] ? r[2].trim() : pinyinPro.pinyin(chi, { toneType: 'num' });
+                vocab.push({
+                    id: Date.now() + added,
+                    vietnamese: r[0].trim(),
+                    chinese: chi,
+                    pinyin: py,
+                    meaning: r[3] ? r[3].trim() : '',
+                    topic: r[4] ? r[4].trim() : 'Sheet',
+                    difficulty: (r[5] || 'easy').trim().toLowerCase(),
+                    learned: (r[6] || 'FALSE').toUpperCase() === 'TRUE',
+                    reviewCount: 0,
+                    nextReview: Date.now()
+                });
+                added++;
+            }
+        });
+        
+        save();
+        renderLibrary();
+        status(`✅ Thêm ${added} từ mới, cập nhật ${updated} từ!`, 'success');
+    } catch (e) {
+        status('❌ Lỗi: ' + e.message, 'error');
+    }
+}
+
+async function appendToSheet(word) {
+    if (!defaultSheetId) return; // Silent fail if no sheet configured
+    
+    try {
+        // Note: Appending to Sheets requires Google Apps Script or API
+        // For now, we'll just notify user to manually sync
+        console.log('Từ mới cần sync:', word);
+        // In production, implement Google Sheets API append here
+    } catch (e) {
+        console.error('Không thể ghi vào Sheet:', e);
+    }
+}
+
+// === LIBRARY ===
+function normalizeVietnamese(str) {
+    return str.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/[^a-z0-9\s]/g, '');
+}
+
+function searchVocab(query) {
+    const normalized = normalizeVietnamese(query);
+    return vocab.filter(w => {
+        return normalizeVietnamese(w.vietnamese).includes(normalized) ||
+               normalizeVietnamese(w.chinese).includes(normalized) ||
+               normalizeVietnamese(w.pinyin).includes(normalized) ||
+               normalizeVietnamese(w.meaning).includes(normalized);
+    });
+}
+
+let searchTimeout;
+$('lib-search').addEventListener('input', (e) => {
+    const val = e.target.value;
+    $('search-clear').classList.toggle('show', val.length > 0);
+    
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        renderLibrary(val);
+    }, 300);
+});
+
+function clearLibSearch() {
+    $('lib-search').value = '';
+    $('search-clear').classList.remove('show');
+    renderLibrary();
+}
+
+function renderLibrary(searchQuery = '') {
+    let filtered = vocab;
+    
+    if (searchQuery) filtered = searchVocab(searchQuery);
+    if (filterTopic !== 'all') filtered = filtered.filter(w => w.topic === filterTopic);
+    if (filterDiff !== 'all') filtered = filtered.filter(w => w.difficulty === filterDiff);
+    if (filterLearned === 'learned') filtered = filtered.filter(w => w.learned);
+    if (filterLearned === 'unlearned') filtered = filtered.filter(w => !w.learned);
+
+    const topics = [...new Set(vocab.map(w => w.topic))];
+    $('total').textContent = vocab.length;
+    $('learned').textContent = vocab.filter(w => w.learned).length;
+    $('topics').textContent = topics.length;
+    $('streak').textContent = getStreak();
+
+    const f = $('filters');
+    f.innerHTML = `
+        <div class="fbtn ${filterTopic === 'all' ? 'active' : ''}" onclick="filterBy('topic','all')">📂 Tất cả</div>
+        ${topics.map(t => `<div class="fbtn ${filterTopic === t ? 'active' : ''}" onclick="filterBy('topic','${t}')">${t}</div>`).join('')}
+        <div style="width:100%;border-top:1px solid var(--g2);margin:8px 0"></div>
+        <div class="fbtn ${filterDiff === 'all' ? 'active' : ''}" onclick="filterBy('diff','all')">⭐ Tất cả</div>
+        <div class="fbtn ${filterDiff === 'easy' ? 'active' : ''}" onclick="filterBy('diff','easy')">😊 Dễ</div>
+        <div class="fbtn ${filterDiff === 'medium' ? 'active' : ''}" onclick="filterBy('diff','medium')">🤔 Vừa</div>
+        <div class="fbtn ${filterDiff === 'hard' ? 'active' : ''}" onclick="filterBy('diff','hard')">😅 Khó</div>
+        <div style="width:100%;border-top:1px solid var(--g2);margin:8px 0"></div>
+        <div class="fbtn ${filterLearned === 'all' ? 'active' : ''}" onclick="filterBy('learned','all')">📚 Tất cả</div>
+        <div class="fbtn ${filterLearned === 'learned' ? 'active' : ''}" onclick="filterBy('learned','learned')">✅ Đã học</div>
+        <div class="fbtn ${filterLearned === 'unlearned' ? 'active' : ''}" onclick="filterBy('learned','unlearned')">📖 Chưa học</div>
+    `;
+
+    const list = $('list');
+    if (filtered.length === 0) {
+        list.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--g6)">
+            ${searchQuery ? '🔍 Không tìm thấy kết quả' : '📭 Chưa có từ vựng nào'}
+        </div>`;
+        return;
+    }
+
+    list.innerHTML = filtered.map(w => `
+        <div class="card">
+            <div>
+                <div style="font-size:1.8rem;font-weight:700;margin-bottom:4px">${w.chinese}</div>
+                <div style="color:var(--g6);font-size:.9rem;font-style:italic;margin-bottom:8px">${w.pinyin}</div>
+                <div style="font-weight:600;margin-bottom:4px">${w.vietnamese}</div>
+                <div style="font-size:.9rem;color:var(--g6)">${w.meaning}</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+                <button class="play" onclick="speak('${w.chinese.replace(/'/g, "\\'")}')">🔊</button>
+                <button onclick="toggleLearned(${w.id})" style="background:none;border:none;cursor:pointer;font-size:1.2rem">
+                    ${w.learned ? '✅' : '⭕'}
+                </button>
+            </div>
+            <div class="badge ${w.difficulty}">${w.difficulty === 'easy' ? '😊' : w.difficulty === 'medium' ? '🤔' : '😅'}</div>
+        </div>
+    `).join('');
+}
+
+function filterBy(type, val) {
+    if (type === 'topic') filterTopic = val;
+    if (type === 'diff') filterDiff = val;
+    if (type === 'learned') filterLearned = val;
+    renderLibrary($('lib-search').value);
+}
+
+function toggleLearned(id) {
+    const w = vocab.find(v => v.id === id);
+    if (w) {
+        w.learned = !w.learned;
+        if (w.learned) {
+            w.lastReviewed = Date.now();
+            updateStreak();
+        }
+        save();
+        renderLibrary($('lib-search').value);
+        status(w.learned ? '✅ Đã đánh dấu học!' : '⭕ Bỏ đánh dấu', 'success');
+    }
+}
+
+function getStreak() {
+    const streak = JSON.parse(localStorage.getItem('streak') || '{"count":0,"lastDate":""}');
+    return streak.count;
+}
+
+function updateStreak() {
+    const today = new Date().toDateString();
+    const streak = JSON.parse(localStorage.getItem('streak') || '{"count":0,"lastDate":""}');
+    
+    if (streak.lastDate !== today) {
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        if (streak.lastDate === yesterday) {
+            streak.count++;
+        } else if (streak.lastDate !== today) {
+            streak.count = 1;
+        }
+        streak.lastDate = today;
+        localStorage.setItem('streak', JSON.stringify(streak));
+    }
+}
+
+// === SEARCH & ADD WORD ===
+function renderSearchSuggestions() {
+    const container = $('search-suggestions');
+    container.innerHTML = SEARCH_SUGGESTIONS.map(s => 
+        `<div class="search-tag" onclick="quickSearch('${s}')">${s}</div>`
+    ).join('');
+}
+
+function quickSearch(word) {
+    $('search-input').value = word;
+    searchWord('vi');
+}
+
+async function searchWord(lang) {
+    const q = $('search-input').value.trim();
+    if (!q) return status('Nhập từ cần tra', 'error');
+
+    status('🔍 Đang tra cứu...');
+    
+    try {
+        // Step 1: Translate to Chinese
+        const sourceLang = lang === 'auto' ? 'vi' : lang;
+        const translateUrl = `${TRANSLATION_API}?q=${encodeURIComponent(q)}&langpair=${sourceLang}|zh-CN`;
+        
+        const res = await fetch(translateUrl);
+        const data = await res.json();
+        
+        if (data.responseStatus !== 200) throw new Error('Translation failed');
+        
+        const chinese = data.responseData.translatedText;
+        
+        // Step 2: Generate pinyin
+        const pinyin = pinyinPro.pinyin(chinese, { toneType: 'num' });
+        
+        // Step 3: Get English meaning
+        const enUrl = `${TRANSLATION_API}?q=${encodeURIComponent(chinese)}&langpair=zh-CN|en`;
+        const enRes = await fetch(enUrl);
+        const enData = await enRes.json();
+        const meaning = enData.responseData.translatedText;
+
+        $('sugg').innerHTML = `
+            <div class="card" style="max-width:100%;background:linear-gradient(135deg, #f0f9ff, #e0f2fe)">
+                <div style="font-size:2rem;font-weight:700;margin-bottom:8px">${chinese}</div>
+                <div style="color:var(--g6);font-style:italic;margin-bottom:12px;font-size:1.1rem">${pinyin}</div>
+                <div style="font-weight:600;margin-bottom:4px">🇻🇳 ${q}</div>
+                <div style="color:var(--g6);margin-bottom:16px">🇬🇧 ${meaning}</div>
+                <button class="btn" onclick="addWord('${chinese.replace(/'/g, "\\'")}','${pinyin}','${meaning.replace(/'/g, "\\'")}','${q.replace(/'/g, "\\'")}')">➕ Thêm vào thư viện</button>
+            </div>
+        `;
+        status('✅ Tra cứu thành công!', 'success');
+    } catch (e) {
+        status('❌ Lỗi tra cứu. Thử lại hoặc dùng từ khác.', 'error');
+        console.error('Search error:', e);
+    }
+}
+
+async function addWord(c, p, m, v) {
+    const t = $('topic').value || prompt('Chủ đề:');
+    if (!t) return status('Chọn chủ đề', 'error');
+    if (vocab.some(w => w.chinese === c)) return status('Từ đã tồn tại', 'error');
+    
+    const newWord = {
+        id: Date.now(),
+        vietnamese: v,
+        chinese: c,
+        pinyin: p,
+        meaning: m,
+        topic: t,
+        difficulty: 'easy',
+        learned: false,
+        nextReview: Date.now(),
+        reviewCount: 0
+    };
+    
+    vocab.push(newWord);
+    save();
+    renderLibrary();
+    show('lib');
+    
+    // Try to append to sheet (background task)
+    if (defaultSheetId) {
+        status('✅ Đã thêm! Đồng bộ Sheet...', 'success');
+        await syncToSheet(newWord);
+    } else {
+        status('✅ Đã thêm vào thư viện!', 'success');
+    }
+}
+
+async function syncToSheet(word) {
+    if (!defaultSheetId) return;
+    
+    // Thay YOUR_APPS_SCRIPT_URL bằng URL từ bước 2
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx601f8sY5TJRD_ypfxaRNQwdSl6KkCPQaa4DgLpWmFTWTKKlWazKqAE5FUa8b8lzWHdg/exec';
+    
+    try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(word)
+        });
+        
+        console.log('Synced to sheet:', word.chinese);
+        setTimeout(() => {
+            status('✅ Đã đồng bộ với Sheet!', 'success');
+        }, 2000);
+    } catch (e) {
+        console.error('Sync error:', e);
+    }
+}
+
+function createTopic() {
+    const name = $('newti').value.trim();
+    if (!name) return status('Nhập tên chủ đề', 'error');
+    
+    const topics = [...new Set(vocab.map(w => w.topic))];
+    if (topics.includes(name)) return status('Chủ đề đã tồn tại', 'error');
+    
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    $('topic').appendChild(opt);
+    $('topic').value = name;
+    $('newti').value = '';
+    status('✅ Tạo chủ đề mới!', 'success');
+}
+
+function updateAddTopicList() {
+    const topics = [...new Set(vocab.map(w => w.topic))];
+    $('topic').innerHTML = '<option value="">Chọn chủ đề...</option>' + 
+        topics.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+// === FLASHCARD ===
+function updateFlashcards() {
+    const topics = ['all', ...new Set(vocab.map(w => w.topic))];
+    $('fc-topic').innerHTML = topics.map(t => 
+        `<option value="${t}" ${fcTopic === t ? 'selected' : ''}>${t === 'all' ? '📚 Tất cả' : t}</option>`
+    ).join('');
+    
+    updateFCStats();
+    generateCards();
+    renderCards();
+}
+
+function updateFCStats() {
+    const today = new Date().toDateString();
+    const todayStudied = vocab.filter(w => {
+        if (!w.lastReviewed) return false;
+        return new Date(w.lastReviewed).toDateString() === today;
+    }).length;
+    
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const weekStudied = vocab.filter(w => w.lastReviewed && w.lastReviewed > weekAgo).length;
+    
+    const needReview = vocab.filter(w => !w.learned || (w.nextReview && w.nextReview <= Date.now())).length;
+    
+    $('today-studied').textContent = todayStudied;
+    $('week-studied').textContent = weekStudied;
+    $('review-count').textContent = needReview;
+}
+
+function generateCards() {
+    let pool = vocab.filter(w => !w.learned || (w.nextReview && w.nextReview <= Date.now()));
+    if (fcTopic !== 'all') pool = pool.filter(w => w.topic === fcTopic);
+    if (pool.length === 0) { currentCards = []; return; }
+    
+    pool.sort((a, b) => (a.nextReview || 0) - (b.nextReview || 0));
+    
+    let remaining = pool.filter(w => !prevCards.some(p => p.id === w.id));
+    if (remaining.length < layout) { remaining = pool; prevCards = []; }
+    
+    currentCards = remaining.slice(0, layout);
+    prevCards = [...prevCards, ...currentCards].slice(-20);
+    currentCardIndex = 0;
+}
+
+function renderCards() {
+    const c = $('fc-container');
+    if (currentCards.length === 0) {
+        c.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:white;background:var(--s);border-radius:20px">
+            🎉 Đã học hết! Thử chọn chủ đề khác hoặc thêm từ mới.
+        </div>`;
+        return;
+    }
+    
+    c.innerHTML = currentCards.map((w, i) => {
+        const progress = w.reviewCount ? Math.min((w.reviewCount / 5) * 100, 100) : 0;
+        const diffClass = w.difficulty === 'hard' ? 'fc-hard' : w.difficulty === 'medium' ? 'fc-medium' : '';
+        
+        return `
+            <div class="fc ${diffClass}" onclick="flipCard(${i})" id="fc-${i}">
+                <div class="fc-counter">${i + 1}/${currentCards.length}</div>
+                <div class="fc-chinese">${w.chinese}</div>
+                <div class="fc-pinyin">${w.pinyin}</div>
+                <div class="fc-viet">${w.vietnamese}</div>
+                <div class="fc-meaning">${w.meaning}</div>
+                <div class="fc-progress">
+                    <div class="fc-progress-bar" style="width:${progress}%"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function flipCard(i) {
+    const f = $(`fc-${i}`);
+    const v = f.querySelector('.fc-viet');
+    const m = f.querySelector('.fc-meaning');
+    const show = v.style.display !== 'block';
+    
+    v.style.display = show ? 'block' : 'none';
+    m.style.display = show ? 'block' : 'none';
+    f.classList.toggle('showing-answer', show);
+    
+    if (show) {
+        speak(currentCards[i].chinese);
+        currentCardIndex = i;
+        $('fc-controls').style.display = 'flex';
+    }
+}
+
+function rateDifficulty(level) {
+    if (currentCardIndex === null) return;
+    
+    const word = currentCards[currentCardIndex];
+    const item = vocab.find(v => v.id === word.id);
+    
+    if (item) {
+        item.reviewCount = (item.reviewCount || 0) + 1;
+        item.lastReviewed = Date.now();
+        
+        const intervals = {
+            easy: 5 * 24 * 60 * 60 * 1000,
+            medium: 3 * 24 * 60 * 60 * 1000,
+            hard: 1 * 24 * 60 * 60 * 1000
+        };
+        
+        item.nextReview = Date.now() + intervals[level];
+        item.difficulty = level;
+        
+        if (item.reviewCount >= 5) {
+            item.learned = true;
+            updateStreak();
+        }
+        
+        save();
+        updateFCStats();
+        
+        currentCards.splice(currentCardIndex, 1);
+        renderCards();
+        $('fc-controls').style.display = 'none';
+        
+        const emoji = level === 'easy' ? '😊' : level === 'medium' ? '🤔' : '😅';
+        status(`${emoji} Đã đánh giá!`, 'success');
+    }
+}
+
+function setLayout(n) {
+    layout = n;
+    localStorage.setItem('fc_layout', n);
+    document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    $('fc-container').className = `fc-grid-${n}`;
+    updateFlashcards();
+    status(`Layout: ${n} thẻ`, 'success');
+}
+
+function nextCards() {
+    generateCards();
+    renderCards();
+    $('fc-controls').style.display = 'none';
+    status('🔄 Bộ thẻ mới!', 'success');
+}
+
+function speak(text) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.8;
+    speechSynthesis.speak(u);
+}
+
+// === CSV ===
+const dropZone = $('csv-drop');
+['dragenter','dragover','dragleave','drop'].forEach(e => 
+    dropZone.addEventListener(e, ev => ev.preventDefault())
+);
+['dragenter','dragover'].forEach(e => 
+    dropZone.addEventListener(e, () => dropZone.classList.add('dragover'))
+);
+['dragleave','drop'].forEach(e => 
+    dropZone.addEventListener(e, () => dropZone.classList.remove('dragover'))
+);
+
+dropZone.addEventListener('drop', e => {
+    if (e.dataTransfer.files[0]) handleCSV(e.dataTransfer.files[0]);
+});
+
+$('csv-file').addEventListener('change', e => {
+    if (e.target.files[0]) handleCSV(e.target.files[0]);
+});
+
+async function handleCSV(file) {
+    status('📂 Đang đọc CSV...');
+    try {
+        const text = await file.text();
+        const rows = parseCSV(text).slice(1);
+        let added = 0;
+        
+        rows.forEach(r => {
+            if (r.length < 2) return;
+            const chi = r[1].trim();
+            if (chi && !vocab.some(v => v.chinese === chi)) {
+                const py = r[2] ? r[2].trim() : pinyinPro.pinyin(chi, { toneType: 'num' });
+                vocab.push({
+                    id: Date.now() + added++,
+                    vietnamese: r[0].trim(),
+                    chinese: chi,
+                    pinyin: py,
+                    meaning: r[3] ? r[3].trim() : '',
+                    topic: r[4] ? r[4].trim() : 'CSV',
+                    difficulty: (r[5] || 'easy').trim().toLowerCase(),
+                    learned: (r[6] || 'FALSE').toUpperCase() === 'TRUE',
+                    reviewCount: 0,
+                    nextReview: Date.now()
+                });
+            }
+        });
+        
+        save();
+        renderLibrary();
+        status(`✅ Đã thêm ${added} từ!`, 'success');
+    } catch (e) {
+        status('❌ Lỗi đọc CSV', 'error');
+    }
+}
+
+function parseCSV(text) {
+    const lines = text.split('\n');
+    return lines.map(line => {
+        const result = [];
+        let field = '';
+        let inQuote = false;
+        for (let i = 0; i < line.length; i++) {
+            const c = line[i];
+            if (c === '"') inQuote = !inQuote;
+            else if (c === ',' && !inQuote) {
+                result.push(field);
+                field = '';
+            } else field += c;
+        }
+        result.push(field);
+        return result;
+    });
+}
+
+function exportCSV() {
+    const header = 'Vietnamese,Chinese,Pinyin,Meaning,Topic,Difficulty,Learned\n';
+    const rows = vocab.map(w => 
+        `"${w.vietnamese}","${w.chinese}","${w.pinyin}","${w.meaning}","${w.topic}","${w.difficulty}","${w.learned}"`
+    ).join('\n');
+    
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `chinese_vocab_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    
+    status('💾 Đã export CSV!', 'success');
+}
+
+function exportDatabase() {
+    const data = {
+        version: DB_VERSION,
+        timestamp: Date.now(),
+        defaultSheetId: defaultSheetId,
+        vocab: vocab,
+        stats: {
+            total: vocab.length,
+            learned: vocab.filter(w => w.learned).length,
+            topics: [...new Set(vocab.map(w => w.topic))].length,
+            streak: getStreak()
+        }
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `chinese_db_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    status('📦 Đã export database!', 'success');
+}
+
+function updateDatabaseInfo() {
+    $('db-total').textContent = vocab.length;
+    $('db-learned').textContent = vocab.filter(w => w.learned).length;
+    
+    const size = new Blob([JSON.stringify(vocab)]).size;
+    $('db-size').textContent = (size / 1024).toFixed(2) + ' KB';
+}
+
+function backupToFile() {
+    exportDatabase();
+}
+
+function restoreFromFile() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            if (confirm(`Restore ${data.vocab.length} từ vựng? Dữ liệu hiện tại sẽ bị ghi đè!`)) {
+                vocab = data.vocab;
+                if (data.defaultSheetId) {
+                    defaultSheetId = data.defaultSheetId;
+                    localStorage.setItem('default_sheet_id', defaultSheetId);
+                }
+                save();
+                renderLibrary();
+                updateSheetDisplay();
+                status('✅ Restore thành công!', 'success');
+            }
+        } catch (e) {
+            status('❌ File không hợp lệ', 'error');
+        }
+    };
+    
+    input.click();
+}
+
+function clearAllData() {
+    if (confirm('⚠️ XÓA TẤT CẢ dữ liệu? Hành động này không thể hoàn tác!')) {
+        if (confirm('Bạn có chắc chắn? Hãy backup trước khi xóa!')) {
+            vocab = [];
+            save();
+            renderLibrary();
+            updateFlashcards();
+            status('🗑️ Đã xóa tất cả', 'success');
+        }
+    }
+}
+
+// === AUTO LOAD ===
+async function autoLoadDatabase() {
+    if (vocab.length === 0) {
+        try {
+            const res = await fetch('./data/vocab.json');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.vocab && Array.isArray(data.vocab)) {
+                    vocab = data.vocab;
+                    save();
+                    renderLibrary();
+                    status(`✅ Đã tải ${vocab.length} từ!`, 'success');
+                }
+            }
+        } catch (e) {
+            console.log('No default database');
+        }
+    }
+    
+    // Load default sheet if configured
+    if (defaultSheetId && vocab.length === 0) {
+        loadFromSheet();
+    }
+}
+
+// === INIT ===
+renderLibrary();
+updateAddTopicList();
+updateFlashcards();
+updateDatabaseInfo();
+updateSheetDisplay();
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoLoadDatabase);
+} else {
+    autoLoadDatabase();
+}
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('data:text/javascript,console.log("SW")').catch(() => {});
+}
+</script>
+</body>
+</html>
