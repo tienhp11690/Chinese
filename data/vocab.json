@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2025-11-01T15:57:45.351Z",
+  "updated": "2025-11-01T16:11:11.257Z",
   "vocab": [
     {
       "id": 1761929158395,
@@ -2184,6 +2184,90 @@
       "difficulty": "easy",
       "learned": false,
       "nextReview": 1761932620400,
+      "reviewCount": 0
+    },
+    {
+      "id": 1762013471256,
+      "vietnamese": "好",
+      "chinese": "形",
+      "pinyin": "hǎo",
+      "meaning": "Tốt",
+      "topic": "khỏe",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1762013471256,
+      "reviewCount": 0
+    },
+    {
+      "id": 1762013471257,
+      "vietnamese": "是",
+      "chinese": "动",
+      "pinyin": "shì",
+      "meaning": "Là",
+      "topic": "thì",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1762013471256,
+      "reviewCount": 0
+    },
+    {
+      "id": 1762013471258,
+      "vietnamese": "老师",
+      "chinese": "名",
+      "pinyin": "lǎoshī",
+      "meaning": "Giáo viên",
+      "topic": "thầy giáo",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1762013471256,
+      "reviewCount": 0
+    },
+    {
+      "id": 1762013471259,
+      "vietnamese": "吗",
+      "chinese": "助",
+      "pinyin": "ma",
+      "meaning": "…không? …à?",
+      "topic": "Chào hỏi",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1762013471256,
+      "reviewCount": 0
+    },
+    {
+      "id": 1762013471260,
+      "vietnamese": "不",
+      "chinese": "副",
+      "pinyin": "bù",
+      "meaning": "Không (trợ từ phủ định)",
+      "topic": "Chào hỏi",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1762013471256,
+      "reviewCount": 0
+    },
+    {
+      "id": 1762013471261,
+      "vietnamese": "我",
+      "chinese": "代",
+      "pinyin": "wǒ",
+      "meaning": "Tôi",
+      "topic": "tớ",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1762013471256,
+      "reviewCount": 0
+    },
+    {
+      "id": 1762013471262,
+      "vietnamese": "生词",
+      "chinese": "拼音",
+      "pinyin": "意义",
+      "meaning": "",
+      "topic": "Chào hỏi",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1762013471256,
       "reviewCount": 0
     }
   ]
