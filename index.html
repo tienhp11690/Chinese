@@ -779,8 +779,10 @@ function updateSheetDisplay() {
     $('default-sheet-id').value = defaultSheetId;
 }
 
-// Parse CSV correctly (handles commas inside quoted fields)
+// ULTIMATE SMART CSV PARSER
+// Handles Google Sheets unquoted commas by smart column detection
 function parseCSVLine(line) {
+    // First pass: standard CSV parsing
     const result = [];
     let current = '';
     let inQuotes = false;
@@ -790,15 +792,13 @@ function parseCSVLine(line) {
         const nextChar = line[i + 1];
         
         if (char === '"') {
-            // Handle escaped quotes ("")
             if (inQuotes && nextChar === '"') {
                 current += '"';
-                i++; // Skip next quote
+                i++;
             } else {
                 inQuotes = !inQuotes;
             }
         } else if (char === ',' && !inQuotes) {
-            // End of field - trim to clean up spaces
             result.push(current.trim());
             current = '';
         } else {
@@ -806,9 +806,43 @@ function parseCSVLine(line) {
         }
     }
     
-    // Push last field - trim to clean up spaces
     result.push(current.trim());
     
+    // Smart merge if we have too many columns
+    const expectedColumns = 7; // Chinese, Type, Pinyin, Meaning, Topic, Difficulty, Learned
+    
+    if (result.length === expectedColumns) {
+        return result; // Perfect!
+    }
+    
+    if (result.length > expectedColumns) {
+        // Too many columns - merge the Meaning field (index 3)
+        const extraColumns = result.length - expectedColumns;
+        const fixed = [];
+        
+        // Copy first 3 columns (Chinese, Type, Pinyin)
+        fixed.push(result[0]);
+        fixed.push(result[1]);
+        fixed.push(result[2]);
+        
+        // Merge Meaning field (index 3 + extra columns)
+        const meaningParts = [];
+        for (let i = 3; i <= 3 + extraColumns; i++) {
+            meaningParts.push(result[i]);
+        }
+        fixed.push(meaningParts.join(', '));
+        
+        // Copy remaining columns (Topic, Difficulty, Learned)
+        for (let i = 3 + extraColumns + 1; i < result.length; i++) {
+            fixed.push(result[i]);
+        }
+        
+        console.log(`⚠️ Fixed column count from ${result.length} to ${fixed.length} by merging Meaning field`);
+        return fixed;
+    }
+    
+    // Too few columns - cannot fix, return as-is
+    console.warn(`❌ Got ${result.length} columns, expected ${expectedColumns}. Cannot auto-fix.`);
     return result;
 }
 
