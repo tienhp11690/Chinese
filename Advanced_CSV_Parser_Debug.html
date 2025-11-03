@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced CSV Parser - Debug Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        h1 { color: #4ec9b0; margin-bottom: 20px; }
+        .btn {
+            padding: 12px 24px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+        }
+        .btn:hover { background: #1177bb; }
+        .section {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 3px solid #4ec9b0;
+        }
+        h2 { color: #4ec9b0; margin-bottom: 16px; }
+        pre {
+            background: #1e1e1e;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            line-height: 1.6;
+            border: 1px solid #3e3e3e;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #3e3e3e;
+            border: 1px solid #555;
+            color: #d4d4d4;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .error { color: #f48771; }
+        .success { color: #4ec9b0; }
+        .warning { color: #dcdcaa; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th {
+            background: #3e3e3e;
+            padding: 10px;
+            text-align: left;
+            color: #4ec9b0;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #3e3e3e;
+        }
+        .problem { background: #3a2020; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔬 Advanced CSV Parser - Real-time Debug</h1>
+    
+    <div class="section">
+        <h2>📥 Load from Google Sheets</h2>
+        <input type="text" id="sheetId" value="1b0rr7I0Z1gVc9o4pR8-0RpWC-pdtNwjasD_hEZ2Wuxw" placeholder="Sheet ID">
+        <button class="btn" onclick="loadAndAnalyze()">🚀 Load & Analyze</button>
+        <button class="btn" onclick="testParsers()" style="background:#9f7aea;">🧪 Test Parsers</button>
+    </div>
+
+    <div id="results"></div>
+</div>
+
+<script>
+// Original parser (from your code)
+function parseCSVLine_v1(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current.trim());
+    return result;
+}
+
+// Enhanced parser - handles edge cases better
+function parseCSVLine_v2(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                // Escaped quote
+                current += '"';
+                i++;
+            } else {
+                // Toggle quote state
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            // Field separator
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current);
+    
+    // Trim and clean each field
+    return result.map(field => field.trim());
+}
+
+// Alternative: Use regex-based parser
+function parseCSVLine_v3(line) {
+    // This regex handles quoted fields with commas
+    const regex = /(?:^|,)("(?:[^"]|"")*"|[^,]*)/g;
+    const result = [];
+    let match;
+    
+    while ((match = regex.exec(line)) !== null) {
+        let field = match[1];
+        
+        // Remove surrounding quotes if present
+        if (field.startsWith('"') && field.endsWith('"')) {
+            field = field.slice(1, -1);
+            // Unescape doubled quotes
+            field = field.replace(/""/g, '"');
+        }
+        
+        result.push(field.trim());
+    }
+    
+    // Remove first empty element if exists
+    if (result[0] === '') result.shift();
+    
+    return result;
+}
+
+function testParsers() {
+    console.clear();
+    console.log('🧪 Testing CSV Parsers\n' + '='.repeat(80));
+    
+    const testCases = [
+        // Case 1: Simple, no quotes
+        '你好,Verb,nǐ hǎo,xin chào,Chào hỏi,Easy,false',
+        
+        // Case 2: Quoted field with comma
+        '你,Noun,nǐ,"Bạn, anh",Đại từ nhân xưng,Easy,false',
+        
+        // Case 3: Unquoted field with comma (Google Sheets may export like this!)
+        '你,Noun,nǐ,Bạn, anh,Đại từ nhân xưng,Easy,false',
+        
+        // Case 4: Multiple commas
+        '老师,Noun,lǎoshī,"Giáo viên, thầy giáo, thầy",Nghề nghiệp,Easy,false',
+        
+        // Case 5: Escaped quotes
+        '测试,Noun,cèshì,"Test ""value""",Topic,Easy,false'
+    ];
+    
+    testCases.forEach((testCase, idx) => {
+        console.log(`\n📝 Test Case ${idx + 1}:`);
+        console.log(`Input: ${testCase}`);
+        
+        const v1 = parseCSVLine_v1(testCase);
+        const v2 = parseCSVLine_v2(testCase);
+        const v3 = parseCSVLine_v3(testCase);
+        
+        console.log(`\nParser V1 (Original): ${v1.length} columns`);
+        v1.forEach((col, i) => console.log(`  [${i}] "${col}"`));
+        
+        console.log(`\nParser V2 (Enhanced): ${v2.length} columns`);
+        v2.forEach((col, i) => console.log(`  [${i}] "${col}"`));
+        
+        console.log(`\nParser V3 (Regex): ${v3.length} columns`);
+        v3.forEach((col, i) => console.log(`  [${i}"] "${col}"`));
+        
+        console.log('\n' + '-'.repeat(80));
+    });
+    
+    alert('✅ Check console (F12) for test results!');
+}
+
+async function loadAndAnalyze() {
+    const sheetId = document.getElementById('sheetId').value.trim();
+    const results = document.getElementById('results');
+    
+    results.innerHTML = '<div class="section"><p class="warning">⏳ Loading...</p></div>';
+    
+    try {
+        const res = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`);
+        const csv = await res.text();
+        
+        console.clear();
+        console.log('📄 Raw CSV loaded. Analyzing first 10 rows...\n');
+        
+        const lines = csv.split(/\r?\n/);
+        const header = lines[0];
+        
+        let html = '<div class="section">';
+        html += '<h2>📊 Comparison: 3 Different Parsers</h2>';
+        html += '<p style="color:#dcdcaa;margin-bottom:16px;">First 10 data rows, parsed with 3 different methods</p>';
+        
+        html += '<table><thead><tr>';
+        html += '<th>#</th><th>Raw Line</th><th>V1 Cols</th><th>V2 Cols</th><th>V3 Cols</th><th>Best?</th>';
+        html += '</tr></thead><tbody>';
+        
+        for (let i = 1; i <= Math.min(10, lines.length - 1); i++) {
+            const line = lines[i];
+            if (!line.trim()) continue;
+            
+            const v1 = parseCSVLine_v1(line);
+            const v2 = parseCSVLine_v2(line);
+            const v3 = parseCSVLine_v3(line);
+            
+            const expected = 7;
+            const v1Match = v1.length === expected;
+            const v2Match = v2.length === expected;
+            const v3Match = v3.length === expected;
+            
+            const rowClass = (v1Match && v2Match && v3Match) ? '' : 'problem';
+            
+            let bestParser = 'None';
+            if (v1Match) bestParser = 'V1';
+            if (v2Match) bestParser = 'V2';
+            if (v3Match) bestParser = 'V3';
+            if (v1Match && v2Match && v3Match) bestParser = 'All';
+            
+            html += `<tr class="${rowClass}">`;
+            html += `<td>${i}</td>`;
+            html += `<td><pre style="margin:0;background:transparent;padding:4px;font-size:0.85rem;">${escapeHtml(line.substring(0, 60))}...</pre></td>`;
+            html += `<td class="${v1Match ? 'success' : 'error'}">${v1.length} ${v1Match ? '✅' : '❌'}</td>`;
+            html += `<td class="${v2Match ? 'success' : 'error'}">${v2.length} ${v2Match ? '✅' : '❌'}</td>`;
+            html += `<td class="${v3Match ? 'success' : 'error'}">${v3.length} ${v3Match ? '✅' : '❌'}</td>`;
+            html += `<td class="${bestParser === 'All' ? 'success' : 'warning'}">${bestParser}</td>`;
+            html += '</tr>';
+            
+            // Log detailed comparison for problematic rows
+            if (!v1Match || !v2Match || !v3Match) {
+                console.log(`\n⚠️ Row ${i} - Column count mismatch:`);
+                console.log(`Raw: ${line}`);
+                console.log(`\nV1 (${v1.length} cols):`, v1);
+                console.log(`V2 (${v2.length} cols):`, v2);
+                console.log(`V3 (${v3.length} cols):`, v3);
+            }
+        }
+        
+        html += '</tbody></table></div>';
+        
+        // Detailed breakdown
+        html += '<div class="section">';
+        html += '<h2>🔍 Detailed Breakdown (First 3 Problematic Rows)</h2>';
+        
+        let found = 0;
+        for (let i = 1; i <= lines.length - 1 && found < 3; i++) {
+            const line = lines[i];
+            if (!line.trim()) continue;
+            
+            const v1 = parseCSVLine_v1(line);
+            const v2 = parseCSVLine_v2(line);
+            const v3 = parseCSVLine_v3(line);
+            
+            if (v1.length !== 7 || v2.length !== 7 || v3.length !== 7) {
+                html += '<div style="background:#1e1e1e;padding:16px;border-radius:6px;margin-bottom:16px;border-left:3px solid #f48771;">';
+                html += `<p class="error">Row ${i}:</p>`;
+                html += `<pre style="margin:12px 0;font-size:0.9rem;">${escapeHtml(line)}</pre>`;
+                
+                html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px;">';
+                
+                // V1
+                html += '<div>';
+                html += `<p style="color:#dcdcaa;font-weight:bold;margin-bottom:8px;">Parser V1: ${v1.length} columns</p>`;
+                html += '<pre style="font-size:0.85rem;">';
+                v1.forEach((col, idx) => {
+                    const labels = ['Chinese', 'Type', 'Pinyin', 'Meaning', 'Topic', 'Diff', 'Learned'];
+                    html += `[${idx}] ${labels[idx] || 'Extra'}: "${escapeHtml(col)}"\n`;
+                });
+                html += '</pre></div>';
+                
+                // V2
+                html += '<div>';
+                html += `<p style="color:#dcdcaa;font-weight:bold;margin-bottom:8px;">Parser V2: ${v2.length} columns</p>`;
+                html += '<pre style="font-size:0.85rem;">';
+                v2.forEach((col, idx) => {
+                    const labels = ['Chinese', 'Type', 'Pinyin', 'Meaning', 'Topic', 'Diff', 'Learned'];
+                    html += `[${idx}] ${labels[idx] || 'Extra'}: "${escapeHtml(col)}"\n`;
+                });
+                html += '</pre></div>';
+                
+                // V3
+                html += '<div>';
+                html += `<p style="color:#dcdcaa;font-weight:bold;margin-bottom:8px;">Parser V3: ${v3.length} columns</p>`;
+                html += '<pre style="font-size:0.85rem;">';
+                v3.forEach((col, idx) => {
+                    const labels = ['Chinese', 'Type', 'Pinyin', 'Meaning', 'Topic', 'Diff', 'Learned'];
+                    html += `[${idx}] ${labels[idx] || 'Extra'}: "${escapeHtml(col)}"\n`;
+                });
+                html += '</pre></div>';
+                
+                html += '</div></div>';
+                found++;
+            }
+        }
+        
+        if (found === 0) {
+            html += '<p class="success">✅ Không tìm thấy rows có vấn đề trong 10 rows đầu!</p>';
+        }
+        
+        html += '</div>';
+        
+        // Recommendation
+        html += '<div class="section">';
+        html += '<h2>💡 Recommendation</h2>';
+        html += '<p>Check console (F12) để xem chi tiết các rows có vấn đề.</p>';
+        html += '<p style="margin-top:12px;">Nếu KHÔNG có parser nào cho 7 columns đúng → <span class="error">Google Sheets export có vấn đề nghiêm trọng!</span></p>';
+        html += '<p style="margin-top:8px;">Solution: Có thể cần pre-process CSV trước khi parse.</p>';
+        html += '</div>';
+        
+        results.innerHTML = html;
+        
+    } catch (e) {
+        results.innerHTML = `<div class="section"><p class="error">❌ Error: ${e.message}</p></div>`;
+        console.error(e);
+    }
+}
+
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// Auto-run tests on load
+window.addEventListener('load', () => {
+    console.log('🚀 Advanced CSV Parser loaded. Click buttons to test!');
+});
+</script>
+</body>
+</html>
