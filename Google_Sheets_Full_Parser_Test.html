@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets CSV Parser - Debug Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { 
+            color: #667eea; 
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        .input-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        .status {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: none;
+        }
+        .status.show { display: block; }
+        .status.loading {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        .results {
+            display: none;
+        }
+        .results.show { display: block; }
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+        }
+        .raw-preview {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .row-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .row-number {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+        .column-count {
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .field {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .field-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #718096;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .field-value {
+            color: #2d3748;
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .extracted {
+            background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+        }
+        .extracted h4 {
+            color: #22543d;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+        .extracted-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .extracted-field {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        .extracted-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #22543d;
+            margin-bottom: 4px;
+        }
+        .extracted-value {
+            color: #1a365d;
+            font-weight: 600;
+        }
+        .highlight-topic {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-left-color: #f59e0b;
+        }
+        .summary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .summary h3 {
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            display: block;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔍 Google Sheets CSV Parser - Debug Tool</h1>
+    <p class="subtitle">Test và debug việc parse dữ liệu từ Google Sheets</p>
+    
+    <div class="input-group">
+        <label>📊 Google Sheet ID:</label>
+        <input type="text" id="sheetId" value="1b0rr7I0Z1gVc9o4pR8-0RpWC-pdtNwjasD_hEZ2Wuxw" placeholder="Nhập Sheet ID...">
+    </div>
+    
+    <div class="btn-group">
+        <button class="btn-primary" onclick="loadAndTest()">
+            🚀 Load từ Google Sheets
+        </button>
+        <button class="btn-secondary" onclick="clearResults()">
+            🗑️ Clear Results
+        </button>
+        <button class="btn-secondary" onclick="exportErrorReport()" id="exportBtn" style="display:none; background:#f59e0b;">
+            📥 Export Error Report
+        </button>
+        <button class="btn-secondary" onclick="copyRawCSV()" id="copyBtn" style="display:none; background:#9f7aea;">
+            📋 Copy Raw CSV
+        </button>
+    </div>
+    
+    <div id="status" class="status"></div>
+    
+    <div id="results" class="results">
+        <div class="section">
+            <h2>📄 Raw CSV Preview</h2>
+            <div id="rawPreview" class="raw-preview"></div>
+        </div>
+        
+        <div class="section">
+            <h2>📦 Parsed Data (First 10 rows)</h2>
+            <div id="parsedData"></div>
+        </div>
+        
+        <div id="summary" class="summary" style="display: none;">
+            <h3>📊 Summary</h3>
+            <div class="summary-stats">
+                <div class="stat">
+                    <span class="stat-number" id="totalRows">0</span>
+                    <span class="stat-label">Total Rows</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" id="validRows">0</span>
+                    <span class="stat-label">Valid Rows</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" id="withCommas">0</span>
+                    <span class="stat-label">With Commas in Meaning</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let globalCSV = '';
+let globalRows = [];
+let globalErrorRows = [];
+
+// Parse CSV correctly (handles commas inside quoted fields)
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current.trim());
+    return result;
+}
+
+function showStatus(msg, type) {
+    const status = document.getElementById('status');
+    status.textContent = msg;
+    status.className = `status show ${type}`;
+}
+
+function clearResults() {
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('status').classList.remove('show');
+}
+
+async function loadAndTest() {
+    const sheetId = document.getElementById('sheetId').value.trim();
+    
+    if (!sheetId) {
+        showStatus('⚠️ Vui lòng nhập Sheet ID!', 'error');
+        return;
+    }
+    
+    showStatus('⏳ Đang tải dữ liệu từ Google Sheets...', 'loading');
+    
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const csv = await res.text();
+        
+        // Store globally for export
+        globalCSV = csv;
+        
+        console.log('✅ CSV loaded successfully');
+        console.log('📄 Raw CSV length:', csv.length);
+        
+        // Show raw preview
+        const rawPreview = document.getElementById('rawPreview');
+        rawPreview.textContent = csv.substring(0, 1000) + (csv.length > 1000 ? '\n\n... (truncated)' : '');
+        
+        // Parse CSV
+        const lines = csv.split(/\r?\n/);
+        const header = lines[0];
+        const rows = lines.slice(1)
+            .filter(line => line.trim())
+            .map(line => parseCSVLine(line));
+        
+        console.log('📊 Total rows:', rows.length);
+        console.log('📋 Header:', header);
+        
+        // Store globally
+        globalRows = rows;
+        
+        // Display parsed data
+        displayParsedData(rows);
+        
+        // Enable export buttons
+        document.getElementById('exportBtn').style.display = 'inline-flex';
+        document.getElementById('copyBtn').style.display = 'inline-flex';
+        
+        // Show results
+        document.getElementById('results').classList.add('show');
+        showStatus(`✅ Đã load thành công ${rows.length} dòng dữ liệu!`, 'success');
+        
+    } catch (e) {
+        console.error('❌ Error:', e);
+        showStatus(`❌ Lỗi: ${e.message}`, 'error');
+    }
+}
+
+function displayParsedData(rows) {
+    const container = document.getElementById('parsedData');
+    const labels = ['Chinese', 'Word Type', 'Pinyin', 'Meaning', 'Topic', 'Difficulty', 'Learned'];
+    
+    let html = '';
+    let validRows = 0;
+    let withCommas = 0;
+    let errorRows = [];
+    
+    // Reset global error rows
+    globalErrorRows = [];
+    
+    // Process ALL rows
+    rows.forEach((row, idx) => {
+        const chinese = row[0] || '';
+        const pinyin = row[2] || '';
+        const meaning = row[3] || '';
+        const topic = row[4] || 'Sheet';
+        const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
+        
+        if (chinese) validRows++;
+        if (meaning.includes(',')) withCommas++;
+        
+        const hasCommaIssue = meaning.includes(',') && topic.includes(',');
+        
+        if (hasCommaIssue) {
+            errorRows.push(idx + 1);
+            globalErrorRows.push({
+                rowNumber: idx + 1,
+                chinese: chinese,
+                pinyin: pinyin,
+                meaning: meaning,
+                topic: topic,
+                rawRow: row
+            });
+        }
+        
+        const rowHtml = `
+        <div class="row-card" data-has-error="${hasCommaIssue}" data-row-index="${idx}">
+            <div class="row-header">
+                <span class="row-number">Row ${idx + 1} ${hasCommaIssue ? '⚠️' : ''}</span>
+                <span class="column-count">${row.length} columns</span>
+            </div>
+            
+            <div class="field-grid">
+                ${row.map((field, fieldIdx) => `
+                    <div class="field">
+                        <div class="field-label">[${fieldIdx}] ${labels[fieldIdx] || 'Col' + fieldIdx}</div>
+                        <div class="field-value">"${escapeHtml(field)}"</div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="extracted ${hasCommaIssue ? 'highlight-topic' : ''}">
+                <h4>🎯 ${hasCommaIssue ? '⚠️ DETECTED ISSUE:' : 'Extracted Values:'}</h4>
+                <div class="extracted-grid">
+                    <div class="extracted-field">
+                        <div class="extracted-label">Chinese</div>
+                        <div class="extracted-value">${escapeHtml(chinese)}</div>
+                    </div>
+                    <div class="extracted-field">
+                        <div class="extracted-label">Pinyin</div>
+                        <div class="extracted-value">${escapeHtml(pinyin)}</div>
+                    </div>
+                    <div class="extracted-field">
+                        <div class="extracted-label">Meaning</div>
+                        <div class="extracted-value">${escapeHtml(meaning)}</div>
+                    </div>
+                    <div class="extracted-field">
+                        <div class="extracted-label">Topic ${hasCommaIssue ? '❌' : '✅'}</div>
+                        <div class="extracted-value">${escapeHtml(topic)}</div>
+                    </div>
+                    <div class="extracted-field">
+                        <div class="extracted-label">Learned</div>
+                        <div class="extracted-value">${learned ? 'Yes' : 'No'}</div>
+                    </div>
+                </div>
+                ${hasCommaIssue ? '<p style="margin-top:12px;color:#c53030;font-weight:600;">⚠️ Topic incorrectly contains comma from Meaning!</p>' : ''}
+            </div>
+        </div>
+        `;
+        
+        html += rowHtml;
+    });
+    
+    // Add filter buttons before results
+    const filterHtml = `
+        <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="filterRows('all')" id="filterAll">
+                📊 Hiện tất cả (${rows.length})
+            </button>
+            <button class="btn-secondary" onclick="filterRows('errors')" id="filterErrors" style="background: #f56565;">
+                ⚠️ Chỉ hiện lỗi (${errorRows.length})
+            </button>
+            <button class="btn-secondary" onclick="filterRows('first10')" id="filterFirst10" style="background: #ed8936;">
+                🔟 10 dòng đầu
+            </button>
+        </div>
+    `;
+    
+    container.innerHTML = filterHtml + html;
+    
+    // Update summary
+    document.getElementById('totalRows').textContent = rows.length;
+    document.getElementById('validRows').textContent = validRows;
+    document.getElementById('withCommas').textContent = withCommas;
+    document.getElementById('summary').style.display = 'block';
+    
+    // Add error summary if there are errors
+    if (errorRows.length > 0) {
+        const errorSummary = document.createElement('div');
+        errorSummary.style.cssText = 'background: #fed7d7; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f56565;';
+        errorSummary.innerHTML = `
+            <h4 style="color: #742a2a; margin-bottom: 8px; font-weight: 700;">⚠️ Phát hiện ${errorRows.length} dòng có lỗi parse!</h4>
+            <p style="color: #742a2a; margin-bottom: 8px;">Các dòng bị lỗi: ${errorRows.slice(0, 20).join(', ')}${errorRows.length > 20 ? '...' : ''}</p>
+            <p style="color: #742a2a; font-weight: 600;">Topic đang bị lấy sai từ nội dung trong Meaning (có dấu phẩy)</p>
+        `;
+        container.insertBefore(errorSummary, container.firstChild);
+    }
+}
+
+function filterRows(type) {
+    const cards = document.querySelectorAll('.row-card');
+    
+    // Reset button states
+    document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
+        btn.style.opacity = '0.6';
+    });
+    
+    if (type === 'all') {
+        cards.forEach(card => card.style.display = 'block');
+        document.getElementById('filterAll').style.opacity = '1';
+    } else if (type === 'errors') {
+        cards.forEach(card => {
+            card.style.display = card.dataset.hasError === 'true' ? 'block' : 'none';
+        });
+        document.getElementById('filterErrors').style.opacity = '1';
+    } else if (type === 'first10') {
+        cards.forEach((card, idx) => {
+            card.style.display = idx < 10 ? 'block' : 'none';
+        });
+        document.getElementById('filterFirst10').style.opacity = '1';
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function exportErrorReport() {
+    if (globalErrorRows.length === 0) {
+        alert('✅ Không có lỗi để export!');
+        return;
+    }
+    
+    let report = '=== ERROR REPORT ===\n\n';
+    report += `Total errors: ${globalErrorRows.length}\n\n`;
+    report += '--- PROBLEMATIC ROWS ---\n\n';
+    
+    globalErrorRows.forEach(err => {
+        report += `Row ${err.rowNumber}:\n`;
+        report += `  Chinese: ${err.chinese}\n`;
+        report += `  Pinyin: ${err.pinyin}\n`;
+        report += `  Meaning: ${err.meaning}\n`;
+        report += `  Topic (WRONG): ${err.topic}\n`;
+        report += `  Raw columns: ${JSON.stringify(err.rawRow)}\n`;
+        report += `  Issue: Topic contains comma from Meaning\n\n`;
+    });
+    
+    // Download as text file
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `csv_parser_errors_${new Date().getTime()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function copyRawCSV() {
+    if (!globalCSV) {
+        alert('⚠️ Chưa load dữ liệu!');
+        return;
+    }
+    
+    navigator.clipboard.writeText(globalCSV).then(() => {
+        alert('✅ Đã copy raw CSV vào clipboard!');
+    }).catch(err => {
+        console.error('Copy failed:', err);
+        // Fallback: show in textarea
+        const textarea = document.createElement('textarea');
+        textarea.value = globalCSV;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('✅ Đã copy raw CSV vào clipboard!');
+    });
+}
+</script>
+</body>
+</html>
