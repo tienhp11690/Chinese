@@ -270,6 +270,12 @@
         <button class="btn-secondary" onclick="clearResults()">
             🗑️ Clear Results
         </button>
+        <button class="btn-secondary" onclick="exportErrorReport()" id="exportBtn" style="display:none; background:#f59e0b;">
+            📥 Export Error Report
+        </button>
+        <button class="btn-secondary" onclick="copyRawCSV()" id="copyBtn" style="display:none; background:#9f7aea;">
+            📋 Copy Raw CSV
+        </button>
     </div>
     
     <div id="status" class="status"></div>
@@ -306,80 +312,312 @@
 </div>
 
 <script>
-async function loadFromSheet() {
-    if (!defaultSheetId) return status('⚠️ Chưa cấu hình', 'error');
+let globalCSV = '';
+let globalRows = [];
+let globalErrorRows = [];
+
+// Parse CSV correctly (handles commas inside quoted fields)
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
     
-    status('📥 Đang load...');
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current.trim());
+    return result;
+}
+
+function showStatus(msg, type) {
+    const status = document.getElementById('status');
+    status.textContent = msg;
+    status.className = `status show ${type}`;
+}
+
+function clearResults() {
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('status').classList.remove('show');
+}
+
+async function loadAndTest() {
+    const sheetId = document.getElementById('sheetId').value.trim();
+    
+    if (!sheetId) {
+        showStatus('⚠️ Vui lòng nhập Sheet ID!', 'error');
+        return;
+    }
+    
+    showStatus('⏳ Đang tải dữ liệu từ Google Sheets...', 'loading');
+    
     try {
-        const res = await fetch(`https://docs.google.com/spreadsheets/d/${defaultSheetId}/export?format=csv`);
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        const res = await fetch(url);
+        
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const csv = await res.text();
         
-        console.log('📋 Raw CSV preview (first 500 chars):', csv.substring(0, 500));
+        // Store globally for export
+        globalCSV = csv;
         
-        // Split by newline and parse each line properly
+        console.log('✅ CSV loaded successfully');
+        console.log('📄 Raw CSV length:', csv.length);
+        
+        // Show raw preview
+        const rawPreview = document.getElementById('rawPreview');
+        rawPreview.textContent = csv.substring(0, 1000) + (csv.length > 1000 ? '\n\n... (truncated)' : '');
+        
+        // Parse CSV
         const lines = csv.split(/\r?\n/);
-        console.log('📊 Total lines:', lines.length);
-        console.log('📋 Header:', lines[0]);
-        
-        const rows = lines.slice(1) // Skip header
-            .filter(line => line.trim()) // Remove empty lines
+        const header = lines[0];
+        const rows = lines.slice(1)
+            .filter(line => line.trim())
             .map(line => parseCSVLine(line));
         
-        console.log('📦 Total rows to process:', rows.length);
+        console.log('📊 Total rows:', rows.length);
+        console.log('📋 Header:', header);
         
-        let added = 0;
-        rows.forEach((r, idx) => {
-            if (r.length < 1) return;
-            
-            // Debug first 3 rows
-            if (idx < 3) {
-                console.log(`\n🔍 Row ${idx + 1}:`, r);
-                console.log(`  Columns: ${r.length}`);
-            }
-            
-            // New structure: Chinese - Word type - Pinyin - Meaning - Topic - Difficulty - Learned
-            const chinese = r[0] || '';
-            // r[1] = Word type (skip)
-            const pinyin = r[2] || '';
-            const meaning = r[3] || '';
-            const topic = r[4] || 'Sheet';
-            // r[5] = Difficulty (skip for now, always use 'easy')
-            const learned = r[6] ? (r[6].toLowerCase() === 'true' || r[6] === '1') : false;
-            
-            // Debug first 3 rows
-            if (idx < 3) {
-                console.log(`  ✅ Parsed:`);
-                console.log(`    Chinese: "${chinese}"`);
-                console.log(`    Pinyin: "${pinyin}"`);
-                console.log(`    Meaning: "${meaning}"`);
-                console.log(`    Topic: "${topic}"`);
-                console.log(`    Learned: ${learned}`);
-            }
-            
-            if (chinese && !vocab.some(v => v.chinese === chinese)) {
-                vocab.push({
-                    id: Date.now() + added++,
-                    vietnamese: meaning || chinese, // Use meaning as Vietnamese if not provided
-                    chinese: chinese,
-                    pinyin: pinyin || generatePinyin(chinese),
-                    meaning: meaning || chinese,
-                    topic: topic,
-                    difficulty: 'easy',
-                    learned: learned,
-                    nextReview: Date.now(),
-                    reviewCount: 0
-                });
-            }
-        });
+        // Store globally
+        globalRows = rows;
         
-        save();
-        renderLibrary();
-        console.log(`✅ Successfully added ${added} words`);
-        status(`✅ Đã thêm ${added} từ!`, 'success');
+        // Display parsed data
+        displayParsedData(rows);
+        
+        // Enable export buttons
+        document.getElementById('exportBtn').style.display = 'inline-flex';
+        document.getElementById('copyBtn').style.display = 'inline-flex';
+        
+        // Show results
+        document.getElementById('results').classList.add('show');
+        showStatus(`✅ Đã load thành công ${rows.length} dòng dữ liệu!`, 'success');
+        
     } catch (e) {
-        console.error('❌ Error loading from sheet:', e);
-        status('❌ Lỗi: ' + e.message, 'error');
+        console.error('❌ Error:', e);
+        showStatus(`❌ Lỗi: ${e.message}`, 'error');
     }
+}
+
+function displayParsedData(rows) {
+    const container = document.getElementById('parsedData');
+    const labels = ['Chinese', 'Word Type', 'Pinyin', 'Meaning', 'Topic', 'Difficulty', 'Learned'];
+    
+    let html = '';
+    let validRows = 0;
+    let withCommas = 0;
+    let errorRows = [];
+    
+    // Reset global error rows
+    globalErrorRows = [];
+    
+    // Process ALL rows
+    rows.forEach((row, idx) => {
+        const chinese = row[0] || '';
+        const pinyin = row[2] || '';
+        const meaning = row[3] || '';
+        const topic = row[4] || 'Sheet';
+        const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
+        
+        if (chinese) validRows++;
+        if (meaning.includes(',')) withCommas++;
+        
+        const hasCommaIssue = meaning.includes(',') && topic.includes(',');
+        
+        if (hasCommaIssue) {
+            errorRows.push(idx + 1);
+            globalErrorRows.push({
+                rowNumber: idx + 1,
+                chinese: chinese,
+                pinyin: pinyin,
+                meaning: meaning,
+                topic: topic,
+                rawRow: row
+            });
+        }
+        
+        const rowHtml = `
+        <div class="row-card" data-has-error="${hasCommaIssue}" data-row-index="${idx}">
+            <div class="row-header">
+                <span class="row-number">Row ${idx + 1} ${hasCommaIssue ? '⚠️' : ''}</span>
+                <span class="column-count">${row.length} columns</span>
+            </div>
+            
+            <div class="field-grid">
+                ${row.map((field, fieldIdx) => `
+                    <div class="field">
+                        <div class="field-label">[${fieldIdx}] ${labels[fieldIdx] || 'Col' + fieldIdx}</div>
+                        <div class="field-value">"${escapeHtml(field)}"</div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="extracted ${hasCommaIssue ? 'highlight-topic' : ''}">
+                <h4>🎯 ${hasCommaIssue ? '⚠️ DETECTED ISSUE:' : 'Extracted Values:'}</h4>
+                <div class="extracted-grid">
+                    <div class="extracted-field">
+                        <div class="extracted-label">Chinese</div>
+                        <div class="extracted-value">${escapeHtml(chinese)}</div>
+                    </div>
+                    <div class="extracted-field">
+                        <div class="extracted-label">Pinyin</div>
+                        <div class="extracted-value">${escapeHtml(pinyin)}</div>
+                    </div>
+                    <div class="extracted-field">
+                        <div class="extracted-label">Meaning</div>
+                        <div class="extracted-value">${escapeHtml(meaning)}</div>
+                    </div>
+                    <div class="extracted-field">
+                        <div class="extracted-label">Topic ${hasCommaIssue ? '❌' : '✅'}</div>
+                        <div class="extracted-value">${escapeHtml(topic)}</div>
+                    </div>
+                    <div class="extracted-field">
+                        <div class="extracted-label">Learned</div>
+                        <div class="extracted-value">${learned ? 'Yes' : 'No'}</div>
+                    </div>
+                </div>
+                ${hasCommaIssue ? '<p style="margin-top:12px;color:#c53030;font-weight:600;">⚠️ Topic incorrectly contains comma from Meaning!</p>' : ''}
+            </div>
+        </div>
+        `;
+        
+        html += rowHtml;
+    });
+    
+    // Add filter buttons before results
+    const filterHtml = `
+        <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="filterRows('all')" id="filterAll">
+                📊 Hiện tất cả (${rows.length})
+            </button>
+            <button class="btn-secondary" onclick="filterRows('errors')" id="filterErrors" style="background: #f56565;">
+                ⚠️ Chỉ hiện lỗi (${errorRows.length})
+            </button>
+            <button class="btn-secondary" onclick="filterRows('first10')" id="filterFirst10" style="background: #ed8936;">
+                🔟 10 dòng đầu
+            </button>
+        </div>
+    `;
+    
+    container.innerHTML = filterHtml + html;
+    
+    // Update summary
+    document.getElementById('totalRows').textContent = rows.length;
+    document.getElementById('validRows').textContent = validRows;
+    document.getElementById('withCommas').textContent = withCommas;
+    document.getElementById('summary').style.display = 'block';
+    
+    // Add error summary if there are errors
+    if (errorRows.length > 0) {
+        const errorSummary = document.createElement('div');
+        errorSummary.style.cssText = 'background: #fed7d7; padding: 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f56565;';
+        errorSummary.innerHTML = `
+            <h4 style="color: #742a2a; margin-bottom: 8px; font-weight: 700;">⚠️ Phát hiện ${errorRows.length} dòng có lỗi parse!</h4>
+            <p style="color: #742a2a; margin-bottom: 8px;">Các dòng bị lỗi: ${errorRows.slice(0, 20).join(', ')}${errorRows.length > 20 ? '...' : ''}</p>
+            <p style="color: #742a2a; font-weight: 600;">Topic đang bị lấy sai từ nội dung trong Meaning (có dấu phẩy)</p>
+        `;
+        container.insertBefore(errorSummary, container.firstChild);
+    }
+}
+
+function filterRows(type) {
+    const cards = document.querySelectorAll('.row-card');
+    
+    // Reset button states
+    document.querySelectorAll('.btn-primary, .btn-secondary').forEach(btn => {
+        btn.style.opacity = '0.6';
+    });
+    
+    if (type === 'all') {
+        cards.forEach(card => card.style.display = 'block');
+        document.getElementById('filterAll').style.opacity = '1';
+    } else if (type === 'errors') {
+        cards.forEach(card => {
+            card.style.display = card.dataset.hasError === 'true' ? 'block' : 'none';
+        });
+        document.getElementById('filterErrors').style.opacity = '1';
+    } else if (type === 'first10') {
+        cards.forEach((card, idx) => {
+            card.style.display = idx < 10 ? 'block' : 'none';
+        });
+        document.getElementById('filterFirst10').style.opacity = '1';
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function exportErrorReport() {
+    if (globalErrorRows.length === 0) {
+        alert('✅ Không có lỗi để export!');
+        return;
+    }
+    
+    let report = '=== ERROR REPORT ===\n\n';
+    report += `Total errors: ${globalErrorRows.length}\n\n`;
+    report += '--- PROBLEMATIC ROWS ---\n\n';
+    
+    globalErrorRows.forEach(err => {
+        report += `Row ${err.rowNumber}:\n`;
+        report += `  Chinese: ${err.chinese}\n`;
+        report += `  Pinyin: ${err.pinyin}\n`;
+        report += `  Meaning: ${err.meaning}\n`;
+        report += `  Topic (WRONG): ${err.topic}\n`;
+        report += `  Raw columns: ${JSON.stringify(err.rawRow)}\n`;
+        report += `  Issue: Topic contains comma from Meaning\n\n`;
+    });
+    
+    // Download as text file
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `csv_parser_errors_${new Date().getTime()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function copyRawCSV() {
+    if (!globalCSV) {
+        alert('⚠️ Chưa load dữ liệu!');
+        return;
+    }
+    
+    navigator.clipboard.writeText(globalCSV).then(() => {
+        alert('✅ Đã copy raw CSV vào clipboard!');
+    }).catch(err => {
+        console.error('Copy failed:', err);
+        // Fallback: show in textarea
+        const textarea = document.createElement('textarea');
+        textarea.value = globalCSV;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('✅ Đã copy raw CSV vào clipboard!');
+    });
 }
 </script>
 </body>
