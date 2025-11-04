@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học Tiếng Trung Pro</title>
+    <title>Học Tiếng Trung Pro - CSV Fixed</title>
     <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.16.0/dist/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 
@@ -75,57 +75,38 @@
         .stroke-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin:20px 0; }
         .stroke-char { width:200px; height:200px; }
 
+        .test-section { background:#d1fae5; padding:20px; border-radius:12px; margin:20px 0; border:2px solid #10b981; }
+        .test-result { padding:12px; margin:8px 0; border-radius:8px; font-family:monospace; font-size:0.9rem; }
+        .test-pass { background:#d1fae5; color:#065f46; }
+        .test-fail { background:#fee2e2; color:#991b1b; }
+
         @media (max-width:768px) { 
             .grid, .fc-grid-6 { grid-template-columns:1fr; }
             .stroke-char { width:150px; height:150px; }
-            
-            /* Mobile navigation */
             .nav { padding:6px; gap:4px; }
             .tab { min-width:80px; padding:10px 8px; font-size:0.85rem; }
-            
-            /* Mobile stats */
             .stats { gap:10px; font-size:0.85rem; }
             .stat { padding:6px 10px; }
-            
-            /* Mobile filters */
             .filters { gap:6px; padding:12px; }
             .fbtn { padding:6px 12px; font-size:0.8rem; }
-            
-            /* Mobile cards - với layout mới (buttons dọc) */
             .card { padding:16px; min-height:120px; }
             .card .play { width:32px; height:32px; font-size:1rem; }
-            
-            /* Mobile flashcard */
             .fc { padding:24px 16px; min-height:180px; }
             .fc-chinese { font-size:1.8rem; }
             .fc-pinyin { font-size:1rem; }
             .fc-viet { font-size:1rem; }
-            
-            /* Mobile buttons */
             .btn { padding:10px 16px; font-size:0.9rem; }
-            
-            /* Mobile input fields */
             .input-field { padding:12px 14px; font-size:0.95rem; }
-            
-            /* Mobile modal */
             .modal-content { padding:24px 16px; width:95%; }
             .stroke-container { gap:12px; }
             .stroke-char { width:140px; height:140px; }
-            
-            /* Mobile page padding */
             .page { padding:20px 16px; }
             .c { padding:12px; }
-            
-            /* Mobile headers */
             .h1 { font-size:1.8rem; }
             h2 { font-size:1.3rem; }
             h3 { font-size:1.1rem; }
-            
-            /* Mobile config sections */
             .config-section { padding:16px; }
             .manual-section { padding:16px; }
-            
-            /* Mobile grid spacing */
             .grid { gap:16px; }
         }
     </style>
@@ -138,6 +119,7 @@
         <button class="tab" onclick="show('add')">➕ Thêm từ</button>
         <button class="tab" onclick="show('fc')">🎴 Flashcard</button>
         <button class="tab" onclick="show('config')">⚙️ Cấu hình</button>
+        <button class="tab" onclick="show('test')">🧪 Test</button>
     </div>
 
     <div id="lib" class="page active">
@@ -166,455 +148,297 @@
             <label>Tiếng Trung <span style="color:red">*</span></label>
             <input type="text" id="manual-zh" class="input-field" placeholder="VD: 医院">
             
-            <label>
-                Pinyin 
-                <span style="color:var(--s);font-size:0.85rem" id="pinyin-status">✨ Tự động</span>
-            </label>
-            <input type="text" id="manual-py" class="input-field" placeholder="VD: yi1 yuan4" readonly style="background:#f0f9ff">
-            <div style="font-size:0.8rem;color:var(--g6);margin-top:4px">
-                ℹ️ Pinyin tự động tạo khi bạn nhập/paste tiếng Trung
-            </div>
+            <label>Pinyin (tự động nếu để trống)</label>
+            <input type="text" id="manual-py" class="input-field" placeholder="VD: yi1 yuan4">
             
-            <label>English <span style="color:var(--g6)">(tùy chọn)</span></label>
-            <input type="text" id="manual-en" class="input-field" placeholder="VD: hospital">
+            <label>Nghĩa chi tiết</label>
+            <input type="text" id="manual-meaning" class="input-field" placeholder="VD: hospital, medical facility">
             
-            <button class="btn" id="manual-add-btn" style="width:100%;margin-top:8px;font-size:1.1rem">
-                ➕ Thêm vào thư viện
-            </button>
+            <label>Chủ đề</label>
+            <input type="text" id="manual-topic" list="topic-list" class="input-field" placeholder="VD: Y tế">
+            <datalist id="topic-list"></datalist>
+            
+            <button class="btn" onclick="addManual()">➕ Thêm từ</button>
         </div>
 
-        <!-- Topic selection -->
-        <div style="margin-top:20px">
-            <label style="display:block;font-weight:600;margin-bottom:8px">Chủ đề</label>
-            <select id="topic" class="input-field">
-                <option value="">Chọn chủ đề...</option>
-            </select>
-            <div style="display:flex;gap:8px;margin-top:8px">
-                <input type="text" id="newti" placeholder="Tên chủ đề mới..." class="input-field" style="margin:0;flex:1">
-                <button class="btn" onclick="createTopic()">Tạo</button>
-            </div>
+        <div class="config-section">
+            <h3 style="margin-bottom:16px">📋 Import từ Google Sheets</h3>
+            <p style="color:var(--g6);font-size:0.9rem;margin-bottom:16px">
+                Cấu trúc cột: Chinese | Word type | Pinyin | Meaning | Topic | Difficulty | Learned
+            </p>
+            
+            <label style="display:block;font-weight:600;margin-bottom:6px">Google Sheets ID</label>
+            <input type="text" id="sheet-id" class="input-field" placeholder="1ABC...XYZ">
+            
+            <label style="display:block;font-weight:600;margin-bottom:6px">Sheet Name</label>
+            <input type="text" id="sheet-name" class="input-field" value="Sheet1">
+            
+            <button class="btn" onclick="loadFromSheet()">📥 Load từ Sheet</button>
+            <p id="sheet-status" style="margin-top:12px;color:var(--g6);font-size:0.9rem"></p>
         </div>
     </div>
 
     <div id="fc" class="page">
-        <h2>🎴 Flashcard</h2>
-        <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
-            <select id="fc-topic" onchange="fcTopic=this.value;updateFlashcards()" class="input-field" style="flex:1;margin:0"></select>
-            <button class="btn" onclick="togglePinyin()" id="pinyin-toggle-btn">👁️ Hiện Pinyin</button>
-            <button class="btn" onclick="nextCards()">🔄 Thẻ mới</button>
+        <div class="stats">
+            <div class="stat">🎯 <span class="n" id="fc-remaining">0</span> Còn lại</div>
+            <div class="stat">📝 <span class="n" id="fc-topic-count">0</span> Chủ đề</div>
         </div>
-        <div id="fc-container" class="fc-grid-6"></div>
+        
+        <div class="filters" id="fc-filters"></div>
+        
+        <div id="fc-empty" style="text-align:center;padding:40px;color:var(--g6)">
+            <h2>🎴 Chọn chủ đề để bắt đầu học</h2>
+        </div>
+        
+        <div id="fc-content" style="display:none">
+            <div class="fc" id="flashcard" onclick="flipCard()">
+                <div class="fc-chinese" id="fc-chinese"></div>
+                <div class="fc-pinyin" id="fc-pinyin"></div>
+                <div class="fc-viet" id="fc-viet"></div>
+            </div>
+            
+            <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
+                <button class="btn" onclick="toggleLearned()" style="flex:1;min-width:140px">
+                    <span id="learn-btn-text">✅ Đã học</span>
+                </button>
+                <button class="btn" onclick="nextCard()" style="flex:1;min-width:140px">⏭️ Tiếp</button>
+                <button class="btn" onclick="showStrokes()" style="flex:1;min-width:140px">✍️ Nét viết</button>
+            </div>
+        </div>
     </div>
 
     <div id="config" class="page">
         <h2>⚙️ Cấu hình</h2>
         
         <div class="config-section">
-            <h3>📦 GitHub Sync</h3>
-            <input type="text" id="github-token" placeholder="GitHub Personal Access Token" class="input-field">
-            <input type="text" id="github-repo" placeholder="username/repo-name" class="input-field">
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn" onclick="saveGitHubConfig()">💾 Lưu</button>
-                <button class="btn" onclick="syncToGitHub()">☁️ Sync ngay</button>
+            <h3>📊 Thống kê</h3>
+            <div class="stats" style="margin-top:16px">
+                <div class="stat">📚 <span class="n" id="cfg-total">0</span> Tổng từ</div>
+                <div class="stat">✅ <span class="n" id="cfg-learned">0</span> Đã học</div>
+                <div class="stat">📂 <span class="n" id="cfg-topics">0</span> Chủ đề</div>
             </div>
         </div>
-        
+
         <div class="config-section">
-            <h3>📊 Google Sheets</h3>
-            <input type="text" id="default-sheet-id" placeholder="Sheet ID..." class="input-field">
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn" onclick="saveDefaultSheet()">💾 Lưu</button>
-                <button class="btn" onclick="loadFromSheet()">📥 Load</button>
-            </div>
-            <p style="margin-top:12px;font-size:0.85rem;color:var(--g6)">
-                Sheet: <span id="current-sheet">Chưa cấu hình</span>
-            </p>
-        </div>
-        
-        <div style="background:#ecfdf5;padding:20px;border-radius:12px;margin:20px 0">
             <h3>💾 Dữ liệu</h3>
-            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-                <button class="btn" onclick="exportCSV()">💾 CSV</button>
-                <button class="btn" onclick="downloadVocabJSON()">📥 vocab.json</button>
-                <button class="btn" style="background:var(--d)" onclick="clearAll()">🗑️ Xóa</button>
+            <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+                <button class="btn" onclick="exportCSV()">📤 Export CSV</button>
+                <button class="btn" onclick="downloadVocabJSON()">📥 Tải vocab.json</button>
+                <button class="btn" onclick="clearAll()" style="background:#ef4444">🗑️ Xóa tất cả</button>
             </div>
+        </div>
+    </div>
+
+    <div id="test" class="page">
+        <h2>🧪 Test CSV Parser</h2>
+        <div class="test-section">
+            <h3 style="margin-bottom:16px">Test Cases</h3>
+            <button class="btn" onclick="runAllTests()">▶️ Chạy tất cả tests</button>
+            <div id="test-results" style="margin-top:20px"></div>
         </div>
     </div>
 </div>
 
 <div id="stroke-modal" class="modal">
     <div class="modal-content">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-            <h2>✍️ Cách viết chữ Hán</h2>
-            <button class="btn" onclick="closeStrokeModal()" style="padding:8px 16px">✕</button>
-        </div>
-        <div id="stroke-word" style="font-size:1.5rem;text-align:center;margin-bottom:20px;color:var(--g6)"></div>
+        <h2 style="margin-bottom:20px">✍️ Nét viết</h2>
         <div class="stroke-container" id="stroke-container"></div>
-        <div style="display:flex;gap:8px;justify-content:center;margin-top:20px">
-            <button class="btn" onclick="animateStrokes()">▶️ Chạy lại</button>
-            <button class="btn" onclick="quizStrokes()">✏️ Luyện viết</button>
-        </div>
+        <button class="btn" onclick="closeModal()" style="width:100%;margin-top:20px">Đóng</button>
     </div>
 </div>
 
-<div id="status" class="status">
-    <div class="spin"></div>
-    <span id="status-msg"></span>
-</div>
+<div class="status" id="status"></div>
 
 <script>
-const SEARCH_SUGGESTIONS = ['bệnh viện', 'máy bay', 'máy tính', 'điện thoại', 'nhà hàng', 'sân bay'];
-
 let vocab = [];
-let defaultSheetId = localStorage.getItem('default_sheet_id') || '';
-let githubToken = localStorage.getItem('github_token') || '';
-let githubRepo = localStorage.getItem('github_repo') || '';
-let filterTopic = 'all';
-let fcTopic = 'all';
-let currentCards = [];
-let currentStrokeWord = '';
-let showPinyinInFlashcard = true; // Default: show pinyin
+let currentFilter = 'all';
+let searchTerm = '';
+let currentCard = 0;
+let fcFilter = [];
+let fcCards = [];
 
-const $ = id => document.getElementById(id);
-
-// Helper function for safe pinyin generation
-function generatePinyin(chinese) {
-    if (!chinese) return '';
+// === IMPROVED CSV PARSER ===
+/**
+ * Chuẩn RFC 4180 CSV Parser
+ * Xử lý đúng các trường hợp:
+ * - Quoted values với dấu phẩy bên trong: "hello, world"
+ * - Double quotes trong quoted values: "she said ""hi"""
+ * - Newlines trong quoted values (nếu cần)
+ */
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
     
-    try {
-        if (typeof pinyinPro !== 'undefined' && pinyinPro.pinyin) {
-            // Try with different options
-            let result = pinyinPro.pinyin(chinese, { toneType: 'num', type: 'all' });
-            if (!result) {
-                result = pinyinPro.pinyin(chinese, { toneType: 'num' });
-            }
-            if (!result) {
-                result = pinyinPro.pinyin(chinese);
-            }
-            return result || chinese;
-        } else {
-            // Library not loaded yet - return Chinese as placeholder
-            // This will be auto-corrected on page refresh
-            return chinese;
-        }
-    } catch (e) {
-        console.error('Pinyin generation error:', e);
-        return chinese; // Fallback to original Chinese
-    }
-}
-
-function status(msg, type = 'loading') {
-    const s = $('status'), spin = s.querySelector('.spin');
-    $('status-msg').textContent = msg;
-    s.className = `status show ${type}`;
-    spin.style.display = type === 'loading' ? 'inline-block' : 'none';
-    if (type !== 'loading') setTimeout(() => s.classList.remove('show'), 3000);
-}
-
-function save() {
-    localStorage.setItem('vocab', JSON.stringify(vocab));
-    if (githubToken && githubRepo) syncToGitHub();
-}
-
-function show(page) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    $(page).classList.add('active');
-    event.target.classList.add('active');
-    if (page === 'lib') renderLibrary();
-    if (page === 'add') updateAddTopicList();
-    if (page === 'fc') updateFlashcards();
-    if (page === 'config') { updateSheetDisplay(); updateGitHubDisplay(); }
-}
-
-// === MODE SWITCHING - REMOVED (only manual mode now) ===
-
-// === MANUAL ADD ===
-// Event listener for manual add button
-document.addEventListener('DOMContentLoaded', function() {
-    const manualBtn = $('manual-add-btn');
-    if (manualBtn) {
-        manualBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            addManualWord();
-        });
-    }
-    
-    // Auto-generate pinyin when Chinese input changes
-    const chineseInput = $('manual-zh');
-    const pinyinInput = $('manual-py');
-    const pinyinStatus = $('pinyin-status');
-    
-    if (chineseInput && pinyinInput) {
-        // Real-time pinyin generation
-        chineseInput.addEventListener('input', function(e) {
-            const chinese = e.target.value.trim();
-            
-            if (chinese) {
-                // Show loading
-                if (pinyinStatus) pinyinStatus.textContent = '⏳ Đang tạo...';
-                pinyinInput.style.background = '#fff9e6';
-                
-                // Generate with small delay to avoid too many calls
-                clearTimeout(window.pinyinTimeout);
-                window.pinyinTimeout = setTimeout(() => {
-                    const pinyin = generatePinyin(chinese);
-                    pinyinInput.value = pinyin;
-                    
-                    // Visual feedback
-                    if (pinyin && pinyin !== chinese) {
-                        pinyinInput.style.background = '#e6f7ed'; // Green tint
-                        if (pinyinStatus) pinyinStatus.textContent = '✅ Đã tạo';
-                    } else {
-                        pinyinInput.style.background = '#fee'; // Red tint
-                        if (pinyinStatus) pinyinStatus.textContent = '⚠️ Lỗi - nhập thủ công';
-                    }
-                }, 300); // 300ms debounce
+    while (i < line.length) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (inQuotes) {
+            if (char === '"') {
+                // Check if it's an escaped quote ("")
+                if (nextChar === '"') {
+                    current += '"';
+                    i += 2; // Skip both quotes
+                    continue;
+                } else {
+                    // End of quoted field
+                    inQuotes = false;
+                    i++;
+                    continue;
+                }
             } else {
-                pinyinInput.value = '';
-                pinyinInput.style.background = '#f0f9ff';
-                if (pinyinStatus) pinyinStatus.textContent = '✨ Tự động';
+                current += char;
+                i++;
             }
-        });
-        
-        // Also trigger on paste
-        chineseInput.addEventListener('paste', function(e) {
-            setTimeout(() => {
-                chineseInput.dispatchEvent(new Event('input'));
-            }, 100);
-        });
-    }
-});
-
-function addManualWord() {
-    console.log('addManualWord called'); // Debug
-    
-    const vi = $('manual-vi').value.trim();
-    const zh = $('manual-zh').value.trim();
-    const py = $('manual-py').value.trim(); // Already generated by input listener
-    const en = $('manual-en').value.trim();
-    const topic = $('topic').value || 'Tự thêm';
-    
-    console.log('Values:', {vi, zh, py, en, topic}); // Debug
-    
-    // Validation
-    if (!vi) {
-        status('⚠️ Vui lòng nhập tiếng Việt', 'error');
-        $('manual-vi').focus();
-        return;
-    }
-    
-    if (!zh) {
-        status('⚠️ Vui lòng nhập tiếng Trung', 'error');
-        $('manual-zh').focus();
-        return;
-    }
-    
-    // Check if pinyin was generated
-    if (!py || py === zh) {
-        status('⚠️ Pinyin chưa được tạo. Vui lòng chờ 1 giây...', 'error');
-        // Try to generate now
-        const generated = generatePinyin(zh);
-        if (generated && generated !== zh) {
-            $('manual-py').value = generated;
-            // Retry add after short delay
-            setTimeout(() => addManualWord(), 500);
+        } else {
+            if (char === '"') {
+                // Start of quoted field
+                inQuotes = true;
+                i++;
+            } else if (char === ',') {
+                // Field separator
+                result.push(current.trim());
+                current = '';
+                i++;
+            } else {
+                current += char;
+                i++;
+            }
         }
-        return;
     }
     
-    // Check duplicate
-    if (vocab.some(w => w.chinese === zh)) {
-        status('⚠️ Từ này đã tồn tại trong thư viện', 'error');
-        return;
-    }
+    // Add the last field
+    result.push(current.trim());
     
-    // Add to vocab
-    const newWord = {
-        id: Date.now(),
-        vietnamese: vi,
-        chinese: zh,
-        pinyin: py,
-        meaning: en || vi,
-        topic: topic,
-        difficulty: 'easy',
-        learned: false,
-        nextReview: Date.now(),
-        reviewCount: 0
-    };
-    
-    console.log('Adding word:', newWord); // Debug
-    vocab.push(newWord);
-    
-    // Save
-    save();
-    
-    // Clear form
-    $('manual-vi').value = '';
-    $('manual-zh').value = '';
-    $('manual-py').value = '';
-    $('manual-en').value = '';
-    $('manual-py').style.background = '#f0f9ff';
-    $('pinyin-status').textContent = '✨ Tự động';
-    
-    // Show success and switch to library
-    status('✅ Đã thêm từ thành công!', 'success');
-    
-    // Switch to library tab after 1 second
-    setTimeout(() => {
-        document.querySelectorAll('.tab')[0].click(); // Click first tab (library)
-    }, 1000);
+    return result;
 }
 
-// === AUTO SEARCH - REMOVED (API không stable) ===
-
-function createTopic() {
-    const name = $('newti').value.trim();
-    if (!name) return status('Nhập tên', 'error');
+// === TEST SUITE ===
+function runAllTests() {
+    const resultsDiv = document.getElementById('test-results');
+    resultsDiv.innerHTML = '<h4>🧪 Running Tests...</h4>';
     
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    $('topic').appendChild(opt);
-    $('topic').value = name;
-    $('newti').value = '';
-    status('✅ Tạo chủ đề!', 'success');
-}
-
-function updateAddTopicList() {
-    const topics = [...new Set(vocab.map(w => w.topic))];
-    $('topic').innerHTML = '<option value="">Chọn chủ đề...</option>' + 
-        topics.map(t => `<option value="${t}">${t}</option>`).join('');
-}
-
-// === STROKE ORDER ===
-function showStrokeOrder(chinese, vietnamese) {
-    currentStrokeWord = chinese;
+    const tests = [
+        // Test 1: Simple fields
+        {
+            name: 'Simple fields without commas',
+            input: 'field1,field2,field3',
+            expected: ['field1', 'field2', 'field3']
+        },
+        // Test 2: Quoted field with comma
+        {
+            name: 'Quoted field with comma',
+            input: 'field1,"field2, with comma",field3',
+            expected: ['field1', 'field2, with comma', 'field3']
+        },
+        // Test 3: Multiple quoted fields with commas
+        {
+            name: 'Multiple quoted fields with commas',
+            input: '"hello, world","foo, bar","baz"',
+            expected: ['hello, world', 'foo, bar', 'baz']
+        },
+        // Test 4: Real Vietnamese data
+        {
+            name: 'Real Vietnamese meaning with comma',
+            input: '避开,Verb,bì kāi,"tránh xa, tránh né",Động từ,easy,false',
+            expected: ['避开', 'Verb', 'bì kāi', 'tránh xa, tránh né', 'Động từ', 'easy', 'false']
+        },
+        // Test 5: Complex Vietnamese example
+        {
+            name: 'Complex Vietnamese with multiple commas',
+            input: '参加,Verb,cān jiā,"tham gia, tham dự, tham gia vào",Động từ,easy,true',
+            expected: ['参加', 'Verb', 'cān jiā', 'tham gia, tham dự, tham gia vào', 'Động từ', 'easy', 'true']
+        },
+        // Test 6: Empty fields
+        {
+            name: 'Empty fields',
+            input: 'field1,,field3',
+            expected: ['field1', '', 'field3']
+        },
+        // Test 7: Quoted empty field
+        {
+            name: 'Quoted empty field',
+            input: 'field1,"",field3',
+            expected: ['field1', '', 'field3']
+        },
+        // Test 8: Escaped quotes
+        {
+            name: 'Escaped quotes in field',
+            input: 'field1,"she said ""hello""",field3',
+            expected: ['field1', 'she said "hello"', 'field3']
+        },
+        // Test 9: Mixed quoted and unquoted
+        {
+            name: 'Mixed quoted and unquoted fields',
+            input: 'simple,"quoted, with comma",simple2,"another, quoted",end',
+            expected: ['simple', 'quoted, with comma', 'simple2', 'another, quoted', 'end']
+        },
+        // Test 10: Real sheet structure
+        {
+            name: 'Complete Google Sheets row structure',
+            input: '医院,Noun,yī yuàn,"bệnh viện, cơ sở y tế",Y tế,easy,false',
+            expected: ['医院', 'Noun', 'yī yuàn', 'bệnh viện, cơ sở y tế', 'Y tế', 'easy', 'false']
+        }
+    ];
     
-    // Generate pinyin for title
-    const pinyin = generatePinyin(chinese);
+    let passed = 0;
+    let failed = 0;
+    let results = '';
     
-    // Show pinyin & meaning in title (no Chinese)
-    $('stroke-word').textContent = `${pinyin} - ${vietnamese}`;
-    $('stroke-modal').classList.add('show');
-    
-    const container = $('stroke-container');
-    container.innerHTML = '';
-    
-    const chars = chinese.split('');
-    chars.forEach((char, i) => {
-        const div = document.createElement('div');
-        div.id = `char-${i}`;
-        div.className = 'stroke-char';
-        container.appendChild(div);
+    tests.forEach((test, idx) => {
+        const result = parseCSVLine(test.input);
+        const success = JSON.stringify(result) === JSON.stringify(test.expected);
         
-        try {
-            const writer = HanziWriter.create(`char-${i}`, char, {
-                width: 200,
-                height: 200,
-                padding: 5,
-                showOutline: true,
-                strokeAnimationSpeed: 1,
-                delayBetweenStrokes: 400
-            });
-            
-            window[`writer${i}`] = writer;
-            writer.animateCharacter();
-        } catch (e) {
-            console.error('Hanzi Writer error:', e);
-            div.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--g6)">Không hỗ trợ</div>`;
+        if (success) {
+            passed++;
+            results += `<div class="test-result test-pass">
+                ✅ Test ${idx + 1}: ${test.name}
+                <br>Input: ${test.input}
+                <br>Expected: [${test.expected.join(', ')}]
+                <br>Got: [${result.join(', ')}]
+            </div>`;
+        } else {
+            failed++;
+            results += `<div class="test-result test-fail">
+                ❌ Test ${idx + 1}: ${test.name}
+                <br>Input: ${test.input}
+                <br>Expected: [${test.expected.join(', ')}]
+                <br>Got: [${result.join(', ')}]
+                <br>Mismatch at indices: ${findMismatch(result, test.expected)}
+            </div>`;
         }
     });
-}
-
-function closeStrokeModal() {
-    $('stroke-modal').classList.remove('show');
-}
-
-function animateStrokes() {
-    const chars = currentStrokeWord.split('');
-    chars.forEach((char, i) => {
-        if (window[`writer${i}`]) window[`writer${i}`].animateCharacter();
-    });
-}
-
-function quizStrokes() {
-    const chars = currentStrokeWord.split('');
-    chars.forEach((char, i) => {
-        if (window[`writer${i}`]) window[`writer${i}`].quiz();
-    });
-    status('✍️ Hãy viết theo nét!', 'success');
-}
-
-// === LIBRARY ===
-$('lib-search').addEventListener('input', () => {
-    clearTimeout(window.searchTimeout);
-    window.searchTimeout = setTimeout(() => renderLibrary($('lib-search').value), 300);
-});
-
-function renderLibrary(searchQuery = '') {
-    let filtered = vocab;
     
-    if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        filtered = vocab.filter(w => 
-            w.vietnamese.toLowerCase().includes(q) ||
-            w.chinese.includes(q) ||
-            w.pinyin.toLowerCase().includes(q)
-        );
-    }
+    const summary = `<div style="padding:16px;background:${passed === tests.length ? '#d1fae5' : '#fef3c7'};border-radius:8px;margin-bottom:20px;">
+        <h3>📊 Test Summary</h3>
+        <p>Total: ${tests.length} | Passed: ✅ ${passed} | Failed: ❌ ${failed}</p>
+        <p>Success Rate: ${((passed / tests.length) * 100).toFixed(1)}%</p>
+    </div>`;
     
-    if (filterTopic !== 'all') filtered = filtered.filter(w => w.topic === filterTopic);
-
-    const topics = [...new Set(vocab.map(w => w.topic))];
-    $('total').textContent = vocab.length;
-    $('learned').textContent = vocab.filter(w => w.learned).length;
-    $('topics').textContent = topics.length;
-
-    $('filters').innerHTML = `
-        <div class="fbtn ${filterTopic === 'all' ? 'active' : ''}" onclick="filterTopic='all';renderLibrary()">📂 Tất cả</div>
-        ${topics.map(t => `<div class="fbtn ${filterTopic === t ? 'active' : ''}" onclick="filterTopic='${t}';renderLibrary()">${t}</div>`).join('')}
-    `;
-
-    const list = $('list');
-    if (filtered.length === 0) {
-        list.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px">
-            <div style="font-size:3rem;margin-bottom:16px">📭</div>
-            <h3 style="margin-bottom:8px">Chưa có từ vựng</h3>
-            <p style="color:var(--g6)">Click tab "➕ Thêm từ" để bắt đầu!</p>
-        </div>`;
-        return;
-    }
-
-    list.innerHTML = filtered.map(w => `
-        <div class="card">
-            <div style="display:flex;gap:12px">
-                <div style="flex:1">
-                    <div style="font-size:1.8rem;font-weight:700;margin-bottom:4px;word-break:break-word">
-                        ${w.chinese}
-                    </div>
-                    <div style="color:var(--g6);font-size:.9rem;font-style:italic;margin-bottom:8px">${w.pinyin}</div>
-                    <div style="font-weight:600;margin-bottom:4px">${w.vietnamese}</div>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center">
-                    <button class="play" onclick="event.stopPropagation();showStrokeOrder('${w.chinese.replace(/'/g, "\\'")}', '${w.vietnamese.replace(/'/g, "\\'")}');" title="Xem cách viết" style="font-size:1.2rem">✍️</button>
-                    <button class="play" onclick="event.stopPropagation();speak('${w.chinese}');" title="Phát âm">🔊</button>
-                    <button onclick="event.stopPropagation();toggleLearned(${w.id})" style="background:none;border:none;cursor:pointer;font-size:1.3rem;padding:4px" title="${w.learned ? 'Đánh dấu chưa học' : 'Đánh dấu đã học'}">
-                        ${w.learned ? '✅' : '⭕'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    `).join('');
+    resultsDiv.innerHTML = summary + results;
 }
 
-function toggleLearned(id) {
-    const w = vocab.find(v => v.id === id);
-    if (w) {
-        w.learned = !w.learned;
-        save();
-        renderLibrary();
-        status(w.learned ? '✅ Đã học!' : '⭕ Chưa học', 'success');
+function findMismatch(got, expected) {
+    const indices = [];
+    const maxLen = Math.max(got.length, expected.length);
+    for (let i = 0; i < maxLen; i++) {
+        if (got[i] !== expected[i]) {
+            indices.push(i);
+        }
+    }
+    return indices.join(', ') || 'none';
+}
+
+// === UTILITIES ===
+function generatePinyin(zh) {
+    if (typeof pinyinPro === 'undefined') return '';
+    try {
+        return pinyinPro.pinyin(zh, { toneType: 'num', type: 'array' }).join(' ');
+    } catch(e) {
+        console.error('Pinyin error:', e);
+        return '';
     }
 }
 
@@ -624,336 +448,409 @@ function speak(text) {
     speechSynthesis.speak(u);
 }
 
-// === FLASHCARD ===
-function updateFlashcards() {
-    const topics = ['all', ...new Set(vocab.map(w => w.topic))];
-    $('fc-topic').innerHTML = topics.map(t => 
-        `<option value="${t}">${t === 'all' ? '📚 Tất cả' : t}</option>`
-    ).join('');
+function status(msg, type = 'success') {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = `status show ${type}`;
+    setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function save() {
+    localStorage.setItem('vocab', JSON.stringify(vocab));
+}
+
+function show(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(page).classList.add('active');
+    event.target.classList.add('active');
     
-    generateCards();
-    renderCards();
+    if (page === 'lib') renderLibrary();
+    if (page === 'fc') updateFlashcards();
+    if (page === 'config') updateConfig();
 }
 
-function generateCards() {
-    let pool = vocab.filter(w => !w.learned);
-    if (fcTopic !== 'all') pool = pool.filter(w => w.topic === fcTopic);
-    currentCards = pool.slice(0, 6);
-}
-
-function renderCards() {
-    const c = $('fc-container');
-    if (currentCards.length === 0) {
-        c.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:white;background:var(--s);border-radius:20px">
-            🎉 Đã học hết! Thêm từ mới hoặc chọn chủ đề khác.
-        </div>`;
+// === LIBRARY ===
+function renderLibrary() {
+    const filtered = vocab.filter(w => {
+        const matchFilter = currentFilter === 'all' || w.topic === currentFilter;
+        const matchSearch = !searchTerm || 
+            w.vietnamese.toLowerCase().includes(searchTerm) ||
+            w.chinese.includes(searchTerm) ||
+            w.pinyin.toLowerCase().includes(searchTerm) ||
+            (w.meaning && w.meaning.toLowerCase().includes(searchTerm));
+        return matchFilter && matchSearch;
+    });
+    
+    document.getElementById('total').textContent = vocab.length;
+    document.getElementById('learned').textContent = vocab.filter(w => w.learned).length;
+    
+    const topics = [...new Set(vocab.map(w => w.topic))];
+    document.getElementById('topics').textContent = topics.length;
+    
+    // Render filters
+    const filtersDiv = document.getElementById('filters');
+    filtersDiv.innerHTML = `
+        <button class="fbtn ${currentFilter === 'all' ? 'active' : ''}" onclick="filterTopic('all')">Tất cả (${vocab.length})</button>
+        ${topics.map(t => `
+            <button class="fbtn ${currentFilter === t ? 'active' : ''}" onclick="filterTopic('${t}')">
+                ${t} (${vocab.filter(w => w.topic === t).length})
+            </button>
+        `).join('')}
+    `;
+    
+    // Render cards
+    const listDiv = document.getElementById('list');
+    if (filtered.length === 0) {
+        listDiv.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--g6)">Không tìm thấy từ nào</div>';
         return;
     }
     
-    c.innerHTML = currentCards.map((w, i) => `
-        <div class="fc" onclick="flipCard(${i})" id="fc-${i}">
-            <div class="fc-chinese">${w.chinese}</div>
-            <div class="fc-pinyin" style="display:${showPinyinInFlashcard ? 'block' : 'none'}">${w.pinyin}</div>
-            <div class="fc-viet">${w.vietnamese}</div>
+    listDiv.innerHTML = filtered.map(w => `
+        <div class="card">
+            <div>
+                <div style="font-size:1.5rem;font-weight:700;margin-bottom:4px">${w.chinese}</div>
+                <div style="color:var(--g6);font-size:0.9rem;margin-bottom:8px">${w.pinyin}</div>
+                <div style="color:var(--g8);font-weight:500">${w.vietnamese}</div>
+                ${w.meaning && w.meaning !== w.vietnamese ? `<div style="color:var(--g6);font-size:0.85rem;margin-top:4px">${w.meaning}</div>` : ''}
+                <div style="color:var(--g6);font-size:0.8rem;margin-top:8px">📂 ${w.topic}</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="play" onclick="speak('${w.chinese}')">🔊</button>
+                <button class="btn" style="flex:1;padding:8px" onclick="toggleLearnedById(${w.id})">
+                    ${w.learned ? '✅' : '⭕'}
+                </button>
+                <button class="btn" style="flex:1;padding:8px;background:#ef4444" onclick="deleteWord(${w.id})">🗑️</button>
+            </div>
+            <span class="badge easy">${w.difficulty}</span>
         </div>
     `).join('');
 }
 
-function togglePinyin() {
-    showPinyinInFlashcard = !showPinyinInFlashcard;
-    const btn = $('pinyin-toggle-btn');
+function filterTopic(topic) {
+    currentFilter = topic;
+    renderLibrary();
+}
+
+function toggleLearnedById(id) {
+    const word = vocab.find(w => w.id === id);
+    if (word) {
+        word.learned = !word.learned;
+        save();
+        renderLibrary();
+    }
+}
+
+function deleteWord(id) {
+    if (confirm('Xóa từ này?')) {
+        vocab = vocab.filter(w => w.id !== id);
+        save();
+        renderLibrary();
+    }
+}
+
+document.getElementById('lib-search').addEventListener('input', (e) => {
+    searchTerm = e.target.value.toLowerCase();
+    renderLibrary();
+});
+
+// === ADD WORD ===
+function addManual() {
+    const vi = document.getElementById('manual-vi').value.trim();
+    const zh = document.getElementById('manual-zh').value.trim();
+    const py = document.getElementById('manual-py').value.trim() || generatePinyin(zh);
+    const meaning = document.getElementById('manual-meaning').value.trim() || vi;
+    const topic = document.getElementById('manual-topic').value.trim() || 'Khác';
     
-    if (showPinyinInFlashcard) {
-        btn.textContent = '👁️ Hiện Pinyin';
-        btn.style.background = 'linear-gradient(135deg,var(--p),var(--pd))';
-    } else {
-        btn.textContent = '🙈 Ẩn Pinyin';
-        btn.style.background = 'linear-gradient(135deg,var(--g6),#1a202c)';
+    if (!vi || !zh) {
+        status('⚠️ Cần nhập Tiếng Việt và Tiếng Trung!', 'error');
+        return;
     }
     
-    // Update all cards (only non-flipped ones)
-    document.querySelectorAll('.fc-pinyin').forEach(el => {
-        const card = el.closest('.fc');
-        if (!card.classList.contains('showing-answer')) {
-            el.style.display = showPinyinInFlashcard ? 'block' : 'none';
-        }
+    vocab.push({
+        id: Date.now(),
+        vietnamese: vi,
+        chinese: zh,
+        pinyin: py,
+        meaning: meaning,
+        topic: topic,
+        difficulty: 'easy',
+        learned: false,
+        nextReview: Date.now(),
+        reviewCount: 0
     });
     
-    status(showPinyinInFlashcard ? '👁️ Đã hiện Pinyin' : '🙈 Đã ẩn Pinyin', 'success');
-}
-
-function flipCard(i) {
-    const f = $(`fc-${i}`);
-    const py = f.querySelector('.fc-pinyin');
-    const v = f.querySelector('.fc-viet');
-    const show = v.style.display !== 'block';
+    save();
+    renderLibrary();
+    updateAddTopicList();
     
-    if (show) {
-        // Flipping to show answer - always show pinyin when flipped
-        py.style.display = 'block';
-        v.style.display = 'block';
-        f.classList.add('showing-answer');
-        speak(currentCards[i].chinese);
-    } else {
-        // Flipping back - respect toggle setting
-        py.style.display = showPinyinInFlashcard ? 'block' : 'none';
-        v.style.display = 'none';
-        f.classList.remove('showing-answer');
-    }
-}
-
-function nextCards() {
-    generateCards();
-    renderCards();
-    status('🔄 Thẻ mới!', 'success');
-}
-
-// === GITHUB ===
-function saveGitHubConfig() {
-    githubToken = $('github-token').value.trim();
-    githubRepo = $('github-repo').value.trim();
+    // Clear inputs
+    document.getElementById('manual-vi').value = '';
+    document.getElementById('manual-zh').value = '';
+    document.getElementById('manual-py').value = '';
+    document.getElementById('manual-meaning').value = '';
     
-    if (!githubToken || !githubRepo) return status('⚠️ Nhập đầy đủ', 'error');
-    
-    localStorage.setItem('github_token', githubToken);
-    localStorage.setItem('github_repo', githubRepo);
-    status('✅ Đã lưu!', 'success');
+    status('✅ Đã thêm từ!', 'success');
 }
 
-function updateGitHubDisplay() {
-    $('github-token').value = githubToken ? '***' + githubToken.slice(-4) : '';
-    $('github-repo').value = githubRepo;
+function updateAddTopicList() {
+    const topics = [...new Set(vocab.map(w => w.topic))];
+    const datalist = document.getElementById('topic-list');
+    datalist.innerHTML = topics.map(t => `<option value="${t}">`).join('');
 }
 
-async function syncToGitHub() {
-    if (!githubToken || !githubRepo) return status('⚠️ Chưa cấu hình GitHub', 'error');
-    
-    status('☁️ Đang sync...');
-    try {
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify({
-            version: '1.0',
-            updated: new Date().toISOString(),
-            vocab: vocab
-        }, null, 2))));
-        
-        let sha = '';
-        try {
-            const getRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/data/vocab.json`, {
-                headers: { 'Authorization': `token ${githubToken}` }
-            });
-            if (getRes.ok) sha = (await getRes.json()).sha;
-        } catch (e) {}
-        
-        const res = await fetch(`https://api.github.com/repos/${githubRepo}/contents/data/vocab.json`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${githubToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Update vocab: ${vocab.length} words`,
-                content: content,
-                sha: sha || undefined
-            })
-        });
-        
-        if (res.ok) status('✅ Đã sync to GitHub!', 'success');
-        else throw new Error('Sync failed');
-    } catch (e) {
-        status('❌ Lỗi sync: ' + e.message, 'error');
-    }
-}
-
-// === SHEETS ===
-function saveDefaultSheet() {
-    const id = $('default-sheet-id').value.trim();
-    if (!id) return status('⚠️ Nhập Sheet ID', 'error');
-    localStorage.setItem('default_sheet_id', id);
-    defaultSheetId = id;
-    updateSheetDisplay();
-    status('✅ Đã lưu!', 'success');
-}
-
+// === GOOGLE SHEETS ===
 function updateSheetDisplay() {
-    $('current-sheet').textContent = defaultSheetId || 'Chưa cấu hình';
-    $('default-sheet-id').value = defaultSheetId;
-}
-
-// ============================================================================
-// ULTIMATE CSV PARSER - Smart Column Merger
-// ============================================================================
-// Handles both quoted and unquoted commas in CSV fields
-// Automatically fixes Google Sheets export issues
-function parseCSVLine(line) {
-    // Step 1: Standard CSV parsing
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        const nextChar = line[i + 1];
-        
-        if (char === '"') {
-            // Handle escaped quotes ("")
-            if (inQuotes && nextChar === '"') {
-                current += '"';
-                i++; // Skip next quote
-            } else {
-                // Toggle quote state
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            // Field separator (only outside quotes)
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
-        }
+    const saved = localStorage.getItem('sheet-config');
+    if (saved) {
+        const config = JSON.parse(saved);
+        document.getElementById('sheet-id').value = config.id || '';
+        document.getElementById('sheet-name').value = config.name || 'Sheet1';
     }
-    
-    // Push last field
-    result.push(current.trim());
-    
-    // Step 2: SMART COLUMN MERGER
-    // Fix Google Sheets unquoted comma issue
-    const expectedColumns = 7; // Chinese, Type, Pinyin, Meaning, Topic, Difficulty, Learned
-    
-    if (result.length === expectedColumns) {
-        // Perfect! No fix needed
-        return result;
-    }
-    
-    if (result.length > expectedColumns) {
-        // Too many columns - Google Sheets didn't quote the Meaning field!
-        // Need to merge split columns back together
-        const extraColumns = result.length - expectedColumns;
-        const fixed = [];
-        
-        // Copy first 3 columns (Chinese, Type, Pinyin)
-        fixed.push(result[0]); // Chinese
-        fixed.push(result[1]); // Type
-        fixed.push(result[2]); // Pinyin
-        
-        // Merge Meaning field (columns 3 through 3+extraColumns)
-        const meaningParts = [];
-        for (let i = 3; i <= 3 + extraColumns; i++) {
-            meaningParts.push(result[i]);
-        }
-        fixed.push(meaningParts.join(', ')); // Merged Meaning
-        
-        // Copy remaining columns (Topic, Difficulty, Learned)
-        for (let i = 3 + extraColumns + 1; i < result.length; i++) {
-            fixed.push(result[i]);
-        }
-        
-        console.log(`⚠️ Fixed column count from ${result.length} to ${fixed.length} by merging Meaning field`);
-        return fixed;
-    }
-    
-    // Too few columns - cannot auto-fix
-    console.warn(`❌ Got ${result.length} columns, expected ${expectedColumns}. Cannot auto-fix.`);
-    return result;
 }
 
 async function loadFromSheet() {
-    if (!defaultSheetId) return status('⚠️ Chưa cấu hình', 'error');
+    const sheetId = document.getElementById('sheet-id').value.trim();
+    const sheetName = document.getElementById('sheet-name').value.trim() || 'Sheet1';
     
-    status('📥 Đang load...');
+    if (!sheetId) {
+        status('⚠️ Nhập Sheet ID!', 'error');
+        return;
+    }
+    
+    localStorage.setItem('sheet-config', JSON.stringify({ id: sheetId, name: sheetName }));
+    
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+    
+    document.getElementById('sheet-status').innerHTML = '<div class="spin" style="display:inline-block"></div> Đang load...';
+    
     try {
-        const res = await fetch(`https://docs.google.com/spreadsheets/d/${defaultSheetId}/export?format=csv`);
-        const csv = await res.text();
+        console.log('🔄 Fetching from:', url);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         
-        // Debug logging
-        console.log('📋 Raw CSV preview (first 500 chars):', csv.substring(0, 500));
+        const text = await res.text();
+        console.log('📥 Received data length:', text.length);
         
-        // Split by newline and parse each line properly
-        const lines = csv.split(/\r?\n/);
-        console.log('📊 Total lines:', lines.length);
-        console.log('📋 Header:', lines[0]);
+        const lines = text.split('\n').filter(l => l.trim());
+        console.log(`📊 Total lines: ${lines.length}`);
         
-        const rows = lines.slice(1) // Skip header
-            .filter(line => line.trim()) // Remove empty lines
-            .map(line => parseCSVLine(line)); // Use smart parser
+        if (lines.length === 0) throw new Error('Sheet rỗng');
         
-        console.log('📦 Total rows to process:', rows.length);
+        // Skip header
+        const dataLines = lines.slice(1);
+        console.log(`📝 Data lines (after header): ${dataLines.length}`);
         
         let added = 0;
-        let fixed = 0;
+        let skipped = 0;
+        let errors = 0;
         
-        rows.forEach((r, idx) => {
-            if (r.length < 1) return;
-            
-            // Debug first 3 rows
-            if (idx < 3) {
-                console.log(`\n🔍 Row ${idx + 1}:`, r);
-                console.log(`  Columns: ${r.length}`);
-            }
-            
-            // Expected structure: Chinese - Word type - Pinyin - Meaning - Topic - Difficulty - Learned
-            const chinese = r[0] || '';
-            // r[1] = Word type (skip)
-            const pinyin = r[2] || '';
-            const meaning = r[3] || '';
-            const topic = r[4] || 'Sheet';
-            // r[5] = Difficulty (skip for now, always use 'easy')
-            const learned = r[6] ? (r[6].toLowerCase() === 'true' || r[6] === '1') : false;
-            
-            // Debug first 3 rows
-            if (idx < 3) {
-                console.log(`  ✅ Parsed:`);
-                console.log(`    Chinese: "${chinese}"`);
-                console.log(`    Pinyin: "${pinyin}"`);
-                console.log(`    Meaning: "${meaning}"`);
-                console.log(`    Topic: "${topic}"`);
-                console.log(`    Learned: ${learned}`);
-            }
-            
-            // Track if this was a fixed row
-            if (r.length === 7 && lines[idx + 1] && parseCSVLine(lines[idx + 1]).length > 7) {
-                fixed++;
-            }
-            
-            // Only add if Chinese field exists and not duplicate
-            if (chinese && !vocab.some(v => v.chinese === chinese)) {
-                vocab.push({
-                    id: Date.now() + added++,
-                    vietnamese: meaning || chinese, // Use meaning as Vietnamese
-                    chinese: chinese,
-                    pinyin: pinyin || generatePinyin(chinese),
-                    meaning: meaning || chinese,
-                    topic: topic,
-                    difficulty: 'easy',
-                    learned: learned,
-                    nextReview: Date.now(),
-                    reviewCount: 0
-                });
+        dataLines.forEach((line, idx) => {
+            try {
+                const row = parseCSVLine(line);
+                
+                // Debug first 5 rows
+                if (idx < 5) {
+                    console.log(`\n🔍 Row ${idx + 1}:`, line);
+                    console.log(`  Parsed (${row.length} columns):`, row);
+                }
+                
+                if (row.length < 4) {
+                    console.warn(`⚠️ Row ${idx + 1} has only ${row.length} columns, skipping`);
+                    skipped++;
+                    return;
+                }
+                
+                // Structure: Chinese | Word type | Pinyin | Meaning | Topic | Difficulty | Learned
+                const chinese = row[0]?.trim() || '';
+                const wordType = row[1]?.trim() || '';
+                const pinyin = row[2]?.trim() || '';
+                const meaning = row[3]?.trim() || '';
+                const topic = row[4]?.trim() || 'Sheet';
+                const difficulty = row[5]?.trim() || 'easy';
+                const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
+                
+                if (idx < 5) {
+                    console.log(`  ✅ Extracted:`);
+                    console.log(`    Chinese: "${chinese}"`);
+                    console.log(`    Word Type: "${wordType}"`);
+                    console.log(`    Pinyin: "${pinyin}"`);
+                    console.log(`    Meaning: "${meaning}"`);
+                    console.log(`    Topic: "${topic}"`);
+                    console.log(`    Difficulty: "${difficulty}"`);
+                    console.log(`    Learned: ${learned}`);
+                }
+                
+                // Only add if Chinese exists and not duplicate
+                if (chinese && !vocab.some(v => v.chinese === chinese)) {
+                    vocab.push({
+                        id: Date.now() + added,
+                        vietnamese: meaning || chinese,
+                        chinese: chinese,
+                        pinyin: pinyin || generatePinyin(chinese),
+                        meaning: meaning || chinese,
+                        topic: topic,
+                        difficulty: difficulty,
+                        learned: learned,
+                        nextReview: Date.now(),
+                        reviewCount: 0
+                    });
+                    added++;
+                } else if (!chinese) {
+                    skipped++;
+                } else {
+                    console.log(`⏭️ Skipped duplicate: ${chinese}`);
+                    skipped++;
+                }
+            } catch (e) {
+                console.error(`❌ Error parsing row ${idx + 1}:`, e);
+                errors++;
             }
         });
         
         save();
         renderLibrary();
         
-        console.log(`✅ Successfully added ${added} words`);
-        if (fixed > 0) {
-            console.log(`🔧 Auto-fixed ${fixed} rows with unquoted commas`);
-        }
+        console.log(`\n📊 Summary:`);
+        console.log(`  ✅ Added: ${added}`);
+        console.log(`  ⏭️ Skipped: ${skipped}`);
+        console.log(`  ❌ Errors: ${errors}`);
+        
+        document.getElementById('sheet-status').innerHTML = `
+            <div style="color:var(--s);font-weight:600">
+                ✅ Thành công: ${added} từ mới
+                ${skipped > 0 ? `<br>⏭️ Đã bỏ qua: ${skipped} dòng` : ''}
+                ${errors > 0 ? `<br>❌ Lỗi: ${errors} dòng` : ''}
+            </div>
+        `;
         
         status(`✅ Đã thêm ${added} từ!`, 'success');
     } catch (e) {
         console.error('❌ Error loading from sheet:', e);
+        document.getElementById('sheet-status').innerHTML = `<div style="color:var(--d)">❌ Lỗi: ${e.message}</div>`;
         status('❌ Lỗi: ' + e.message, 'error');
     }
 }
 
-// === EXPORT ===
+// === FLASHCARD ===
+function updateFlashcards() {
+    fcCards = vocab.filter(w => fcFilter.length === 0 || fcFilter.includes(w.topic));
+    
+    document.getElementById('fc-remaining').textContent = fcCards.length;
+    document.getElementById('fc-topic-count').textContent = fcFilter.length || 'Tất cả';
+    
+    const topics = [...new Set(vocab.map(w => w.topic))];
+    const filtersDiv = document.getElementById('fc-filters');
+    filtersDiv.innerHTML = topics.map(t => `
+        <button class="fbtn ${fcFilter.includes(t) ? 'active' : ''}" onclick="toggleFcFilter('${t}')">
+            ${t}
+        </button>
+    `).join('');
+    
+    if (fcCards.length === 0) {
+        document.getElementById('fc-empty').style.display = 'block';
+        document.getElementById('fc-content').style.display = 'none';
+    } else {
+        document.getElementById('fc-empty').style.display = 'none';
+        document.getElementById('fc-content').style.display = 'block';
+        showCard();
+    }
+}
+
+function toggleFcFilter(topic) {
+    if (fcFilter.includes(topic)) {
+        fcFilter = fcFilter.filter(t => t !== topic);
+    } else {
+        fcFilter.push(topic);
+    }
+    updateFlashcards();
+}
+
+function showCard() {
+    if (fcCards.length === 0) return;
+    
+    currentCard = currentCard % fcCards.length;
+    const card = fcCards[currentCard];
+    
+    document.getElementById('fc-chinese').textContent = card.chinese;
+    document.getElementById('fc-pinyin').textContent = card.pinyin;
+    document.getElementById('fc-viet').textContent = `${card.vietnamese}${card.meaning && card.meaning !== card.vietnamese ? ' (' + card.meaning + ')' : ''}`;
+    document.getElementById('fc-viet').style.display = 'none';
+    
+    document.getElementById('flashcard').classList.remove('showing-answer');
+    
+    const btnText = card.learned ? '✅ Đã học' : '⭕ Chưa học';
+    document.getElementById('learn-btn-text').textContent = btnText;
+}
+
+function flipCard() {
+    const viet = document.getElementById('fc-viet');
+    const isShowing = viet.style.display === 'block';
+    viet.style.display = isShowing ? 'none' : 'block';
+    document.getElementById('flashcard').classList.toggle('showing-answer');
+}
+
+function nextCard() {
+    currentCard = (currentCard + 1) % fcCards.length;
+    showCard();
+}
+
+function toggleLearned() {
+    if (fcCards.length === 0) return;
+    const card = fcCards[currentCard];
+    card.learned = !card.learned;
+    save();
+    document.getElementById('learn-btn-text').textContent = card.learned ? '✅ Đã học' : '⭕ Chưa học';
+    renderLibrary();
+}
+
+function showStrokes() {
+    if (fcCards.length === 0) return;
+    const card = fcCards[currentCard];
+    
+    const modal = document.getElementById('stroke-modal');
+    const container = document.getElementById('stroke-container');
+    container.innerHTML = '';
+    
+    const chars = card.chinese.split('');
+    chars.forEach(char => {
+        const div = document.createElement('div');
+        div.className = 'stroke-char';
+        container.appendChild(div);
+        
+        if (typeof HanziWriter !== 'undefined') {
+            HanziWriter.create(div, char, {
+                width: 200,
+                height: 200,
+                padding: 5,
+                showOutline: true,
+                strokeAnimationSpeed: 2,
+                delayBetweenStrokes: 200
+            });
+        }
+    });
+    
+    modal.classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('stroke-modal').classList.remove('show');
+}
+
+// === CONFIG ===
+function updateConfig() {
+    document.getElementById('cfg-total').textContent = vocab.length;
+    document.getElementById('cfg-learned').textContent = vocab.filter(w => w.learned).length;
+    document.getElementById('cfg-topics').textContent = [...new Set(vocab.map(w => w.topic))].length;
+}
+
 function exportCSV() {
-    const header = 'Vietnamese,Chinese,Pinyin,Meaning,Topic,Difficulty,Learned\n';
+    const header = 'Chinese,Word type,Pinyin,Meaning,Topic,Difficulty,Learned\n';
     const rows = vocab.map(w => 
-        `"${w.vietnamese}","${w.chinese}","${w.pinyin}","${w.meaning}","${w.topic}","${w.difficulty}","${w.learned}"`
+        `"${w.chinese}","","${w.pinyin}","${w.meaning}","${w.topic}","${w.difficulty}","${w.learned}"`
     ).join('\n');
     
-    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `vocab_${new Date().toISOString().split('T')[0]}.csv`;
@@ -1014,7 +911,7 @@ async function init() {
     updateAddTopicList();
     updateFlashcards();
     updateSheetDisplay();
-    updateGitHubDisplay();
+    updateConfig();
 }
 
 // Wait for libraries to load
@@ -1028,14 +925,13 @@ function waitForLibraries() {
             }
         }, 100);
         
-        // Timeout after 5 seconds
         setTimeout(() => {
             clearInterval(checkInterval);
             if (typeof pinyinPro === 'undefined') {
                 console.error('❌ Pinyin library failed to load');
                 status('⚠️ Pinyin library chưa load. Refresh page (F5)', 'error');
             }
-            resolve(); // Continue anyway
+            resolve();
         }, 5000);
     });
 }
