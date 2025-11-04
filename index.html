@@ -82,17 +82,23 @@
     }
     .card:hover { transform:translateY(-4px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
     
-    .card-content { display:flex; flex-direction:column; gap:4px; }
+    .card-content { 
+        display:flex; 
+        flex-direction:column; 
+        gap:4px;
+        padding-top:24px; /* Add space for badge */
+    }
     
     /* Badge moved to TOP-LEFT */
     .card .badge { 
         position:absolute; 
-        top:12px; 
-        left:12px;  /* Changed from right to left */
+        top:8px; 
+        left:8px;
         padding:4px 10px; 
         border-radius:12px; 
         font-size:.75rem; 
-        font-weight:600; 
+        font-weight:600;
+        z-index:1;
     }
     .card .badge.easy { background:#d4edda; color:#155724; }
     
@@ -358,7 +364,10 @@
     <div class="modal-content">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
             <h2>✍️ Cách viết chữ Hán</h2>
-            <button class="btn" onclick="closeStrokeModal()" style="padding:8px 16px">✕</button>
+            <div style="display:flex;gap:8px">
+                <button class="btn" onclick="replayStrokeAnimation()" id="replay-btn" style="padding:8px 16px">🔄 Replay</button>
+                <button class="btn" onclick="closeStrokeModal()" style="padding:8px 16px">✕</button>
+            </div>
         </div>
         <div class="stroke-container" id="stroke-container"></div>
         <button class="btn" onclick="closeStrokeModal()" style="width:100%;margin-top:20px">Đóng</button>
@@ -543,7 +552,7 @@ function renderLibrary() {
     filtersDiv.innerHTML = `
         <button class="fbtn ${!currentFilter ? 'active' : ''}" onclick="filterTopic('')">Tất cả (${vocab.length})</button>
         ${topics.map(t => `
-            <button class="fbtn ${currentFilter === t ? 'active' : ''}" onclick="filterTopic('${t}')">
+            <button class="fbtn ${currentFilter === t ? 'active' : ''}" onclick="filterTopic(\`${t.replace(/`/g, '\\`')}\`)">
                 ${t} (${vocab.filter(w => w.topic === t).length})
             </button>
         `).join('')}
@@ -592,16 +601,28 @@ function toggleLearnedById(id) {
         word.learned = !word.learned;
         save();
         renderLibrary();
+        
+        // Auto-sync to GitHub if configured
+        if (githubToken && githubRepo) {
+            console.log('☁️ Auto-syncing learned status to GitHub...');
+            syncToGitHubSilent().then(() => {
+                console.log('✅ Synced learned status to GitHub');
+            }).catch(err => {
+                console.error('⚠️ Failed to sync to GitHub:', err);
+            });
+        }
     }
 }
+
+let currentWriters = []; // Store current writers for replay
 
 function showStrokeOrder(chinese) {
     const modal = document.getElementById('stroke-modal');
     const container = document.getElementById('stroke-container');
     container.innerHTML = '';
+    currentWriters = [];
     
     const chars = chinese.split('');
-    const writers = [];
     
     chars.forEach((char, idx) => {
         const div = document.createElement('div');
@@ -615,41 +636,56 @@ function showStrokeOrder(chinese) {
                 padding: 5,
                 showOutline: true,
                 strokeAnimationSpeed: 1,
-                delayBetweenStrokes: 100,
-                delayBetweenLoops: 2000
+                delayBetweenStrokes: 100
             });
-            writers.push(writer);
+            currentWriters.push(writer);
         }
     });
     
     modal.classList.add('show');
     
-    // Auto-animate all characters sequentially
-    if (writers.length > 0) {
+    // Auto-animate once on open
+    if (currentWriters.length > 0) {
         setTimeout(() => {
-            animateWritersSequentially(writers, 0);
+            animateWritersSequentially(currentWriters, 0, false);
         }, 300);
     }
 }
 
 // Helper function to animate writers one by one
-function animateWritersSequentially(writers, index) {
+function animateWritersSequentially(writers, index, loop = false) {
     if (index >= writers.length) {
-        // Loop back to start after finishing all
-        setTimeout(() => {
-            animateWritersSequentially(writers, 0);
-        }, 2000);
+        if (loop) {
+            // Only loop if explicitly requested
+            setTimeout(() => {
+                animateWritersSequentially(writers, 0, true);
+            }, 2000);
+        }
         return;
     }
     
     writers[index].animateCharacter({
         onComplete: () => {
-            // Wait a bit then animate next character
             setTimeout(() => {
-                animateWritersSequentially(writers, index + 1);
+                animateWritersSequentially(writers, index + 1, loop);
             }, 500);
         }
     });
+}
+
+function replayStrokeAnimation() {
+    if (currentWriters.length > 0) {
+        // Reset all characters first
+        currentWriters.forEach(writer => {
+            writer.hideCharacter();
+            writer.showOutline();
+        });
+        
+        // Animate again
+        setTimeout(() => {
+            animateWritersSequentially(currentWriters, 0, false);
+        }, 100);
+    }
 }
 
 function closeStrokeModal() {
@@ -855,59 +891,69 @@ function clearVocabJson() {
 
 // === NEW: Clear vocab.json from GitHub ===
 async function clearVocabGitHub() {
-    if (!githubToken || !githubRepo) {
-        return status('⚠️ Chưa cấu hình GitHub (token & repo)!', 'error');
+    // Check if we have GitHub config OR vocab.json URL
+    const hasGitHubConfig = githubToken && githubRepo;
+    const hasVocabUrl = vocabJsonUrl && vocabJsonUrl.includes('github');
+    
+    if (!hasGitHubConfig && !hasVocabUrl) {
+        return status('⚠️ Chưa cấu hình GitHub (token & repo) hoặc vocab.json URL!', 'error');
     }
     
     if (!confirm('⚠️ XÓA vocab.json TRÊN GITHUB?\n\n❌ Hành động này sẽ:\n- Xóa file vocab.json trên GitHub repo\n- KHÔNG thể hoàn tác\n\nBạn chắc chắn muốn tiếp tục?')) {
         return;
     }
     
-    showLoading('Đang xóa vocab.json từ GitHub...', 'Repo: ' + githubRepo);
-    
-    try {
-        // First, get the file SHA (required for deletion)
-        const getRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/vocab.json`, {
-            headers: {
-                'Authorization': `token ${githubToken}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
+    // If we have GitHub config, use it
+    if (hasGitHubConfig) {
+        showLoading('Đang xóa vocab.json từ GitHub...', 'Repo: ' + githubRepo);
         
-        if (!getRes.ok) {
-            if (getRes.status === 404) {
+        try {
+            // First, get the file SHA (required for deletion)
+            const getRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/vocab.json`, {
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (!getRes.ok) {
+                if (getRes.status === 404) {
+                    hideLoading();
+                    return status('ℹ️ File vocab.json không tồn tại trên GitHub', 'error');
+                }
+                throw new Error(`HTTP ${getRes.status}`);
+            }
+            
+            const fileData = await getRes.json();
+            const sha = fileData.sha;
+            
+            // Delete the file
+            const deleteRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/vocab.json`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Delete vocab.json - ${new Date().toISOString()}`,
+                    sha: sha
+                })
+            });
+            
+            if (deleteRes.ok) {
                 hideLoading();
-                return status('ℹ️ File vocab.json không tồn tại trên GitHub', 'error');
+                status('✅ Đã xóa vocab.json từ GitHub!', 'success');
+            } else {
+                throw new Error('GitHub API delete error');
             }
-            throw new Error(`HTTP ${getRes.status}`);
-        }
-        
-        const fileData = await getRes.json();
-        const sha = fileData.sha;
-        
-        // Delete the file
-        const deleteRes = await fetch(`https://api.github.com/repos/${githubRepo}/contents/vocab.json`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `token ${githubToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Delete vocab.json - ${new Date().toISOString()}`,
-                sha: sha
-            })
-        });
-        
-        if (deleteRes.ok) {
+        } catch (e) {
+            console.error('GitHub delete error:', e);
             hideLoading();
-            status('✅ Đã xóa vocab.json từ GitHub!', 'success');
-        } else {
-            throw new Error('GitHub API delete error');
+            status('❌ Lỗi xóa từ GitHub: ' + e.message, 'error');
         }
-    } catch (e) {
-        console.error('GitHub delete error:', e);
-        hideLoading();
-        status('❌ Lỗi xóa từ GitHub: ' + e.message, 'error');
+    } else {
+        // Try to extract repo info from vocab.json URL
+        status('ℹ️ Chức năng này cần GitHub token & repo. Không thể xóa qua vocab.json URL.', 'error');
     }
 }
 
