@@ -20,7 +20,7 @@
         .page.active { display:block; } @keyframes f { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
 
 ```
-    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
     .fc-grid-6 { display:grid; gap:20px; grid-template-columns:repeat(3,1fr); }
 
     .stats { display:flex; gap:20px; font-size:.95rem; color:var(--g6); margin-bottom:24px; flex-wrap:wrap; }
@@ -174,6 +174,102 @@
     .stroke-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin:20px 0; }
     .stroke-char { width:200px; height:200px; }
 
+    .sentence-card { 
+        background:white; 
+        border:2px solid var(--g2); 
+        border-radius:16px; 
+        padding:24px; 
+        transition:all .3s;
+        position:relative;
+    }
+    .sentence-card:hover { 
+        transform:translateY(-4px); 
+        box-shadow:0 12px 30px rgba(0,0,0,.15); 
+        border-color:var(--p);
+    }
+    .sentence-card .match-badge {
+        position:absolute;
+        top:16px;
+        right:16px;
+        background:linear-gradient(135deg,var(--p),var(--pd));
+        color:white;
+        padding:6px 12px;
+        border-radius:20px;
+        font-size:0.85rem;
+        font-weight:600;
+    }
+    .sentence-card .chinese-text {
+        font-size:1.5rem;
+        font-weight:700;
+        color:var(--g8);
+        margin-bottom:8px;
+        line-height:1.6;
+    }
+    .sentence-card .pinyin-text {
+        font-size:1rem;
+        color:var(--g6);
+        margin-bottom:12px;
+        font-style:italic;
+    }
+    .sentence-card .vietnamese-text {
+        font-size:1.05rem;
+        color:var(--g8);
+        margin-bottom:16px;
+        line-height:1.5;
+    }
+    .sentence-card .matched-words {
+        display:flex;
+        flex-wrap:wrap;
+        gap:6px;
+        margin-bottom:16px;
+    }
+    .sentence-card .matched-word {
+        background:var(--g1);
+        padding:4px 10px;
+        border-radius:12px;
+        font-size:0.85rem;
+        color:var(--p);
+        font-weight:500;
+    }
+    .sentence-card .actions {
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+    }
+    
+    .sentence-tabs {
+        display:flex;
+        gap:8px;
+        margin-bottom:20px;
+        border-bottom:2px solid var(--g2);
+        padding-bottom:0;
+    }
+    .sentence-tab {
+        padding:12px 24px;
+        border:none;
+        background:transparent;
+        cursor:pointer;
+        font-weight:600;
+        color:var(--g6);
+        border-bottom:3px solid transparent;
+        transition:all .3s;
+        margin-bottom:-2px;
+    }
+    .sentence-tab:hover {
+        color:var(--p);
+        background:var(--g1);
+    }
+    .sentence-tab.active {
+        color:var(--p);
+        border-bottom-color:var(--p);
+    }
+    .sentence-sub-page {
+        display:none;
+    }
+    .sentence-sub-page.active {
+        display:block;
+    }
+
     @media (max-width:768px) { 
         .grid, .fc-grid-6 { grid-template-columns:1fr; }
         .stroke-char { width:150px; height:150px; }
@@ -192,9 +288,22 @@
         .fc-viet { font-size:1rem; }
         .btn { padding:10px 16px; font-size:0.9rem; }
         .input-field { padding:12px 14px; font-size:0.95rem; }
-        .modal-content { padding:24px 16px; width:95%; }
+        .modal-content { 
+            padding:24px 12px 20px 12px !important; 
+            width:95%; 
+            max-height:90vh;
+            overflow-y:auto;
+        }
         .stroke-container { gap:12px; }
         .stroke-char { width:140px; height:140px; }
+        /* Mobile-specific stroke modal adjustments */
+        #stroke-modal .modal-content h2 {
+            font-size:1.4rem !important;
+            margin-bottom:8px !important;
+        }
+        #stroke-modal .modal-content > div:first-child {
+            margin-top:16px !important;
+        }
         .page { padding:20px 16px; }
         .c { padding:12px; }
         .h1 { font-size:1.8rem; }
@@ -214,8 +323,9 @@
     <h1 class="h1">📚 Học Tiếng Trung Pro</h1>
     <div class="nav">
         <button class="tab active" onclick="show('lib')">📖 Thư viện</button>
-        <button class="tab" onclick="show('add')">➕ Thêm từ</button>
+        <button class="tab" onclick="show('sentences')">💬 Mẫu câu</button>
         <button class="tab" onclick="show('fc')">🎴 Flashcard</button>
+        <button class="tab" onclick="show('add')">➕ Thêm từ</button>
         <button class="tab" onclick="show('config')">⚙️ Cấu hình</button>
     </div>
 
@@ -297,6 +407,81 @@
     <div id="fc-container" class="fc-grid-6"></div>
 </div>
 
+<div id="sentences" class="page">
+    <h2>💬 Mẫu câu</h2>
+    
+    <!-- Sub-tabs -->
+    <div class="sentence-tabs">
+        <button class="sentence-tab active" onclick="showSentenceSubTab('list')">📋 Danh sách</button>
+        <button class="sentence-tab" onclick="showSentenceSubTab('search')">🔍 Thêm mới</button>
+    </div>
+    
+    <!-- Sub-page: Danh sách -->
+    <div id="sentence-list" class="sentence-sub-page active">
+        <div style="background:var(--g1);padding:16px;border-radius:12px;margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <span style="font-weight:600">
+                    📚 <span class="n" id="saved-sentences-count">0</span> mẫu câu đã lưu
+                </span>
+                <button class="btn" onclick="filterSavedSentences('')" style="padding:6px 12px;font-size:0.85rem">🔄 Tải lại</button>
+            </div>
+        </div>
+        
+        <div id="saved-sentences-list" style="display:grid;gap:20px"></div>
+        
+        <div id="saved-sentences-empty" style="text-align:center;padding:60px 20px;color:var(--g6)">
+            <p style="font-size:1.3rem;margin-bottom:12px">📭 Chưa có mẫu câu nào</p>
+            <p style="margin-bottom:20px">Vào tab "🔍 Thêm mới" để tìm và thêm mẫu câu!</p>
+            <button class="btn" onclick="showSentenceSubTab('search')">🔍 Tìm mẫu câu</button>
+        </div>
+    </div>
+    
+    <!-- Sub-page: Thêm mới (Search) -->
+    <div id="sentence-search" class="sentence-sub-page">
+        <div style="background:var(--g1);padding:20px;border-radius:12px;margin-bottom:24px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+                <span style="font-weight:600">Dựa trên <span class="n" id="learned-count-display">0</span> từ đã học:</span>
+                <div id="learned-words-preview" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
+            
+            <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+                <button class="btn" onclick="findSuggestedSentences()" id="find-sentences-btn">
+                    🔍 Tìm mẫu câu
+                </button>
+                <button class="btn" onclick="syncSentencesToSheets()" style="background:linear-gradient(135deg,var(--s),#38a169)">
+                    ☁️ Lưu vào Google Sheets
+                </button>
+            </div>
+            
+            <div id="sentences-filters" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--g2)">
+                <label style="display:block;margin-bottom:8px;font-weight:600">⚙️ Bộ lọc:</label>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                    <label style="display:flex;align-items:center;gap:6px">
+                        <input type="number" id="min-match-words" value="2" min="1" max="10" style="width:60px;padding:4px 8px;border:1px solid var(--g2);border-radius:6px">
+                        <span style="font-size:0.9rem">Tối thiểu từ match</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px">
+                        <input type="number" id="max-sentence-length" value="20" min="5" max="50" style="width:60px;padding:4px 8px;border:1px solid var(--g2);border-radius:6px">
+                        <span style="font-size:0.9rem">Độ dài tối đa</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div id="sentences-loading" style="display:none;text-align:center;padding:40px;color:var(--g6)">
+            <div class="loading-spinner" style="margin:0 auto 16px"></div>
+            <p>Đang tìm mẫu câu phù hợp...</p>
+        </div>
+        
+        <div id="sentences-results" style="display:grid;gap:20px"></div>
+        
+        <div id="sentences-empty" style="display:none;text-align:center;padding:40px;color:var(--g6)">
+            <p style="font-size:1.2rem;margin-bottom:12px">📚 Chưa có mẫu câu</p>
+            <p>Hãy đánh dấu một số từ là "Đã học" và click "🔍 Tìm mẫu câu"</p>
+        </div>
+    </div>
+</div>
+
 <div id="config" class="page">
     <h2>⚙️ Cấu hình</h2>
     
@@ -318,6 +503,25 @@
             <button class="btn" onclick="loadFromSheet()">📥 Load</button>
             <button class="btn btn-warning" onclick="clearCacheAndReload()">🔄 Clear Cache & Load</button>
         </div>
+        
+        <!-- NEW: Sync Strategy -->
+        <div style="margin-top:16px;padding:16px;background:#fef3c7;border-radius:8px">
+            <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--g8)">🔄 Chiến lược đồng bộ:</label>
+            <select id="sync-strategy" class="input-field" style="margin-bottom:12px" onchange="saveSyncStrategy()">
+                <option value="always">Luôn luôn sync (mỗi lần load trang)</option>
+                <option value="daily">Sync 1 lần/ngày (tiết kiệm thời gian)</option>
+                <option value="manual">Chỉ sync thủ công</option>
+            </select>
+            <p style="font-size:0.85rem;color:var(--g6);margin-bottom:8px">
+                <strong>Luôn luôn sync:</strong> Load từ Sheets mỗi lần mở app (chậm hơn, data luôn mới)<br>
+                <strong>Sync 1 lần/ngày:</strong> Ưu tiên localStorage, chỉ sync nếu đã quá 24h (nhanh hơn)<br>
+                <strong>Chỉ thủ công:</strong> Không tự động sync, dùng localStorage (nhanh nhất)
+            </p>
+            <div style="font-size:0.85rem;color:var(--g6)">
+                Lần sync cuối: <strong id="last-sync-time">Chưa sync</strong>
+            </div>
+        </div>
+        
         <p style="margin-top:12px;font-size:0.85rem;color:var(--g6)">
             Sheet: <span id="current-sheet">Chưa cấu hình</span>
         </p>
@@ -361,17 +565,25 @@
 </div>
 
 <div id="stroke-modal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-            <h2>✍️ Cách viết chữ Hán</h2>
-            <div style="display:flex;gap:8px">
-                <button class="btn" onclick="replayStrokeAnimation()" id="replay-btn" style="padding:8px 16px">🔄 Replay</button>
-                <button class="btn" onclick="closeStrokeModal()" style="padding:8px 16px">✕</button>
-            </div>
+    <div class="modal-content" style="position:relative;padding:28px 16px 24px 16px">
+        <button onclick="closeStrokeModal()" style="position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:none;background:var(--g2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .3s;z-index:10" onmouseover="this.style.background='var(--d)';this.style.color='white'" onmouseout="this.style.background='var(--g2)';this.style.color='inherit'">✕</button>
+
+```
+    <div style="text-align:center;margin-bottom:12px;margin-top:20px">
+        <div id="stroke-word-info">
+            <div style="font-size:0.85rem;color:var(--g6);margin-bottom:4px;line-height:1.2" id="stroke-pinyin"></div>
+            <div style="font-size:0.95rem;color:var(--g8);font-weight:500;margin-bottom:10px;line-height:1.3" id="stroke-meaning"></div>
+            <h2 style="font-size:1.6rem;color:var(--p);margin-bottom:10px;line-height:1.2" id="stroke-chinese"></h2>
         </div>
-        <div class="stroke-container" id="stroke-container"></div>
-        <button class="btn" onclick="closeStrokeModal()" style="width:100%;margin-top:20px">Đóng</button>
     </div>
+    <div class="stroke-container" id="stroke-container"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+        <button class="btn" onclick="replayStrokeAnimation()" id="replay-btn" style="padding:8px 16px;font-size:0.9rem">🔄 Replay</button>
+        <button class="btn" onclick="startPracticeMode()" id="practice-btn" style="background:linear-gradient(135deg,var(--s),#38a169);padding:8px 16px;font-size:0.9rem">✍️ Tập viết</button>
+    </div>
+</div>
+```
+
 </div>
 
 <div id="loading-overlay" class="loading-overlay">
@@ -396,6 +608,9 @@ let githubToken = '';
 let githubRepo = '';
 let vocabJsonUrl = '';
 let hideLearnedWords = false;  // NEW: state for hide learned toggle
+let suggestedSentences = [];  // NEW: store suggested sentences
+let syncStrategy = 'always';  // NEW: sync strategy (always, daily, manual)
+let lastSyncTime = 0;  // NEW: timestamp of last sync
 
 // === IMPROVED CSV PARSER (RFC 4180) ===
 function parseCSVLine(line) {
@@ -489,6 +704,7 @@ function show(page) {
     if (page === 'lib') renderLibrary();
     if (page === 'fc') updateFlashcards();
     if (page === 'config') updateConfig();
+    if (page === 'sentences') renderSentencesPage();
 }
 
 // === NEW: Toggle hide learned words ===
@@ -516,6 +732,8 @@ function loadHideLearnedState() {
 
 // === LIBRARY ===
 function renderLibrary() {
+    console.log('🔄 renderLibrary called - currentFilter:', currentFilter, 'searchTerm:', searchTerm);
+    
     // Apply hide learned filter
     let filtered = vocab.filter(w => {
         if (hideLearnedWords && w.learned) return false;
@@ -528,6 +746,8 @@ function renderLibrary() {
             (w.meaning && w.meaning.toLowerCase().includes(searchTerm));
         return matchFilter && matchSearch;
     });
+    
+    console.log('📊 Filtered results:', filtered.length, 'out of', vocab.length);
     
     const learnedCount = vocab.filter(w => w.learned).length;
     const hiddenCount = hideLearnedWords ? learnedCount : 0;
@@ -547,16 +767,18 @@ function renderLibrary() {
     const topics = [...new Set(vocab.map(w => w.topic))];
     document.getElementById('topics').textContent = topics.length;
     
-    // Render filters
+    // Render filters with DIRECT onclick - most reliable method
     const filtersDiv = document.getElementById('filters');
     filtersDiv.innerHTML = `
-        <button class="fbtn ${!currentFilter ? 'active' : ''}" onclick="filterTopic('')">Tất cả (${vocab.length})</button>
-        ${topics.map(t => `
-            <button class="fbtn ${currentFilter === t ? 'active' : ''}" onclick="filterTopic(\`${t.replace(/`/g, '\\`')}\`)">
-                ${t} (${vocab.filter(w => w.topic === t).length})
-            </button>
-        `).join('')}
+        <button class="fbtn ${!currentFilter ? 'active' : ''}" onclick="window.filterTopic('')">Tất cả (${vocab.length})</button>
+        ${topics.map(t => {
+            const escaped = t.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const isActive = currentFilter === t ? 'active' : '';
+            return `<button class="fbtn ${isActive}" onclick="window.filterTopic('${escaped}')">${t} (${vocab.filter(w => w.topic === t).length})</button>`;
+        }).join('')}
     `;
+    
+    console.log('✅ Filters rendered. Topics:', topics.length);
     
     // Render cards with NEW LAYOUT
     const listDiv = document.getElementById('list');
@@ -590,17 +812,47 @@ function renderLibrary() {
     `).join('');
 }
 
-function filterTopic(topic) {
+// Make filterTopic global and accessible from onclick
+window.filterTopic = function(topic) {
+    console.log('🎯 filterTopic called with:', topic);
     currentFilter = topic;
     renderLibrary();
-}
+};
 
 function toggleLearnedById(id) {
     const word = vocab.find(w => w.id === id);
     if (word) {
         word.learned = !word.learned;
         save();
-        renderLibrary();
+        
+        // Update UI in real-time without full re-render
+        const cardButton = event.target.closest('.action-btn');
+        if (cardButton) {
+            if (word.learned) {
+                cardButton.classList.add('learned');
+                cardButton.innerHTML = '✅';
+            } else {
+                cardButton.classList.remove('learned');
+                cardButton.innerHTML = '⭕';
+            }
+        }
+        
+        // Update stats
+        const learnedCount = vocab.filter(w => w.learned).length;
+        document.getElementById('learned').textContent = learnedCount;
+        
+        // If hide learned is active, remove the card with animation
+        if (hideLearnedWords && word.learned) {
+            const card = cardButton.closest('.card');
+            if (card) {
+                card.style.transition = 'all 0.3s';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    renderLibrary();
+                }, 300);
+            }
+        }
         
         // Auto-sync to GitHub if configured
         if (githubToken && githubRepo) {
@@ -615,12 +867,22 @@ function toggleLearnedById(id) {
 }
 
 let currentWriters = []; // Store current writers for replay
+let currentStrokeWord = null; // Store current word being shown
 
 function showStrokeOrder(chinese) {
+    // Find the word to get pinyin and meaning
+    const word = vocab.find(w => w.chinese === chinese);
+    currentStrokeWord = word;
+    
     const modal = document.getElementById('stroke-modal');
     const container = document.getElementById('stroke-container');
     container.innerHTML = '';
     currentWriters = [];
+    
+    // Populate word info
+    document.getElementById('stroke-chinese').textContent = chinese;
+    document.getElementById('stroke-pinyin').textContent = word ? word.pinyin : '';
+    document.getElementById('stroke-meaning').textContent = word ? word.vietnamese : '';
     
     const chars = chinese.split('');
     
@@ -688,14 +950,24 @@ function replayStrokeAnimation() {
     }
 }
 
+function startPracticeMode() {
+    if (currentWriters.length > 0) {
+        // Clear and enable quiz mode for all writers
+        currentWriters.forEach(writer => {
+            writer.hideCharacter();
+            writer.quiz({
+                onComplete: function(summaryData) {
+                    console.log('Practice complete!', summaryData);
+                }
+            });
+        });
+        status('✍️ Bắt đầu tập viết! Vẽ theo nét.', 'success');
+    }
+}
+
 function closeStrokeModal() {
     document.getElementById('stroke-modal').classList.remove('show');
 }
-
-document.getElementById('lib-search').addEventListener('input', (e) => {
-    searchTerm = e.target.value.toLowerCase();
-    renderLibrary();
-});
 
 // === ADD WORD ===
 function addManual() {
@@ -785,6 +1057,65 @@ function saveDefaultSheet() {
     status('✅ Đã lưu!', 'success');
 }
 
+function saveSyncStrategy() {
+    const strategy = document.getElementById('sync-strategy').value;
+    syncStrategy = strategy;
+    localStorage.setItem('sync-strategy', strategy);
+    console.log('Sync strategy saved:', strategy);
+    status('✅ Đã lưu chiến lược đồng bộ!', 'success');
+}
+
+function shouldSyncNow() {
+    if (syncStrategy === 'manual') {
+        console.log('Sync strategy: manual - skip auto sync');
+        return false;
+    }
+    
+    if (syncStrategy === 'always') {
+        console.log('Sync strategy: always - sync now');
+        return true;
+    }
+    
+    if (syncStrategy === 'daily') {
+        const now = Date.now();
+        const hoursSinceLastSync = (now - lastSyncTime) / (1000 * 60 * 60);
+        const shouldSync = hoursSinceLastSync >= 24;
+        console.log(`Sync strategy: daily - last sync ${hoursSinceLastSync.toFixed(1)}h ago - should sync: ${shouldSync}`);
+        return shouldSync;
+    }
+    
+    return false;
+}
+
+function updateLastSyncTime() {
+    lastSyncTime = Date.now();
+    localStorage.setItem('last-sync-time', lastSyncTime.toString());
+    updateSyncTimeDisplay();
+}
+
+function updateSyncTimeDisplay() {
+    const display = document.getElementById('last-sync-time');
+    if (!display) return;
+    
+    if (lastSyncTime === 0) {
+        display.textContent = 'Chưa sync';
+        return;
+    }
+    
+    const now = Date.now();
+    const diffMs = now - lastSyncTime;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    
+    if (diffHours < 1) {
+        display.textContent = 'Vừa xong';
+    } else if (diffHours < 24) {
+        display.textContent = `${Math.floor(diffHours)} giờ trước`;
+    } else {
+        display.textContent = `${Math.floor(diffDays)} ngày trước`;
+    }
+}
+
 function updateConfig() {
     const savedId = localStorage.getItem('default-sheet-id');
     if (savedId) {
@@ -792,6 +1123,23 @@ function updateConfig() {
         document.getElementById('default-sheet-id').value = savedId;
         document.getElementById('current-sheet').textContent = savedId.substring(0, 20) + '...';
     }
+    
+    // Load sync strategy
+    const savedStrategy = localStorage.getItem('sync-strategy');
+    if (savedStrategy) {
+        syncStrategy = savedStrategy;
+        const selectEl = document.getElementById('sync-strategy');
+        if (selectEl) {
+            selectEl.value = savedStrategy;
+        }
+    }
+    
+    // Load last sync time
+    const savedLastSync = localStorage.getItem('last-sync-time');
+    if (savedLastSync) {
+        lastSyncTime = parseInt(savedLastSync);
+    }
+    updateSyncTimeDisplay();
     
     const savedToken = localStorage.getItem('github-token');
     const savedRepo = localStorage.getItem('github-repo');
@@ -1016,6 +1364,7 @@ async function loadFromSheet() {
         });
         
         save();
+        updateLastSyncTime();
         renderLibrary();
         updateTopicSelect();
         
@@ -1185,7 +1534,362 @@ async function syncToGitHubSilent() {
     return true;
 }
 
-// === FLASHCARD ===
+// === SUGGESTED SENTENCES ===
+let currentSentenceSubTab = 'list';
+
+function showSentenceSubTab(tab) {
+    currentSentenceSubTab = tab;
+    
+    // Update tab buttons
+    document.querySelectorAll('.sentence-tab').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Update sub-pages
+    document.querySelectorAll('.sentence-sub-page').forEach(page => {
+        page.classList.remove('active');
+    });
+    
+    if (tab === 'list') {
+        document.getElementById('sentence-list').classList.add('active');
+        renderSavedSentences();
+    } else {
+        document.getElementById('sentence-search').classList.add('active');
+    }
+}
+
+function renderSavedSentences() {
+    const savedSentences = vocab.filter(w => w.topic === 'Mẫu câu' || w.isSentence);
+    
+    document.getElementById('saved-sentences-count').textContent = savedSentences.length;
+    
+    const listDiv = document.getElementById('saved-sentences-list');
+    const emptyDiv = document.getElementById('saved-sentences-empty');
+    
+    if (savedSentences.length === 0) {
+        listDiv.style.display = 'none';
+        emptyDiv.style.display = 'block';
+        return;
+    }
+    
+    listDiv.style.display = 'grid';
+    emptyDiv.style.display = 'none';
+    
+    listDiv.innerHTML = savedSentences.map(s => `
+        <div class="sentence-card">
+            <div class="chinese-text">${s.chinese}</div>
+            <div class="pinyin-text">${s.pinyin}</div>
+            <div class="vietnamese-text">${s.vietnamese}</div>
+            
+            <div class="actions" style="margin-top:16px">
+                <button class="btn" onclick="speak('${s.chinese.replace(/'/g, "\\'")}')">🔊 Nghe</button>
+                <button class="btn" onclick="showStrokeOrder('${s.chinese.replace(/'/g, "\\'")}')">✍️ Viết</button>
+                <button class="action-btn ${s.learned ? 'learned' : ''}" onclick="toggleLearnedById(${s.id})" style="width:auto;border-radius:12px;padding:8px 16px;height:auto">
+                    ${s.learned ? '✅ Đã học' : '⭕ Chưa học'}
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterSavedSentences(filter) {
+    renderSavedSentences();
+}
+
+function renderSentencesPage() {
+    const learnedWords = vocab.filter(w => w.learned);
+    document.getElementById('learned-count-display').textContent = learnedWords.length;
+    
+    // Show preview of learned words
+    const preview = document.getElementById('learned-words-preview');
+    preview.innerHTML = learnedWords.slice(0, 10).map(w => 
+        `<span style="background:var(--g2);padding:4px 8px;border-radius:8px;font-size:0.85rem">${w.chinese}</span>`
+    ).join('') + (learnedWords.length > 10 ? `<span style="color:var(--g6);font-size:0.85rem">+${learnedWords.length - 10} từ nữa</span>` : '');
+    
+    // Show/hide empty state
+    if (suggestedSentences.length === 0) {
+        document.getElementById('sentences-empty').style.display = 'block';
+        document.getElementById('sentences-results').style.display = 'none';
+    } else {
+        document.getElementById('sentences-empty').style.display = 'none';
+        document.getElementById('sentences-results').style.display = 'grid';
+        renderSuggestedSentences();
+    }
+}
+
+async function findSuggestedSentences() {
+    const learnedWords = vocab.filter(w => w.learned);
+    
+    if (learnedWords.length === 0) {
+        return status('⚠️ Hãy đánh dấu một số từ là "Đã học" trước!', 'error');
+    }
+    
+    document.getElementById('sentences-loading').style.display = 'block';
+    document.getElementById('sentences-results').style.display = 'none';
+    document.getElementById('sentences-empty').style.display = 'none';
+    document.getElementById('find-sentences-btn').disabled = true;
+    
+    console.log('🔍 Searching sentences for', learnedWords.length, 'learned words...');
+    
+    const minMatchWords = parseInt(document.getElementById('min-match-words')?.value || 2);
+    const maxLength = parseInt(document.getElementById('max-sentence-length')?.value || 20);
+    
+    try {
+        const sentences = [];
+        
+        // Sample from learned words (max 10 để tránh quá nhiều requests)
+        const sampleWords = learnedWords.slice(0, 10);
+        
+        // Try multiple Chinese learning sentence sources
+        for (const word of sampleWords) {
+            try {
+                // Method 1: Tatoeba-like API (example sentences database)
+                // Note: This is a simplified example. Real implementation might need different endpoints
+                const searchQuery = encodeURIComponent(word.chinese);
+                
+                // Using a mock structure - in production you'd call real API
+                // For now, generate example sentences using the learned words
+                const exampleSentences = generateExampleSentences(learnedWords, word);
+                sentences.push(...exampleSentences);
+                
+            } catch (e) {
+                console.error('Error fetching for word:', word.chinese, e);
+            }
+        }
+        
+        // Calculate match scores
+        const scoredSentences = sentences.map(s => ({
+            ...s,
+            matchScore: calculateMatchScore(s.chinese, learnedWords),
+            matchedWords: findMatchedWords(s.chinese, learnedWords)
+        }));
+        
+        // Filter and sort
+        suggestedSentences = scoredSentences
+            .filter(s => s.matchedWords.length >= minMatchWords && s.chinese.length <= maxLength)
+            .sort((a, b) => b.matchScore - a.matchScore)
+            .slice(0, 20); // Top 20
+        
+        console.log('✅ Found', suggestedSentences.length, 'sentences');
+        
+        document.getElementById('sentences-loading').style.display = 'none';
+        document.getElementById('find-sentences-btn').disabled = false;
+        
+        if (suggestedSentences.length === 0) {
+            document.getElementById('sentences-empty').style.display = 'block';
+            status('⚠️ Không tìm thấy mẫu câu phù hợp. Thử giảm bộ lọc.', 'error');
+        } else {
+            document.getElementById('sentences-results').style.display = 'grid';
+            renderSuggestedSentences();
+            status(`✅ Tìm thấy ${suggestedSentences.length} mẫu câu!`, 'success');
+        }
+        
+    } catch (e) {
+        console.error('Error finding sentences:', e);
+        document.getElementById('sentences-loading').style.display = 'none';
+        document.getElementById('find-sentences-btn').disabled = false;
+        status('❌ Lỗi tìm mẫu câu: ' + e.message, 'error');
+    }
+}
+
+function generateExampleSentences(learnedWords, baseWord) {
+    // Generate example sentences using learned words
+    // This is a simplified version - in production you'd call a real API
+    const templates = [
+        { pattern: 'A，B！', meaning: 'A, B!' },
+        { pattern: 'A和B', meaning: 'A và B' },
+        { pattern: '我A你', meaning: 'Tôi A bạn' },
+        { pattern: 'A，谢谢', meaning: 'A, cảm ơn' },
+        { pattern: 'A，再见', meaning: 'A, tạm biệt' }
+    ];
+    
+    const sentences = [];
+    const otherWords = learnedWords.filter(w => w.id !== baseWord.id).slice(0, 3);
+    
+    otherWords.forEach(other => {
+        // Create simple combinations
+        sentences.push({
+            chinese: `${baseWord.chinese}，${other.chinese}！`,
+            pinyin: `${baseWord.pinyin}, ${other.pinyin}!`,
+            vietnamese: `${baseWord.vietnamese}, ${other.vietnamese}!`,
+            source: 'generated'
+        });
+        
+        if (other.chinese !== baseWord.chinese) {
+            sentences.push({
+                chinese: `${baseWord.chinese}和${other.chinese}`,
+                pinyin: `${baseWord.pinyin} hé ${other.pinyin}`,
+                vietnamese: `${baseWord.vietnamese} và ${other.vietnamese}`,
+                source: 'generated'
+            });
+        }
+    });
+    
+    return sentences;
+}
+
+function calculateMatchScore(sentenceChinese, learnedWords) {
+    const matchedWords = findMatchedWords(sentenceChinese, learnedWords);
+    const sentenceLength = sentenceChinese.length;
+    
+    // Score factors:
+    // 1. Number of matched words (higher = better)
+    let score = matchedWords.length * 20;
+    
+    // 2. Ratio of known words (higher = better)
+    const knownRatio = matchedWords.reduce((sum, w) => sum + w.chinese.length, 0) / sentenceLength;
+    score += knownRatio * 30;
+    
+    // 3. Sentence length penalty (shorter sentences preferred)
+    score -= sentenceLength * 0.5;
+    
+    // 4. Bonus for 2-4 matched words (sweet spot)
+    if (matchedWords.length >= 2 && matchedWords.length <= 4) {
+        score += 15;
+    }
+    
+    return Math.round(score);
+}
+
+function findMatchedWords(sentenceChinese, learnedWords) {
+    const matched = [];
+    learnedWords.forEach(word => {
+        if (sentenceChinese.includes(word.chinese)) {
+            matched.push(word);
+        }
+    });
+    return matched;
+}
+
+function renderSuggestedSentences() {
+    const container = document.getElementById('sentences-results');
+    
+    container.innerHTML = suggestedSentences.map((s, idx) => {
+        const matchPercent = Math.round((s.matchedWords.length / s.chinese.length) * 100);
+        
+        return `
+            <div class="sentence-card">
+                <div class="match-badge">
+                    🏆 ${matchPercent}% (${s.matchedWords.length}/${s.chinese.length} từ)
+                </div>
+                
+                <div class="chinese-text">${s.chinese}</div>
+                <div class="pinyin-text">${s.pinyin}</div>
+                <div class="vietnamese-text">${s.vietnamese}</div>
+                
+                <div class="matched-words">
+                    <span style="font-size:0.85rem;color:var(--g6);margin-right:6px">Từ đã học:</span>
+                    ${s.matchedWords.map(w => 
+                        `<span class="matched-word">${w.chinese}</span>`
+                    ).join('')}
+                </div>
+                
+                <div class="actions">
+                    <button class="btn" onclick="speak('${s.chinese.replace(/'/g, "\\'")}')">🔊 Nghe</button>
+                    <button class="btn" onclick="addSentenceToVocab(${idx})" style="background:linear-gradient(135deg,var(--s),#38a169)">
+                        ➕ Thêm vào thư viện
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function addSentenceToVocab(index) {
+    const sentence = suggestedSentences[index];
+    
+    if (vocab.some(v => v.chinese === sentence.chinese)) {
+        return status('⚠️ Câu này đã có trong danh sách!', 'error');
+    }
+    
+    vocab.push({
+        id: Date.now(),
+        vietnamese: sentence.vietnamese,
+        chinese: sentence.chinese,
+        pinyin: sentence.pinyin,
+        meaning: sentence.vietnamese,
+        topic: 'Mẫu câu',
+        difficulty: 'easy',
+        learned: false,
+        nextReview: Date.now(),
+        reviewCount: 0,
+        isSentence: true
+    });
+    
+    save();
+    updateTopicSelect();
+    
+    // Update button to show added
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '✅ Đã thêm';
+    btn.style.opacity = '0.6';
+    
+    // Auto-sync to GitHub if configured
+    if (githubToken && githubRepo) {
+        syncToGitHubSilent().catch(e => console.error('Sync error:', e));
+    }
+    
+    status('✅ Đã thêm vào danh sách! Xem trong tab "📋 Danh sách"', 'success');
+    
+    // Update saved count if on list tab
+    if (currentSentenceSubTab === 'list') {
+        renderSavedSentences();
+    }
+}
+
+async function syncSentencesToSheets() {
+    if (!defaultSheetId) {
+        return status('⚠️ Chưa cấu hình Google Sheets!', 'error');
+    }
+    
+    if (suggestedSentences.length === 0) {
+        return status('⚠️ Chưa có mẫu câu nào để sync!', 'error');
+    }
+    
+    showLoading('Đang lưu mẫu câu...', `Lưu ${suggestedSentences.length} câu vào Google Sheets`);
+    
+    try {
+        // Format data for Sheets
+        // Note: This requires Google Apps Script Web App endpoint to append data
+        // For MVP, we'll show success message and log the data
+        
+        console.log('📊 Sentences to sync:', suggestedSentences);
+        
+        // In production, you would:
+        // 1. Create a Google Apps Script Web App
+        // 2. POST data to that endpoint
+        // 3. Script appends to a "Suggested_Sentences" sheet
+        
+        hideLoading();
+        status(`✅ Đã chuẩn bị ${suggestedSentences.length} mẫu câu. Cần setup Google Apps Script để sync.`, 'success');
+        
+        // For now, export as CSV for manual upload
+        exportSentencesCSV();
+        
+    } catch (e) {
+        console.error('Sync error:', e);
+        hideLoading();
+        status('❌ Lỗi sync: ' + e.message, 'error');
+    }
+}
+
+function exportSentencesCSV() {
+    const header = 'Chinese,Pinyin,Vietnamese,Match_Score,Matched_Words,Status\n';
+    const rows = suggestedSentences.map(s => {
+        const matchedWordsStr = s.matchedWords.map(w => w.chinese).join(' ');
+        return `"${s.chinese}","${s.pinyin}","${s.vietnamese}","${s.matchScore}","${matchedWordsStr}","pending"`;
+    }).join('\n');
+    
+    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `suggested_sentences_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    
+    status('💾 Đã export CSV mẫu câu! Upload vào Google Sheets.', 'success');
+}
 function updateFlashcards() {
     fcCards = fcTopic ? vocab.filter(w => w.topic === fcTopic) : vocab;
     fcCards = fcCards.sort(() => Math.random() - 0.5).slice(0, 6);
@@ -1194,25 +1898,45 @@ function updateFlashcards() {
     container.innerHTML = fcCards.map((w, idx) => `
         <div class="fc" id="fc-${idx}" onclick="flipCard(${idx})">
             <div class="fc-chinese">${w.chinese}</div>
-            <div class="fc-pinyin" style="display:${showPinyinInCard ? 'block' : 'none'}">${w.pinyin}</div>
-            <div class="fc-viet">${w.vietnamese}</div>
-            <button class="btn" onclick="event.stopPropagation();speak('${w.chinese}')" style="position:absolute;top:16px;right:16px;padding:8px 12px">🔊</button>
+            <div class="fc-pinyin" style="display:none">${w.pinyin}</div>
+            <div class="fc-viet" style="display:none">${w.vietnamese}</div>
+            <button class="btn" onclick="event.stopPropagation();speak('${w.chinese.replace(/'/g, "\\'")}');" style="position:absolute;top:16px;right:16px;padding:8px 12px">🔊</button>
         </div>
     `).join('');
 }
 
 function flipCard(idx) {
     const card = document.getElementById(`fc-${idx}`);
+    const pinyin = card.querySelector('.fc-pinyin');
     const viet = card.querySelector('.fc-viet');
-    viet.style.display = viet.style.display === 'none' ? 'block' : 'none';
-    card.classList.toggle('showing-answer');
+    
+    const isFlipped = card.classList.contains('showing-answer');
+    
+    if (!isFlipped) {
+        // Flip to show answer - always show both pinyin and meaning
+        pinyin.style.display = 'block';
+        viet.style.display = 'block';
+        card.classList.add('showing-answer');
+    } else {
+        // Flip back to hide answer
+        pinyin.style.display = 'none';
+        viet.style.display = 'none';
+        card.classList.remove('showing-answer');
+    }
 }
 
 function togglePinyin() {
+    // This button only affects unflipped cards
     showPinyinInCard = !showPinyinInCard;
-    document.querySelectorAll('.fc-pinyin').forEach(el => {
-        el.style.display = showPinyinInCard ? 'block' : 'none';
+    
+    document.querySelectorAll('.fc').forEach((card, idx) => {
+        const isFlipped = card.classList.contains('showing-answer');
+        if (!isFlipped) {
+            const pinyin = card.querySelector('.fc-pinyin');
+            pinyin.style.display = showPinyinInCard ? 'block' : 'none';
+        }
     });
+    
     document.getElementById('pinyin-toggle-btn').textContent = showPinyinInCard ? '🙈 Ẩn Pinyin' : '👁️ Hiện Pinyin';
 }
 
@@ -1275,6 +1999,21 @@ async function init() {
     if (savedToken) githubToken = savedToken;
     if (savedRepo) githubRepo = savedRepo;
     
+    // Load sync strategy
+    const savedStrategy = localStorage.getItem('sync-strategy');
+    if (savedStrategy) {
+        syncStrategy = savedStrategy;
+    }
+    
+    // Load last sync time
+    const savedLastSync = localStorage.getItem('last-sync-time');
+    if (savedLastSync) {
+        lastSyncTime = parseInt(savedLastSync);
+    }
+    
+    console.log('📊 Sync strategy:', syncStrategy);
+    console.log('🕐 Last sync:', lastSyncTime ? new Date(lastSyncTime).toLocaleString() : 'Never');
+    
     // Check localStorage first
     const stored = localStorage.getItem('vocab');
     if (stored) {
@@ -1282,103 +2021,113 @@ async function init() {
         console.log(`📦 Loaded ${vocab.length} từ from localStorage`);
     }
     
-    // AUTO-SYNC: Clear vocab.json and load fresh from Google Sheets
+    // AUTO-SYNC based on strategy
     const savedSheetId = localStorage.getItem('default-sheet-id');
     
     if (savedSheetId) {
         defaultSheetId = savedSheetId;
-        console.log('🔄 Auto-syncing from Google Sheets (clearing old data)...');
-        showLoading('Đang đồng bộ dữ liệu...', 'Bước 1/2: Tải từ Google Sheets...');
         
-        try {
-            const url = `https://docs.google.com/spreadsheets/d/${defaultSheetId}/export?format=csv`;
-            const res = await fetch(url);
+        // Check if we should sync
+        if (shouldSyncNow()) {
+            console.log('🔄 Auto-syncing from Google Sheets based on strategy...');
+            showLoading('Đang đồng bộ dữ liệu...', 'Bước 1/2: Tải từ Google Sheets...');
             
-            if (res.ok) {
-                const csv = await res.text();
-                const lines = csv.split(/\r?\n/).filter(l => l.trim());
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${defaultSheetId}/export?format=csv`;
+                const res = await fetch(url);
                 
-                if (lines.length > 1) {
-                    // CLEAR OLD DATA before loading new
-                    vocab = [];
+                if (res.ok) {
+                    const csv = await res.text();
+                    const lines = csv.split(/\r?\n/).filter(l => l.trim());
                     
-                    const dataLines = lines.slice(1);
-                    let added = 0;
-                    
-                    dataLines.forEach((line, idx) => {
-                        try {
-                            const row = parseCSVLine(line);
-                            if (row.length >= 4) {
-                                const chinese = row[0]?.trim() || '';
-                                const pinyin = row[2]?.trim() || '';
-                                const meaning = row[3]?.trim() || '';
-                                const topic = row[4]?.trim() || 'Sheet';
-                                const difficulty = row[5]?.trim() || 'easy';
-                                const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
-                                
-                                if (chinese && !vocab.some(v => v.chinese === chinese)) {
-                                    vocab.push({
-                                        id: Date.now() + added,
-                                        vietnamese: meaning || chinese,
-                                        chinese: chinese,
-                                        pinyin: pinyin || generatePinyin(chinese),
-                                        meaning: meaning || chinese,
-                                        topic: topic,
-                                        difficulty: difficulty,
-                                        learned: learned,
-                                        nextReview: Date.now(),
-                                        reviewCount: 0
-                                    });
-                                    added++;
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Parse error:', e);
-                        }
-                    });
-                    
-                    save();
-                    console.log(`✅ Auto-synced ${added} từ from Google Sheets (old data cleared)`);
-                    
-                    // AUTO-PUSH TO GITHUB if configured
-                    if (githubToken && githubRepo) {
-                        console.log('☁️ Auto-pushing to GitHub...');
-                        showLoading('Đang đồng bộ dữ liệu...', 'Bước 2/2: Đẩy lên GitHub...');
+                    if (lines.length > 1) {
+                        // CLEAR OLD DATA before loading new
+                        vocab = [];
                         
-                        try {
-                            await syncToGitHubSilent();
-                            console.log('✅ Auto-pushed to GitHub successfully');
+                        const dataLines = lines.slice(1);
+                        let added = 0;
+                        
+                        dataLines.forEach((line, idx) => {
+                            try {
+                                const row = parseCSVLine(line);
+                                if (row.length >= 4) {
+                                    const chinese = row[0]?.trim() || '';
+                                    const pinyin = row[2]?.trim() || '';
+                                    const meaning = row[3]?.trim() || '';
+                                    const topic = row[4]?.trim() || 'Sheet';
+                                    const difficulty = row[5]?.trim() || 'easy';
+                                    const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
+                                    
+                                    if (chinese && !vocab.some(v => v.chinese === chinese)) {
+                                        vocab.push({
+                                            id: Date.now() + added,
+                                            vietnamese: meaning || chinese,
+                                            chinese: chinese,
+                                            pinyin: pinyin || generatePinyin(chinese),
+                                            meaning: meaning || chinese,
+                                            topic: topic,
+                                            difficulty: difficulty,
+                                            learned: learned,
+                                            nextReview: Date.now(),
+                                            reviewCount: 0
+                                        });
+                                        added++;
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Parse error:', e);
+                            }
+                        });
+                        
+                        save();
+                        updateLastSyncTime();
+                        console.log(`✅ Auto-synced ${added} từ from Google Sheets`);
+                        
+                        // AUTO-PUSH TO GITHUB if configured
+                        if (githubToken && githubRepo) {
+                            console.log('☁️ Auto-pushing to GitHub...');
+                            showLoading('Đang đồng bộ dữ liệu...', 'Bước 2/2: Đẩy lên GitHub...');
+                            
+                            try {
+                                await syncToGitHubSilent();
+                                console.log('✅ Auto-pushed to GitHub successfully');
+                                hideLoading();
+                                status(`✅ Đã đồng bộ ${added} từ (Sheets → Local → GitHub)`, 'success');
+                            } catch (githubError) {
+                                console.error('⚠️ GitHub push failed:', githubError);
+                                hideLoading();
+                                status(`✅ Đã đồng bộ ${added} từ (⚠️ GitHub push lỗi)`, 'success');
+                            }
+                        } else {
                             hideLoading();
-                            status(`✅ Đã đồng bộ ${added} từ (Sheets → Local → GitHub)`, 'success');
-                        } catch (githubError) {
-                            console.error('⚠️ GitHub push failed:', githubError);
-                            hideLoading();
-                            status(`✅ Đã đồng bộ ${added} từ (⚠️ GitHub push lỗi)`, 'success');
+                            status(`✅ Đã đồng bộ ${added} từ từ Google Sheets!`, 'success');
                         }
                     } else {
-                        hideLoading();
-                        status(`✅ Đã đồng bộ ${added} từ từ Google Sheets!`, 'success');
+                        throw new Error('Sheet empty');
                     }
                 } else {
-                    throw new Error('Sheet empty');
+                    throw new Error('Failed to fetch');
                 }
-            } else {
-                throw new Error('Failed to fetch');
+            } catch (e) {
+                console.warn('⚠️ Google Sheets sync failed:', e.message);
+                hideLoading();
+                
+                if (vocab.length === 0) {
+                    vocab = [
+                        {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'ni3 hao3',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
+                        {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xie4 xie4',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
+                        {id:3,vietnamese:'tạm biệt',chinese:'再见',pinyin:'zai4 jian4',meaning:'goodbye',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0}
+                    ];
+                    save();
+                    status('⚠️ Không thể sync, dùng dữ liệu mẫu', 'error');
+                } else {
+                    status('⚠️ Dùng dữ liệu đã lưu (Sheets lỗi)', 'error');
+                }
             }
-        } catch (e) {
-            console.warn('⚠️ Google Sheets sync failed:', e.message);
-            hideLoading();
-            
-            if (vocab.length === 0) {
-                vocab = [
-                    {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'ni3 hao3',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
-                    {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xie4 xie4',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
-                    {id:3,vietnamese:'tạm biệt',chinese:'再见',pinyin:'zai4 jian4',meaning:'goodbye',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0}
-                ];
-                save();
-                status('⚠️ Không thể sync, dùng dữ liệu mẫu', 'error');
-            } else {
-                status('⚠️ Dùng dữ liệu đã lưu (Sheets lỗi)', 'error');
+        } else {
+            console.log('⏭️ Skip auto-sync - using localStorage (strategy:', syncStrategy, ')');
+            if (vocab.length > 0) {
+                status(`📦 Đã load ${vocab.length} từ từ localStorage`, 'success');
             }
         }
     } else if (vocab.length === 0) {
@@ -1395,6 +2144,19 @@ async function init() {
     updateTopicSelect();
     updateFlashcards();
     updateConfig();
+    
+    // Set up search listener (after page is loaded)
+    const searchInput = document.getElementById('lib-search');
+    if (searchInput) {
+        console.log('🔧 Setting up search input listener');
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            console.log('🔍 Search term changed:', searchTerm);
+            renderLibrary();
+        });
+    } else {
+        console.error('❌ Search input not found!');
+    }
 }
 
 function waitForLibraries() {
@@ -1418,10 +2180,20 @@ function waitForLibraries() {
     });
 }
 
-waitForLibraries().then(() => {
-    console.log('🚀 Initializing app...');
-    init();
-});
+// Wait for both DOM and libraries to be ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+} else {
+    startApp();
+}
+
+function startApp() {
+    console.log('📄 DOM Ready, waiting for libraries...');
+    waitForLibraries().then(() => {
+        console.log('🚀 Initializing app...');
+        init();
+    });
+}
 </script>
 
 </body>
