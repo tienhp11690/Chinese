@@ -34,10 +34,17 @@
 
     .card { background:white; border:1px solid var(--g2); border-radius:16px; padding:20px; position:relative; transition:all .3s; display:flex; flex-direction:column; justify-content:space-between; min-height:140px; }
     .card:hover { transform:translateY(-4px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
-    .card .play { background:rgba(102,126,234,.1); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .3s; }
+    .card .play { background:rgba(102,126,234,.1); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .3s; font-size:1.2rem; }
     .card .play:hover { background:var(--p); color:white; }
     .card .badge { position:absolute; top:12px; right:12px; padding:4px 10px; border-radius:12px; font-size:.75rem; font-weight:600; }
     .card .badge.easy { background:#d4edda; color:#155724; }
+    .card-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+    
+    .loading-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:9999; }
+    .loading-overlay.show { display:flex; }
+    .loading-content { background:white; padding:32px; border-radius:16px; text-align:center; max-width:400px; }
+    .loading-spinner { width:50px; height:50px; border:4px solid var(--g2); border-top:4px solid var(--p); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
     .btn { padding:12px 24px; border:none; border-radius:12px; font-weight:600; cursor:pointer; display:inline-flex; gap:8px; align-items:center; transition:all .3s; background:linear-gradient(135deg,var(--p),var(--pd)); color:white; }
     .btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(102,126,234,.3); }
@@ -215,13 +222,31 @@
         </p>
     </div>
     
+    <div class="config-section">
+        <h3>📦 vocab.json URL</h3>
+        <input type="text" id="vocab-json-url" placeholder="https://your-domain.com/vocab.json" class="input-field">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <button class="btn" onclick="saveVocabJsonUrl()">💾 Lưu URL</button>
+            <button class="btn" onclick="loadFromVocabUrl()">📥 Load từ URL</button>
+        </div>
+        <p style="margin-top:8px;font-size:0.85rem;color:var(--g6)">
+            URL hiện tại: <span id="current-vocab-url">Chưa cấu hình</span>
+        </p>
+    </div>
+    
     <div style="background:#ecfdf5;padding:20px;border-radius:12px;margin:20px 0">
         <h3>💾 Dữ liệu</h3>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn" onclick="exportCSV()">💾 CSV</button>
-            <button class="btn" onclick="downloadVocabJSON()">📥 vocab.json</button>
-            <button class="btn" style="background:var(--d)" onclick="clearAll()">🗑️ Xóa</button>
+            <button class="btn" onclick="exportCSV()">💾 Export CSV</button>
+            <button class="btn" onclick="downloadVocabJSON()">📥 Download vocab.json</button>
+            <button class="btn" onclick="document.getElementById('upload-json').click()">📂 Upload vocab.json</button>
+            <input type="file" id="upload-json" accept=".json" style="display:none" onchange="uploadVocabJson(event)">
+            <button class="btn" style="background:#f59e0b" onclick="clearVocabJson()">🗑️ Clear vocab.json</button>
+            <button class="btn" style="background:var(--d)" onclick="clearAll()">🗑️ Xóa tất cả</button>
         </div>
+        <p style="margin-top:12px;font-size:0.85rem;color:var(--g6)">
+            💡 <strong>Clear vocab.json:</strong> Xóa data trong localStorage, giữ lại cấu hình. Sau đó có thể load lại từ Google Sheets.
+        </p>
     </div>
 </div>
 ```
@@ -239,6 +264,14 @@
     </div>
 </div>
 
+<div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <h3 id="loading-title" style="margin-bottom:8px">Đang tải dữ liệu...</h3>
+        <p id="loading-message" style="color:var(--g6);font-size:0.9rem"></p>
+    </div>
+</div>
+
 <div class="status" id="status"></div>
 
 <script>
@@ -251,6 +284,7 @@ let fcCards = [];
 let defaultSheetId = '';
 let githubToken = '';
 let githubRepo = '';
+let vocabJsonUrl = '';
 
 // === IMPROVED CSV PARSER (RFC 4180) ===
 function parseCSVLine(line) {
@@ -304,6 +338,16 @@ function parseCSVLine(line) {
 }
 
 // === UTILITIES ===
+function showLoading(title, message) {
+    document.getElementById('loading-title').textContent = title;
+    document.getElementById('loading-message').textContent = message;
+    document.getElementById('loading-overlay').classList.add('show');
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').classList.remove('show');
+}
+
 function generatePinyin(zh) {
     if (typeof pinyinPro === 'undefined') return '';
     try {
@@ -387,12 +431,12 @@ function renderLibrary() {
                 ${w.meaning && w.meaning !== w.vietnamese ? `<div style="color:var(--g6);font-size:0.85rem;margin-top:4px">${w.meaning}</div>` : ''}
                 <div style="color:var(--g6);font-size:0.8rem;margin-top:8px">📂 ${w.topic}</div>
             </div>
-            <div style="display:flex;gap:8px;margin-top:12px">
-                <button class="play" onclick="speak('${w.chinese}')">🔊</button>
-                <button class="btn" style="flex:1;padding:8px" onclick="toggleLearnedById(${w.id})">
+            <div class="card-actions">
+                <button class="play" onclick="speak('${w.chinese.replace(/'/g, "\\'")}')">🔊</button>
+                <button class="play" onclick="showStrokeOrder('${w.chinese.replace(/'/g, "\\'")}')">✍️</button>
+                <button class="play" onclick="toggleLearnedById(${w.id})" style="background:${w.learned ? '#d4edda' : 'rgba(102,126,234,.1)'}">
                     ${w.learned ? '✅' : '⭕'}
                 </button>
-                <button class="btn" style="flex:1;padding:8px;background:#ef4444" onclick="deleteWord(${w.id})">🗑️</button>
             </div>
             <span class="badge easy">${w.difficulty}</span>
         </div>
@@ -413,12 +457,34 @@ function toggleLearnedById(id) {
     }
 }
 
-function deleteWord(id) {
-    if (confirm('Xóa từ này?')) {
-        vocab = vocab.filter(w => w.id !== id);
-        save();
-        renderLibrary();
-    }
+function showStrokeOrder(chinese) {
+    const modal = document.getElementById('stroke-modal');
+    const container = document.getElementById('stroke-container');
+    container.innerHTML = '';
+    
+    const chars = chinese.split('');
+    chars.forEach(char => {
+        const div = document.createElement('div');
+        div.className = 'stroke-char';
+        container.appendChild(div);
+        
+        if (typeof HanziWriter !== 'undefined') {
+            HanziWriter.create(div, char, {
+                width: 200,
+                height: 200,
+                padding: 5,
+                showOutline: true,
+                strokeAnimationSpeed: 2,
+                delayBetweenStrokes: 200
+            });
+        }
+    });
+    
+    modal.classList.add('show');
+}
+
+function closeStrokeModal() {
+    document.getElementById('stroke-modal').classList.remove('show');
 }
 
 document.getElementById('lib-search').addEventListener('input', (e) => {
@@ -534,6 +600,91 @@ function updateConfig() {
         githubRepo = savedRepo;
         document.getElementById('github-repo').value = savedRepo;
     }
+    
+    const savedVocabUrl = localStorage.getItem('vocab-json-url');
+    if (savedVocabUrl) {
+        vocabJsonUrl = savedVocabUrl;
+        document.getElementById('vocab-json-url').value = savedVocabUrl;
+        document.getElementById('current-vocab-url').textContent = savedVocabUrl.substring(0, 50) + (savedVocabUrl.length > 50 ? '...' : '');
+    }
+}
+
+function saveVocabJsonUrl() {
+    const url = document.getElementById('vocab-json-url').value.trim();
+    if (!url) return status('⚠️ Nhập URL vocab.json!', 'error');
+    
+    vocabJsonUrl = url;
+    localStorage.setItem('vocab-json-url', url);
+    document.getElementById('current-vocab-url').textContent = url.substring(0, 50) + (url.length > 50 ? '...' : '');
+    status('✅ Đã lưu URL vocab.json!', 'success');
+}
+
+async function loadFromVocabUrl() {
+    if (!vocabJsonUrl) return status('⚠️ Chưa cấu hình URL vocab.json!', 'error');
+    
+    showLoading('Đang tải vocab.json...', 'Từ URL: ' + vocabJsonUrl.substring(0, 50) + '...');
+    
+    try {
+        const res = await fetch(vocabJsonUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        const data = await res.json();
+        if (data.vocab && Array.isArray(data.vocab)) {
+            vocab = data.vocab;
+            save();
+            renderLibrary();
+            updateTopicSelect();
+            hideLoading();
+            status(`✅ Đã load ${vocab.length} từ từ URL!`, 'success');
+        } else {
+            throw new Error('Format JSON không hợp lệ');
+        }
+    } catch (e) {
+        console.error('Load từ URL error:', e);
+        hideLoading();
+        status('❌ Lỗi load từ URL: ' + e.message, 'error');
+    }
+}
+
+function uploadVocabJson(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    showLoading('Đang xử lý file...', file.name);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.vocab && Array.isArray(data.vocab)) {
+                vocab = data.vocab;
+                save();
+                renderLibrary();
+                updateTopicSelect();
+                hideLoading();
+                status(`✅ Đã import ${vocab.length} từ từ file!`, 'success');
+            } else {
+                throw new Error('Format JSON không hợp lệ');
+            }
+        } catch (err) {
+            console.error('Upload error:', err);
+            hideLoading();
+            status('❌ Lỗi: ' + err.message, 'error');
+        }
+    };
+    reader.readAsText(file);
+    
+    // Reset input
+    event.target.value = '';
+}
+
+function clearVocabJson() {
+    if (confirm('⚠️ Xóa dữ liệu vocab.json trong localStorage?\n\nSau đó bạn có thể load lại từ Google Sheets hoặc URL.')) {
+        vocab = [];
+        save();
+        renderLibrary();
+        status('✅ Đã xóa vocab.json! Load lại từ nguồn khác.', 'success');
+    }
 }
 
 async function loadFromSheet() {
@@ -542,7 +693,7 @@ async function loadFromSheet() {
     console.log('🔄 Loading from Google Sheets...');
     console.log('📋 Sheet ID:', defaultSheetId);
     
-    status('📥 Đang load từ Google Sheets...');
+    showLoading('Đang tải từ Google Sheets...', 'Sheet ID: ' + defaultSheetId.substring(0, 20) + '...');
     
     try {
         const url = `https://docs.google.com/spreadsheets/d/${defaultSheetId}/export?format=csv`;
@@ -638,9 +789,11 @@ async function loadFromSheet() {
         console.log(`  ⏭️ Skipped: ${skipped}`);
         console.log(`  ❌ Errors: ${errors}`);
         
+        hideLoading();
         status(`✅ Đã thêm ${added} từ mới!${skipped > 0 ? ` (Bỏ qua ${skipped})` : ''}`, 'success');
     } catch (e) {
         console.error('❌ Error loading from sheet:', e);
+        hideLoading();
         status('❌ Lỗi: ' + e.message, 'error');
     }
 }
@@ -782,29 +935,129 @@ function clearAll() {
 
 // === INIT ===
 async function init() {
-    try {
-        const res = await fetch('./data/vocab.json');
-        if (res.ok) {
-            const data = await res.json();
-            if (data.vocab) {
-                vocab = data.vocab;
-                save();
-                status(`✅ Đã load ${vocab.length} từ từ vocab.json!`, 'success');
+    console.log('🚀 Initializing app...');
+    
+    // Check localStorage first
+    const stored = localStorage.getItem('vocab');
+    if (stored) {
+        vocab = JSON.parse(stored);
+        console.log(`📦 Loaded ${vocab.length} từ from localStorage`);
+    }
+    
+    // Auto-sync from Google Sheets on page load
+    const savedSheetId = localStorage.getItem('default-sheet-id');
+    const savedVocabUrl = localStorage.getItem('vocab-json-url');
+    
+    if (savedSheetId) {
+        defaultSheetId = savedSheetId;
+        console.log('🔄 Auto-syncing from Google Sheets...');
+        showLoading('Đang đồng bộ dữ liệu...', 'Từ Google Sheets');
+        
+        try {
+            const url = `https://docs.google.com/spreadsheets/d/${defaultSheetId}/export?format=csv`;
+            const res = await fetch(url);
+            
+            if (res.ok) {
+                const csv = await res.text();
+                const lines = csv.split(/\r?\n/).filter(l => l.trim());
+                
+                if (lines.length > 1) {
+                    // Clear old data and load fresh
+                    vocab = [];
+                    const dataLines = lines.slice(1);
+                    let added = 0;
+                    
+                    dataLines.forEach((line, idx) => {
+                        try {
+                            const row = parseCSVLine(line);
+                            if (row.length >= 4) {
+                                const chinese = row[0]?.trim() || '';
+                                const pinyin = row[2]?.trim() || '';
+                                const meaning = row[3]?.trim() || '';
+                                const topic = row[4]?.trim() || 'Sheet';
+                                const difficulty = row[5]?.trim() || 'easy';
+                                const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
+                                
+                                if (chinese && !vocab.some(v => v.chinese === chinese)) {
+                                    vocab.push({
+                                        id: Date.now() + added,
+                                        vietnamese: meaning || chinese,
+                                        chinese: chinese,
+                                        pinyin: pinyin || generatePinyin(chinese),
+                                        meaning: meaning || chinese,
+                                        topic: topic,
+                                        difficulty: difficulty,
+                                        learned: learned,
+                                        nextReview: Date.now(),
+                                        reviewCount: 0
+                                    });
+                                    added++;
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Parse error:', e);
+                        }
+                    });
+                    
+                    save();
+                    console.log(`✅ Auto-synced ${added} từ from Google Sheets`);
+                    hideLoading();
+                    status(`✅ Đã đồng bộ ${added} từ từ Google Sheets!`, 'success');
+                } else {
+                    throw new Error('Sheet empty');
+                }
+            } else {
+                throw new Error('Failed to fetch');
+            }
+        } catch (e) {
+            console.warn('⚠️ Google Sheets sync failed:', e.message);
+            hideLoading();
+            
+            // Fallback to vocab.json URL if available
+            if (savedVocabUrl && vocab.length === 0) {
+                vocabJsonUrl = savedVocabUrl;
+                console.log('🔄 Falling back to vocab.json URL...');
+                showLoading('Đang tải từ vocab.json...', 'Fallback từ URL');
+                
+                try {
+                    const res = await fetch(savedVocabUrl);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.vocab && Array.isArray(data.vocab)) {
+                            vocab = data.vocab;
+                            save();
+                            console.log(`✅ Loaded ${vocab.length} từ from vocab.json URL`);
+                            hideLoading();
+                            status(`✅ Đã load ${vocab.length} từ từ vocab.json!`, 'success');
+                        }
+                    }
+                } catch (err) {
+                    console.error('❌ Vocab.json URL fallback failed:', err);
+                    hideLoading();
+                    if (vocab.length === 0) {
+                        // Load demo data if everything failed
+                        vocab = [
+                            {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'ni3 hao3',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
+                            {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xie4 xie4',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
+                            {id:3,vietnamese:'tạm biệt',chinese:'再见',pinyin:'zai4 jian4',meaning:'goodbye',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0}
+                        ];
+                        save();
+                        status('⚠️ Không thể sync, dùng dữ liệu mẫu', 'error');
+                    }
+                }
+            } else if (vocab.length > 0) {
+                status('⚠️ Dùng dữ liệu đã lưu (Sheets lỗi)', 'error');
             }
         }
-    } catch (e) {
-        const stored = localStorage.getItem('vocab');
-        if (stored) {
-            vocab = JSON.parse(stored);
-        } else {
-            // Default demo data
-            vocab = [
-                {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'ni3 hao3',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
-                {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xie4 xie4',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
-                {id:3,vietnamese:'tạm biệt',chinese:'再见',pinyin:'zai4 jian4',meaning:'goodbye',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0}
-            ];
-            save();
-        }
+    } else if (vocab.length === 0) {
+        // No saved config, load demo data
+        vocab = [
+            {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'ni3 hao3',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
+            {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xie4 xie4',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
+            {id:3,vietnamese:'tạm biệt',chinese:'再见',pinyin:'zai4 jian4',meaning:'goodbye',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0}
+        ];
+        save();
+        console.log('📝 Loaded demo data');
     }
     
     renderLibrary();
