@@ -1,0 +1,24 @@
+{
+  "defaultConfig": {
+    "sheetsUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit",
+    "githubToken": "",
+    "githubRepo": "yourusername/your-repo",
+    "githubFile": "data/vocab.json",
+    "vocabJsonUrl": "https://raw.githubusercontent.com/yourusername/your-repo/main/data/vocab.json",
+    "syncStrategy": "sheets-first"
+  },
+  "notes": {
+    "sheetsUrl": "URL của Google Sheets chứa từ vựng (Sheet 1) và mẫu câu (Sheet 2)",
+    "githubToken": "Personal Access Token từ GitHub với quyền 'repo'",
+    "githubRepo": "Format: username/repository-name",
+    "githubFile": "Đường dẫn file trong repo để lưu vocab",
+    "vocabJsonUrl": "URL raw của file vocab.json trên GitHub để load trực tiếp",
+    "syncStrategy": "sheets-first = auto load từ Sheets | local-first = dùng localStorage"
+  },
+  "instructions": {
+    "step1": "Thay YOUR_SHEET_ID bằng ID thực tế của Google Sheet",
+    "step2": "Thay yourusername/your-repo bằng repo GitHub của bạn",
+    "step3": "Upload file này lên GitHub: yourusername/your-repo/config.json",
+    "step4": "App sẽ tự động load config từ: https://raw.githubusercontent.com/yourusername/your-repo/main/config.json"
+  }
+}
