@@ -1,9 +1,9 @@
 {
   "version": "1.0",
-  "updated": "2025-11-04T16:37:10.259Z",
+  "updated": "2025-11-05T04:21:21.189Z",
   "vocab": [
     {
-      "id": 1762274230258,
+      "id": 1762316481187,
       "vietnamese": "xin chào",
       "chinese": "你好",
       "pinyin": "nǐ hǎo",
@@ -11,11 +11,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230259,
+      "id": 1762316481188,
       "vietnamese": "tạm biệt",
       "chinese": "再见",
       "pinyin": "zàijiàn",
@@ -23,11 +23,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230260,
+      "id": 1762316481189,
       "vietnamese": "cảm ơn",
       "chinese": "谢谢",
       "pinyin": "xièxie",
@@ -35,11 +35,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230261,
+      "id": 1762316481190,
       "vietnamese": "không có chi",
       "chinese": "不客气",
       "pinyin": "bú kèqì",
@@ -47,11 +47,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230262,
+      "id": 1762316481191,
       "vietnamese": "xin lỗi",
       "chinese": "对不起",
       "pinyin": "duìbuqǐ",
@@ -59,11 +59,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230263,
+      "id": 1762316481192,
       "vietnamese": "không sao",
       "chinese": "没关系",
       "pinyin": "méi guānxi",
@@ -71,11 +71,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230264,
+      "id": 1762316481193,
       "vietnamese": "bạn khỏe không?",
       "chinese": "你好吗?",
       "pinyin": "nǐ hǎo ma?",
@@ -83,11 +83,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230265,
+      "id": 1762316481194,
       "vietnamese": "tôi khỏe",
       "chinese": "我很好",
       "pinyin": "wǒ hěn hǎo",
@@ -95,11 +95,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230266,
+      "id": 1762316481195,
       "vietnamese": "Bạn, anh, chị (đại từ ngôi thứ 2 số ít)",
       "chinese": "你",
       "pinyin": "nǐ",
@@ -107,11 +107,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230267,
+      "id": 1762316481196,
       "vietnamese": "Tốt, khỏe, hay , ngon",
       "chinese": "好",
       "pinyin": "hǎo",
@@ -119,11 +119,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230268,
+      "id": 1762316481197,
       "vietnamese": "Là, thì",
       "chinese": "是",
       "pinyin": "shì",
@@ -131,11 +131,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230269,
+      "id": 1762316481198,
       "vietnamese": "Giáo viên, thầy giáo, cô giáo",
       "chinese": "老师",
       "pinyin": "lǎoshī",
@@ -143,11 +143,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230270,
+      "id": 1762316481199,
       "vietnamese": "…không? …à?",
       "chinese": "吗",
       "pinyin": "ma",
@@ -155,11 +155,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230271,
+      "id": 1762316481200,
       "vietnamese": "Không (trợ từ phủ định)",
       "chinese": "不",
       "pinyin": "bù",
@@ -167,11 +167,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230272,
+      "id": 1762316481201,
       "vietnamese": "Tôi, tớ, mình (đại từ chỉ người ngôi thứ nhất số ít)",
       "chinese": "我",
       "pinyin": "wǒ",
@@ -179,11 +179,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230273,
+      "id": 1762316481202,
       "vietnamese": "Học sinh",
       "chinese": "学生",
       "pinyin": "xuéshēng",
@@ -191,11 +191,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230274,
+      "id": 1762316481203,
       "vietnamese": "Cô ấy, chị ấy, nó,... (đại từ chỉ người ngôi thứ 3 số ít, nữ giới)",
       "chinese": "她",
       "pinyin": "tā",
@@ -203,11 +203,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230275,
+      "id": 1762316481204,
       "vietnamese": "Ông, bà, cô, chú, anh, chị,… (đại từ xưng hô trang trọng ngôi thứ 2 số ít)",
       "chinese": "您",
       "pinyin": "nín",
@@ -215,11 +215,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230276,
+      "id": 1762316481205,
       "vietnamese": "Lưu học sinh",
       "chinese": "留学生",
       "pinyin": "liúxuéshēng",
@@ -227,11 +227,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230277,
+      "id": 1762316481206,
       "vietnamese": "Gọi, kêu",
       "chinese": "叫",
       "pinyin": "jiào",
@@ -239,11 +239,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230278,
+      "id": 1762316481207,
       "vietnamese": "Gì? Cái gì?",
       "chinese": "什么",
       "pinyin": "shénme",
@@ -251,11 +251,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230279,
+      "id": 1762316481208,
       "vietnamese": "Tên, họ tên",
       "chinese": "名字",
       "pinyin": "míngzi",
@@ -263,11 +263,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230280,
+      "id": 1762316481209,
       "vietnamese": "David (tên riêng người nam)",
       "chinese": "大卫",
       "pinyin": "Dà wèi",
@@ -275,11 +275,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230281,
+      "id": 1762316481210,
       "vietnamese": "Lý Quân (tên riêng người nam)",
       "chinese": "李军",
       "pinyin": "Lǐ jūn",
@@ -287,11 +287,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230282,
+      "id": 1762316481211,
       "vietnamese": "Vương (họ của người Trung Quốc)",
       "chinese": "王",
       "pinyin": "Wáng",
@@ -299,11 +299,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230283,
+      "id": 1762316481212,
       "vietnamese": "Bạn cùng học",
       "chinese": "同学",
       "pinyin": "tóngxué",
@@ -311,11 +311,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230284,
+      "id": 1762316481213,
       "vietnamese": "Hậu tố chỉ người ở số nhiều",
       "chinese": "们",
       "pinyin": "men",
@@ -323,11 +323,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230285,
+      "id": 1762316481214,
       "vietnamese": "Đến, tới",
       "chinese": "来",
       "pinyin": "lái",
@@ -335,11 +335,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230286,
+      "id": 1762316481215,
       "vietnamese": "Giới thiệu",
       "chinese": "介绍",
       "pinyin": "jièshào",
@@ -347,11 +347,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230287,
+      "id": 1762316481216,
       "vietnamese": "Một chút",
       "chinese": "一下儿",
       "pinyin": "yíxiàr",
@@ -359,11 +359,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230288,
+      "id": 1762316481217,
       "vietnamese": "Họ (của tên)",
       "chinese": "姓",
       "pinyin": "xìng",
@@ -371,11 +371,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230289,
+      "id": 1762316481218,
       "vietnamese": "Trợ từ",
       "chinese": "的",
       "pinyin": "de",
@@ -383,11 +383,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230290,
+      "id": 1762316481219,
       "vietnamese": "nào",
       "chinese": "哪",
       "pinyin": "nǎ",
@@ -395,11 +395,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230291,
+      "id": 1762316481220,
       "vietnamese": "Nước, quốc gia",
       "chinese": "国",
       "pinyin": "guó",
@@ -407,11 +407,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230292,
+      "id": 1762316481221,
       "vietnamese": "Người",
       "chinese": "人",
       "pinyin": "rén",
@@ -419,11 +419,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230293,
+      "id": 1762316481222,
       "vietnamese": "Anh ấy, ông ấy,…",
       "chinese": "他",
       "pinyin": "tā",
@@ -431,11 +431,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230294,
+      "id": 1762316481223,
       "vietnamese": "Quen biết",
       "chinese": "认识",
       "pinyin": "rènshi",
@@ -443,11 +443,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230295,
+      "id": 1762316481224,
       "vietnamese": "Rất",
       "chinese": "很",
       "pinyin": "hěn",
@@ -455,11 +455,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230296,
+      "id": 1762316481225,
       "vietnamese": "Vui mừng",
       "chinese": "高兴",
       "pinyin": "gāoxìng",
@@ -467,11 +467,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230258,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230298,
+      "id": 1762316481226,
       "vietnamese": "Cũng",
       "chinese": "也",
       "pinyin": "yě",
@@ -479,11 +479,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230259,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230299,
+      "id": 1762316481227,
       "vietnamese": "Trợ từ",
       "chinese": "呢",
       "pinyin": "ne",
@@ -491,11 +491,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230259,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230300,
+      "id": 1762316481228,
       "vietnamese": "Lưu",
       "chinese": "刘",
       "pinyin": "Líu",
@@ -503,11 +503,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230259,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230301,
+      "id": 1762316481229,
       "vietnamese": "Lưu Minh",
       "chinese": "刘明",
       "pinyin": "Líu míng",
@@ -515,11 +515,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230259,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230302,
+      "id": 1762316481230,
       "vietnamese": "Mỹ quốc",
       "chinese": "美国",
       "pinyin": "Měiguó",
@@ -527,11 +527,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230259,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230303,
+      "id": 1762316481231,
       "vietnamese": "Mã Lệ",
       "chinese": "玛丽",
       "pinyin": "Mǎlì",
@@ -539,11 +539,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230259,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230304,
+      "id": 1762316481232,
       "vietnamese": "Gia Nã Đại",
       "chinese": "加拿大",
       "pinyin": "Jiānádà",
@@ -551,11 +551,11 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230259,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     },
     {
-      "id": 1762274230305,
+      "id": 1762316481233,
       "vietnamese": "Trung Quốc",
       "chinese": "中国",
       "pinyin": "Zhōngguó",
@@ -563,7 +563,7 @@
       "topic": "Chào hỏi",
       "difficulty": "Easy",
       "learned": true,
-      "nextReview": 1762274230259,
+      "nextReview": 1762316481187,
       "reviewCount": 0
     }
   ]
