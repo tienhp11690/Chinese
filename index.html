@@ -293,10 +293,23 @@
 
         <div class="config-section">
             <h3>☁️ GitHub Backup</h3>
+            <p style="margin:10px 0; font-size:0.9rem; color:#666;">
+                Đẩy dữ liệu lên GitHub để backup. Khi Google Sheets fail, app sẽ tự động load từ GitHub.
+            </p>
             <input type="text" id="github-token" class="input-field" placeholder="GitHub Personal Access Token">
             <input type="text" id="github-repo" class="input-field" placeholder="username/repo-name">
             <input type="text" id="github-file" class="input-field" placeholder="data/vocab.json" value="data/vocab.json">
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            
+            <!-- NEW: Vocab JSON URL for fallback -->
+            <label style="display:block; margin-top:12px; margin-bottom:6px; font-weight:600;">
+                📦 URL vocab.json (Fallback khi Sheets fail):
+            </label>
+            <input type="text" id="vocab-json-url" class="input-field" placeholder="https://raw.githubusercontent.com/username/repo/main/data/vocab.json">
+            <p style="font-size:0.85rem; color:#666; margin-top:6px;">
+                URL trực tiếp đến file vocab.json trên GitHub. App sẽ tự động load từ đây nếu Google Sheets không khả dụng.
+            </p>
+            
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
                 <button class="btn" onclick="saveGitHubConfig()">💾 Lưu GitHub Config</button>
                 <button class="btn" onclick="syncToGitHub()">☁️ Push to GitHub</button>
             </div>
@@ -361,7 +374,7 @@ let sentenceTemplates = [];
 
 // Config URL - THAY ĐỔI URL NÀY THÀNH REPO CỦA BẠN
 // Ví dụ: 'https://raw.githubusercontent.com/yourusername/chinese-vocab/main/config.json'
-const CONFIG_URL = 'https://raw.githubusercontent.com/tienhp11690/chinese-vocab/main/config.json';
+const CONFIG_URL = 'https://raw.githubusercontent.com/yourusername/chinese-vocab/main/config.json';
 
 // ==================== AUTO-LOAD CONFIG FROM GITHUB ====================
 
@@ -399,6 +412,12 @@ async function loadConfigFromGitHub() {
             if (!localStorage.getItem('github-file') && defaultConfig.githubFile) {
                 localStorage.setItem('github-file', defaultConfig.githubFile);
                 console.log('📥 Auto-filled: GitHub File Path');
+                applied = true;
+            }
+            
+            if (!localStorage.getItem('vocab-json-url') && defaultConfig.vocabJsonUrl) {
+                localStorage.setItem('vocab-json-url', defaultConfig.vocabJsonUrl);
+                console.log('📥 Auto-filled: Vocab JSON URL');
                 applied = true;
             }
             
@@ -1016,6 +1035,7 @@ function updateConfig() {
     const githubToken = localStorage.getItem('github-token') || '';
     const githubRepo = localStorage.getItem('github-repo') || '';
     const githubFile = localStorage.getItem('github-file') || 'data/vocab.json';
+    const vocabJsonUrl = localStorage.getItem('vocab-json-url') || '';
     const syncStrategy = localStorage.getItem('sync-strategy') || 'sheets-first';
     const lastSyncTime = localStorage.getItem('last-sync-time') || 'Chưa sync';
 
@@ -1023,6 +1043,13 @@ function updateConfig() {
     document.getElementById('github-token').value = githubToken;
     document.getElementById('github-repo').value = githubRepo;
     document.getElementById('github-file').value = githubFile;
+    
+    // NEW: Populate vocab-json-url field
+    const vocabJsonUrlField = document.getElementById('vocab-json-url');
+    if (vocabJsonUrlField) {
+        vocabJsonUrlField.value = vocabJsonUrl;
+    }
+    
     document.getElementById('sync-strategy').value = syncStrategy;
     document.getElementById('last-sync-time').textContent = lastSyncTime;
 }
@@ -1043,10 +1070,12 @@ function saveGitHubConfig() {
     const token = document.getElementById('github-token').value.trim();
     const repo = document.getElementById('github-repo').value.trim();
     const file = document.getElementById('github-file').value.trim();
+    const vocabJsonUrl = document.getElementById('vocab-json-url').value.trim();
 
     localStorage.setItem('github-token', token);
     localStorage.setItem('github-repo', repo);
     localStorage.setItem('github-file', file);
+    localStorage.setItem('vocab-json-url', vocabJsonUrl);
 
     status('💾 Đã lưu GitHub config!', 'success');
 }
@@ -1234,16 +1263,34 @@ function importData(event) {
     reader.onload = (e) => {
         try {
             const imported = JSON.parse(e.target.result);
+            
+            // Support both formats:
+            // 1. Direct array: [{ id: 1, chinese: "你好", ... }, ...]
+            // 2. Nested object: { version: "1.0", vocab: [...] }
+            let vocabData = null;
+            
             if (Array.isArray(imported)) {
-                vocab = imported;
+                // Format 1: Direct array
+                vocabData = imported;
+            } else if (imported.vocab && Array.isArray(imported.vocab)) {
+                // Format 2: Nested object with vocab array
+                vocabData = imported.vocab;
+            } else {
+                throw new Error('Invalid format: Expected array or object with vocab array');
+            }
+            
+            if (vocabData && vocabData.length > 0) {
+                vocab = vocabData;
                 save();
                 renderLibrary();
                 status(`📤 Đã nhập ${vocab.length} từ!`, 'success');
+                console.log('✅ Import successful:', vocab.length, 'words');
             } else {
-                throw new Error('Invalid format');
+                throw new Error('No vocab data found');
             }
         } catch (err) {
-            status('❌ File không hợp lệ!', 'error');
+            console.error('❌ Import error:', err);
+            status(`❌ File không hợp lệ: ${err.message}`, 'error');
         }
     };
     reader.readAsText(file);
@@ -1333,8 +1380,52 @@ async function init() {
                 }
             }
         } catch (e) {
+            console.error('⚠️ Google Sheets sync failed:', e.message);
             hideLoading();
+            
+            // FALLBACK: Try to load from GitHub vocab.json
+            const vocabJsonUrl = localStorage.getItem('vocab-json-url');
+            const githubRepo = localStorage.getItem('github-repo');
+            
+            let fallbackUrl = vocabJsonUrl;
+            if (!fallbackUrl && githubRepo) {
+                // Construct URL from repo if not explicitly set
+                const githubFile = localStorage.getItem('github-file') || 'data/vocab.json';
+                fallbackUrl = `https://raw.githubusercontent.com/${githubRepo}/main/${githubFile}`;
+            }
+            
+            if (fallbackUrl) {
+                console.log('🔄 Attempting fallback: Loading from GitHub vocab.json...');
+                showLoading('Google Sheets không khả dụng...', 'Đang tải từ GitHub backup...');
+                
+                try {
+                    const githubResponse = await fetch(fallbackUrl);
+                    if (githubResponse.ok) {
+                        const githubData = await githubResponse.json();
+                        
+                        // Support both formats (direct array or nested object)
+                        let vocabData = Array.isArray(githubData) ? githubData : githubData.vocab;
+                        
+                        if (vocabData && vocabData.length > 0) {
+                            vocab = vocabData;
+                            save();
+                            hideLoading();
+                            status(`✅ Đã load ${vocab.length} từ từ GitHub backup!`, 'success');
+                            console.log('✅ Fallback successful: Loaded from GitHub');
+                            renderLibrary();
+                            return; // Exit early, no need for demo data
+                        }
+                    }
+                } catch (githubError) {
+                    console.error('⚠️ GitHub fallback also failed:', githubError.message);
+                }
+                
+                hideLoading();
+            }
+            
+            // LAST RESORT: Use demo data
             if (vocab.length === 0) {
+                console.log('📝 Using demo data as last resort');
                 vocab = [
                     {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'nǐ hǎo',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
                     {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xiè xiè',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
