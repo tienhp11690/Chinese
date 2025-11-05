@@ -693,6 +693,54 @@ function revealFlashcard(idx) {
 
 // ==================== SENTENCES - IMPROVED ====================
 
+// AUTO-MATCH: Extract words from Chinese sentence by matching with vocab
+function extractWordsFromSentence(chineseSentence) {
+    const words = [];
+    const vocabChineseSet = vocab.map(v => v.chinese);
+    
+    // Sort vocab by length (longest first) for greedy matching
+    const sortedVocab = vocabChineseSet.sort((a, b) => b.length - a.length);
+    
+    let remaining = chineseSentence;
+    let position = 0;
+    
+    while (position < chineseSentence.length) {
+        let matched = false;
+        
+        // Try to match longest vocab word at current position
+        for (const vocabWord of sortedVocab) {
+            if (remaining.startsWith(vocabWord, position)) {
+                words.push(vocabWord);
+                position += vocabWord.length;
+                matched = true;
+                break;
+            }
+        }
+        
+        // If no match, try substring from current position
+        if (!matched) {
+            // Try decreasing lengths from current position
+            let foundSubstring = false;
+            for (let len = remaining.length - position; len > 0; len--) {
+                const substring = remaining.substring(position, position + len);
+                if (sortedVocab.includes(substring)) {
+                    words.push(substring);
+                    position += len;
+                    foundSubstring = true;
+                    break;
+                }
+            }
+            
+            // If still no match, skip this character
+            if (!foundSubstring) {
+                position++;
+            }
+        }
+    }
+    
+    return words;
+}
+
 async function loadSentenceTemplates() {
     const sheetsUrl = localStorage.getItem('sheets-url');
     
@@ -715,16 +763,32 @@ async function loadSentenceTemplates() {
                         dataLines.forEach(line => {
                             const row = parseCSVLine(line);
                             if (row.length >= 3) {
-                                sentenceTemplates.push({
-                                    chinese: row[0]?.trim() || '',
-                                    pinyin: row[1]?.trim() || '',
-                                    vietnamese: row[2]?.trim() || '',
-                                    words: row[3]?.trim().split(',').map(w => w.trim()) || []
-                                });
+                                const chinese = row[0]?.trim() || '';
+                                const pinyin = row[1]?.trim() || '';
+                                const vietnamese = row[2]?.trim() || '';
+                                
+                                // AUTO-MATCH: Try column D first, fallback to auto-extract
+                                let words = [];
+                                if (row[3] && row[3].trim()) {
+                                    // Manual words provided in column D
+                                    words = row[3].trim().split(',').map(w => w.trim()).filter(w => w);
+                                } else {
+                                    // AUTO-EXTRACT from Chinese sentence
+                                    words = extractWordsFromSentence(chinese);
+                                }
+                                
+                                if (chinese && pinyin && vietnamese) {
+                                    sentenceTemplates.push({
+                                        chinese: chinese,
+                                        pinyin: pinyin,
+                                        vietnamese: vietnamese,
+                                        words: words
+                                    });
+                                }
                             }
                         });
                         
-                        console.log(`✅ Loaded ${sentenceTemplates.length} sentences from Sheets`);
+                        console.log(`✅ Loaded ${sentenceTemplates.length} sentences from Sheets (auto-match enabled)`);
                         return;
                     }
                 }
@@ -734,29 +798,32 @@ async function loadSentenceTemplates() {
         }
     }
     
-    // High-quality built-in templates
+    // High-quality built-in templates (words will be auto-matched during generation)
     sentenceTemplates = [
-        { chinese: '我每天早上喝咖啡', pinyin: 'wǒ měi tiān zǎo shang hē kā fēi', vietnamese: 'Tôi uống cà phê mỗi sáng', words: ['我', '每天', '早上', '喝', '咖啡'] },
-        { chinese: '我爸爸是医生', pinyin: 'wǒ bà ba shì yī shēng', vietnamese: 'Bố tôi là bác sĩ', words: ['我', '爸爸', '是', '医生'] },
-        { chinese: '我妈妈很漂亮', pinyin: 'wǒ mā ma hěn piào liang', vietnamese: 'Mẹ tôi rất đẹp', words: ['我', '妈妈', '很', '漂亮'] },
-        { chinese: '我喜欢吃中国菜', pinyin: 'wǒ xǐ huan chī zhōng guó cài', vietnamese: 'Tôi thích ăn đồ Trung Quốc', words: ['我', '喜欢', '吃', '中国', '菜'] },
-        { chinese: '今天天气很好', pinyin: 'jīn tiān tiān qì hěn hǎo', vietnamese: 'Hôm nay thời tiết rất tốt', words: ['今天', '天气', '很', '好'] },
-        { chinese: '我想去北京旅游', pinyin: 'wǒ xiǎng qù běi jīng lǚ yóu', vietnamese: 'Tôi muốn đi du lịch Bắc Kinh', words: ['我', '想', '去', '北京', '旅游'] },
-        { chinese: '这个电影很有意思', pinyin: 'zhè ge diàn yǐng hěn yǒu yì si', vietnamese: 'Bộ phim này rất thú vị', words: ['这个', '电影', '很', '有意思'] },
-        { chinese: '我在学校学习汉语', pinyin: 'wǒ zài xué xiào xué xí hàn yǔ', vietnamese: 'Tôi học tiếng Trung ở trường', words: ['我', '在', '学校', '学习', '汉语'] },
-        { chinese: '他工作很努力', pinyin: 'tā gōng zuò hěn nǔ lì', vietnamese: 'Anh ấy làm việc rất chăm chỉ', words: ['他', '工作', '很', '努力'] },
-        { chinese: '我们一起去吃饭吧', pinyin: 'wǒ men yì qǐ qù chī fàn ba', vietnamese: 'Chúng ta cùng đi ăn nhé', words: ['我们', '一起', '去', '吃饭'] },
-        { chinese: '这家餐厅的菜很好吃', pinyin: 'zhè jiā cān tīng de cài hěn hǎo chī', vietnamese: 'Món ăn nhà hàng này rất ngon', words: ['这', '餐厅', '的', '菜', '很', '好吃'] },
-        { chinese: '我朋友喜欢喝茶', pinyin: 'wǒ péng you xǐ huan hē chá', vietnamese: 'Bạn tôi thích uống trà', words: ['我', '朋友', '喜欢', '喝', '茶'] },
-        { chinese: '明天我要去上海出差', pinyin: 'míng tiān wǒ yào qù shàng hǎi chū chāi', vietnamese: 'Ngày mai tôi đi công tác Thượng Hải', words: ['明天', '我', '要', '去', '上海', '出差'] },
-        { chinese: '她是一个很好的老师', pinyin: 'tā shì yí gè hěn hǎo de lǎo shī', vietnamese: 'Cô ấy là giáo viên rất tốt', words: ['她', '是', '一个', '很', '好', '的', '老师'] },
-        { chinese: '周末我喜欢看书', pinyin: 'zhōu mò wǒ xǐ huan kàn shū', vietnamese: 'Cuối tuần tôi thích đọc sách', words: ['周末', '我', '喜欢', '看', '书'] },
-        { chinese: '这个城市有很多博物馆', pinyin: 'zhè ge chéng shì yǒu hěn duō bó wù guǎn', vietnamese: 'Thành phố này có nhiều bảo tàng', words: ['这个', '城市', '有', '很多', '博物馆'] },
-        { chinese: '我弟弟在大学学习经济', pinyin: 'wǒ dì di zài dà xué xué xí jīng jì', vietnamese: 'Em trai tôi học kinh tế ở đại học', words: ['我', '弟弟', '在', '大学', '学习', '经济'] },
-        { chinese: '春天的时候我喜欢去公园散步', pinyin: 'chūn tiān de shí hou wǒ xǐ huan qù gōng yuán sàn bù', vietnamese: 'Mùa xuân tôi thích đi dạo công viên', words: ['春天', '的', '时候', '我', '喜欢', '去', '公园', '散步'] },
-        { chinese: '我每个星期去健身房三次', pinyin: 'wǒ měi gè xīng qī qù jiàn shēn fáng sān cì', vietnamese: 'Tôi đi phòng gym ba lần mỗi tuần', words: ['我', '每个', '星期', '去', '健身房', '三', '次'] },
-        { chinese: '这个问题很复杂', pinyin: 'zhè ge wèn tí hěn fù zá', vietnamese: 'Vấn đề này rất phức tạp', words: ['这个', '问题', '很', '复杂'] }
-    ];
+        { chinese: '我每天早上喝咖啡', pinyin: 'wǒ měi tiān zǎo shang hē kā fēi', vietnamese: 'Tôi uống cà phê mỗi sáng' },
+        { chinese: '我爸爸是医生', pinyin: 'wǒ bà ba shì yī shēng', vietnamese: 'Bố tôi là bác sĩ' },
+        { chinese: '我妈妈很漂亮', pinyin: 'wǒ mā ma hěn piào liang', vietnamese: 'Mẹ tôi rất đẹp' },
+        { chinese: '我喜欢吃中国菜', pinyin: 'wǒ xǐ huan chī zhōng guó cài', vietnamese: 'Tôi thích ăn đồ Trung Quốc' },
+        { chinese: '今天天气很好', pinyin: 'jīn tiān tiān qì hěn hǎo', vietnamese: 'Hôm nay thời tiết rất tốt' },
+        { chinese: '我想去北京旅游', pinyin: 'wǒ xiǎng qù běi jīng lǚ yóu', vietnamese: 'Tôi muốn đi du lịch Bắc Kinh' },
+        { chinese: '这个电影很有意思', pinyin: 'zhè ge diàn yǐng hěn yǒu yì si', vietnamese: 'Bộ phim này rất thú vị' },
+        { chinese: '我在学校学习汉语', pinyin: 'wǒ zài xué xiào xué xí hàn yǔ', vietnamese: 'Tôi học tiếng Trung ở trường' },
+        { chinese: '他工作很努力', pinyin: 'tā gōng zuò hěn nǔ lì', vietnamese: 'Anh ấy làm việc rất chăm chỉ' },
+        { chinese: '我们一起去吃饭吧', pinyin: 'wǒ men yì qǐ qù chī fàn ba', vietnamese: 'Chúng ta cùng đi ăn nhé' },
+        { chinese: '这家餐厅的菜很好吃', pinyin: 'zhè jiā cān tīng de cài hěn hǎo chī', vietnamese: 'Món ăn nhà hàng này rất ngon' },
+        { chinese: '我朋友喜欢喝茶', pinyin: 'wǒ péng you xǐ huan hē chá', vietnamese: 'Bạn tôi thích uống trà' },
+        { chinese: '明天我要去上海出差', pinyin: 'míng tiān wǒ yào qù shàng hǎi chū chāi', vietnamese: 'Ngày mai tôi đi công tác Thượng Hải' },
+        { chinese: '她是一个很好的老师', pinyin: 'tā shì yí gè hěn hǎo de lǎo shī', vietnamese: 'Cô ấy là giáo viên rất tốt' },
+        { chinese: '周末我喜欢看书', pinyin: 'zhōu mò wǒ xǐ huan kàn shū', vietnamese: 'Cuối tuần tôi thích đọc sách' },
+        { chinese: '这个城市有很多博物馆', pinyin: 'zhè ge chéng shì yǒu hěn duō bó wù guǎn', vietnamese: 'Thành phố này có nhiều bảo tàng' },
+        { chinese: '我弟弟在大学学习经济', pinyin: 'wǒ dì di zài dà xué xué xí jīng jì', vietnamese: 'Em trai tôi học kinh tế ở đại học' },
+        { chinese: '春天的时候我喜欢去公园散步', pinyin: 'chūn tiān de shí hou wǒ xǐ huan qù gōng yuán sàn bù', vietnamese: 'Mùa xuân tôi thích đi dạo công viên' },
+        { chinese: '我每个星期去健身房三次', pinyin: 'wǒ měi gè xīng qī qù jiàn shēn fáng sān cì', vietnamese: 'Tôi đi phòng gym ba lần mỗi tuần' },
+        { chinese: '这个问题很复杂', pinyin: 'zhè ge wèn tí hěn fù zá', vietnamese: 'Vấn đề này rất phức tạp' }
+    ].map(s => ({
+        ...s,
+        words: [] // Will be auto-matched during generateSentences
+    }));
 }
 
 function generateSentences() {
@@ -771,11 +838,18 @@ function generateSentences() {
     
     const matchedSentences = sentenceTemplates
         .map(template => {
-            const matchedWords = template.words.filter(w => learnedChineseSet.has(w));
+            // AUTO-MATCH: If words array is empty or not provided, extract from sentence
+            let wordsToMatch = template.words;
+            if (!wordsToMatch || wordsToMatch.length === 0) {
+                wordsToMatch = extractWordsFromSentence(template.chinese);
+            }
+            
+            const matchedWords = wordsToMatch.filter(w => learnedChineseSet.has(w));
             return {
                 ...template,
                 matchedWords,
-                matchCount: matchedWords.length
+                matchCount: matchedWords.length,
+                allWords: wordsToMatch // Store for display
             };
         })
         .filter(s => s.matchCount >= 2)
