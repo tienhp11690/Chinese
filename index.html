@@ -259,8 +259,20 @@
     <div id="config" class="page">
         <h2>⚙️ Cài Đặt</h2>
 
+        <!-- Info box về auto-config -->
+        <div style="background:#e0f2fe; padding:16px; border-radius:12px; margin-bottom:20px; border-left:4px solid #0ea5e9;">
+            <strong style="color:#0369a1;">💡 Auto-Config:</strong> 
+            <span style="color:#0c4a6e;">
+                App có thể tự động load cấu hình từ GitHub. 
+                Xem <code style="background:#bae6fd; padding:2px 6px; border-radius:4px;">CONFIG_SETUP.md</code> để biết cách setup.
+            </span>
+        </div>
+
         <div class="config-section">
             <h3>🔄 Đồng Bộ Google Sheets</h3>
+            <p style="margin:10px 0; font-size:0.9rem; color:#666;">
+                <strong>Sheet 1:</strong> Từ vựng | <strong>Sheet 2:</strong> Mẫu câu (tự động match từ)
+            </p>
             <input type="text" id="sheets-url" class="input-field" placeholder="https://docs.google.com/spreadsheets/d/YOUR_ID/edit">
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="btn" onclick="saveConfig()">💾 Lưu cấu hình</button>
@@ -346,6 +358,71 @@ let currentFlashcards = [];
 
 // NEW: Sentence templates
 let sentenceTemplates = [];
+
+// Config URL - THAY ĐỔI URL NÀY THÀNH REPO CỦA BẠN
+// Ví dụ: 'https://raw.githubusercontent.com/yourusername/chinese-vocab/main/config.json'
+const CONFIG_URL = 'https://raw.githubusercontent.com/yourusername/chinese-vocab/main/config.json';
+
+// ==================== AUTO-LOAD CONFIG FROM GITHUB ====================
+
+async function loadConfigFromGitHub() {
+    // Check if CONFIG_URL is customized
+    if (CONFIG_URL.includes('yourusername')) {
+        console.log('⚠️ CONFIG_URL chưa được cấu hình. Skip auto-load config.');
+        console.log('💡 Để sử dụng auto-config: Thay "yourusername/chinese-vocab" bằng repo thực tế');
+        return;
+    }
+    
+    try {
+        console.log('🔧 Loading config from GitHub:', CONFIG_URL);
+        const response = await fetch(CONFIG_URL);
+        
+        if (response.ok) {
+            const config = await response.json();
+            const defaultConfig = config.defaultConfig;
+            
+            // Only apply if localStorage doesn't have values (first-time setup)
+            let applied = false;
+            
+            if (!localStorage.getItem('sheets-url') && defaultConfig.sheetsUrl) {
+                localStorage.setItem('sheets-url', defaultConfig.sheetsUrl);
+                console.log('📥 Auto-filled: Google Sheets URL');
+                applied = true;
+            }
+            
+            if (!localStorage.getItem('github-repo') && defaultConfig.githubRepo) {
+                localStorage.setItem('github-repo', defaultConfig.githubRepo);
+                console.log('📥 Auto-filled: GitHub Repo');
+                applied = true;
+            }
+            
+            if (!localStorage.getItem('github-file') && defaultConfig.githubFile) {
+                localStorage.setItem('github-file', defaultConfig.githubFile);
+                console.log('📥 Auto-filled: GitHub File Path');
+                applied = true;
+            }
+            
+            if (!localStorage.getItem('sync-strategy') && defaultConfig.syncStrategy) {
+                localStorage.setItem('sync-strategy', defaultConfig.syncStrategy);
+                console.log('📥 Auto-filled: Sync Strategy');
+                applied = true;
+            }
+            
+            // Note: Không auto-fill GitHub Token vì lý do bảo mật
+            
+            if (applied) {
+                console.log('✅ Config loaded and applied successfully');
+            } else {
+                console.log('ℹ️ Config loaded but not applied (localStorage already has values)');
+            }
+        } else {
+            console.warn('⚠️ Could not fetch config from GitHub (status:', response.status, ')');
+        }
+    } catch (e) {
+        console.warn('⚠️ Could not load config from GitHub:', e.message);
+        console.log('💾 Using existing localStorage config');
+    }
+}
 
 // ==================== CORE FUNCTIONS ====================
 
@@ -1185,7 +1262,13 @@ function confirmClearData() {
 
 async function init() {
     load();
+    
+    // NEW: Load config from GitHub first (before everything else)
+    await loadConfigFromGitHub();
+    
+    // Load sentence templates from Sheet 2 (gid=1)
     await loadSentenceTemplates();
+    
     loadHideLearnedState();
     
     const syncStrategy = localStorage.getItem('sync-strategy') || 'sheets-first';
