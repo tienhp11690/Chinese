@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -19,304 +18,301 @@
         .page { display:none; background:white; border-radius:16px; padding:32px; box-shadow:0 10px 25px rgba(0,0,0,.15); animation:f .4s; }
         .page.active { display:block; } @keyframes f { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
 
-```
-    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
-    .fc-grid-6 { display:grid; gap:20px; grid-template-columns:repeat(3,1fr); }
+        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
+        .fc-grid-6 { display:grid; gap:20px; grid-template-columns:repeat(3,1fr); }
 
-    .stats { display:flex; gap:20px; font-size:.95rem; color:var(--g6); margin-bottom:24px; flex-wrap:wrap; }
-    .stat { display:flex; align-items:center; gap:6px; background:var(--g1); padding:8px 14px; border-radius:20px; font-weight:500; }
-    .n { font-weight:700; color:var(--p); }
+        .stats { display:flex; gap:20px; font-size:.95rem; color:var(--g6); margin-bottom:24px; flex-wrap:wrap; }
+        .stat { display:flex; align-items:center; gap:6px; background:var(--g1); padding:8px 14px; border-radius:20px; font-weight:500; }
+        .n { font-weight:700; color:var(--p); }
 
-    /* Toggle hide learned words */
-    .hide-learned-toggle { 
-        display:flex; 
-        align-items:center; 
-        gap:12px; 
-        padding:12px 16px; 
-        background:var(--g1); 
-        border-radius:12px; 
-        margin-bottom:16px;
-        cursor:pointer;
-        user-select:none;
-    }
-    .hide-learned-toggle:hover { background:var(--g2); }
-    .toggle-switch { 
-        position:relative; 
-        width:48px; 
-        height:26px; 
-        background:#ccc; 
-        border-radius:13px; 
-        transition:all .3s;
-    }
-    .toggle-switch.active { background:var(--s); }
-    .toggle-switch::after {
-        content:'';
-        position:absolute;
-        width:20px;
-        height:20px;
-        background:white;
-        border-radius:50%;
-        top:3px;
-        left:3px;
-        transition:all .3s;
-    }
-    .toggle-switch.active::after { left:25px; }
-
-    .filters { display:flex; flex-wrap:wrap; gap:10px; padding:16px; background:var(--g1); border-radius:12px; margin-bottom:24px; }
-    .fbtn { padding:8px 16px; border:2px solid var(--g2); background:white; border-radius:20px; font-size:.9rem; cursor:pointer; transition:all .3s; }
-    .fbtn.active { background:var(--p); color:white; border-color:var(--p); }
-
-    /* NEW CARD LAYOUT - Buttons vertical on right, badge on top-left */
-    .card { 
-        background:white; 
-        border:1px solid var(--g2); 
-        border-radius:16px; 
-        padding:20px; 
-        position:relative; 
-        transition:all .3s; 
-        display:grid;
-        grid-template-columns:1fr auto;
-        gap:16px;
-        align-items:start;
-        min-height:140px; 
-    }
-    .card:hover { transform:translateY(-4px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
-    
-    .card-content { 
-        display:flex; 
-        flex-direction:column; 
-        gap:4px;
-        padding-top:24px; /* Add space for badge */
-    }
-    
-    /* Badge moved to TOP-LEFT */
-    .card .badge { 
-        position:absolute; 
-        top:8px; 
-        left:8px;
-        padding:4px 10px; 
-        border-radius:12px; 
-        font-size:.75rem; 
-        font-weight:600;
-        z-index:1;
-    }
-    .card .badge.easy { background:#d4edda; color:#155724; }
-    
-    /* 3 buttons VERTICAL on RIGHT */
-    .card-actions { 
-        display:flex; 
-        flex-direction:column;  /* Changed to column for vertical layout */
-        gap:8px; 
-        align-items:flex-end;
-    }
-    
-    /* Larger buttons: 44x44px on desktop */
-    .card .action-btn { 
-        background:rgba(102,126,234,.1); 
-        border:none; 
-        border-radius:50%; 
-        width:44px; 
-        height:44px; 
-        display:flex; 
-        align-items:center; 
-        justify-content:center; 
-        cursor:pointer; 
-        transition:all .3s; 
-        font-size:1.3rem; 
-        flex-shrink:0;
-    }
-    .card .action-btn:hover { background:var(--p); color:white; transform:scale(1.1); }
-    .card .action-btn.learned { background:#d4edda; color:#155724; }
-    
-    .loading-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:9999; }
-    .loading-overlay.show { display:flex; }
-    .loading-content { background:white; padding:32px; border-radius:16px; text-align:center; max-width:400px; }
-    .loading-spinner { width:50px; height:50px; border:4px solid var(--g2); border-top:4px solid var(--p); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 16px; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-
-    .btn { padding:12px 24px; border:none; border-radius:12px; font-weight:600; cursor:pointer; display:inline-flex; gap:8px; align-items:center; transition:all .3s; background:linear-gradient(135deg,var(--p),var(--pd)); color:white; }
-    .btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(102,126,234,.3); }
-    .btn:disabled { opacity:0.5; cursor:not-allowed; }
-    .btn-danger { background:linear-gradient(135deg,var(--d),#c53030); }
-    .btn-warning { background:linear-gradient(135deg,var(--w),#dd6b20); }
-
-    .fc { background:linear-gradient(135deg,var(--p),var(--pd)); color:white; border-radius:20px; padding:32px; cursor:pointer; min-height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,.15); transition:all .3s; position:relative; }
-    .fc:hover { transform:scale(1.02); }
-    .fc.showing-answer { background:linear-gradient(135deg,var(--s),#38a169); }
-    .fc-chinese { font-size:2.2rem; font-weight:700; margin-bottom:8px; }
-    .fc-pinyin { font-size:1.1rem; font-style:italic; margin-bottom:16px; opacity:0.9; }
-    .fc-viet { display:none; font-size:1.1rem; margin-top:12px; }
-
-    .input-field { width:100%; padding:14px 16px; border:2px solid var(--g2); border-radius:12px; font-size:1rem; margin-bottom:12px; }
-    .search-suggestions { margin:12px 0; display:flex; gap:8px; flex-wrap:wrap; }
-    .search-tag { padding:6px 12px; background:var(--g1); border-radius:16px; font-size:0.85rem; cursor:pointer; transition:all .3s; }
-    .search-tag:hover { background:var(--p); color:white; }
-
-    .status { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:12px 24px; border-radius:50px; box-shadow:0 10px 25px rgba(0,0,0,.15); font-weight:500; opacity:0; transition:all .3s; z-index:999; }
-    .status.show { opacity:1; }
-    .status.success { color:var(--s); }
-    .status.error { color:var(--d); }
-    .spin { width:18px; height:18px; border:2px solid #f3f3f3; border-top:2px solid currentColor; border-radius:50%; animation:s 1s linear infinite; display:none; }
-    @keyframes s { to{transform:rotate(360deg)} }
-
-    .config-section { background:#e0e7ff; padding:20px; border-radius:12px; margin:20px 0; }
-    
-    .tabs-container { display:flex; gap:8px; margin-bottom:20px; }
-    .mode-tab { padding:12px 24px; border-radius:12px; border:2px solid var(--g2); background:white; cursor:pointer; transition:all .3s; font-weight:600; }
-    .mode-tab.active { background:var(--p); color:white; border-color:var(--p); }
-    
-    .manual-section { background:#fef3c7; padding:20px; border-radius:12px; margin:20px 0; }
-    .manual-section label { display:block; font-weight:600; margin-bottom:6px; color:var(--g8); }
-
-    .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); }
-    .modal.show { display:flex; align-items:center; justify-content:center; }
-    .modal-content { background:white; padding:40px; border-radius:20px; max-width:600px; width:90%; }
-    .stroke-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin:20px 0; }
-    .stroke-char { width:200px; height:200px; }
-
-    .sentence-card { 
-        background:white; 
-        border:2px solid var(--g2); 
-        border-radius:16px; 
-        padding:24px; 
-        transition:all .3s;
-        position:relative;
-    }
-    .sentence-card:hover { 
-        transform:translateY(-4px); 
-        box-shadow:0 12px 30px rgba(0,0,0,.15); 
-        border-color:var(--p);
-    }
-    .sentence-card .match-badge {
-        position:absolute;
-        top:16px;
-        right:16px;
-        background:linear-gradient(135deg,var(--p),var(--pd));
-        color:white;
-        padding:6px 12px;
-        border-radius:20px;
-        font-size:0.85rem;
-        font-weight:600;
-    }
-    .sentence-card .chinese-text {
-        font-size:1.5rem;
-        font-weight:700;
-        color:var(--g8);
-        margin-bottom:8px;
-        line-height:1.6;
-    }
-    .sentence-card .pinyin-text {
-        font-size:1rem;
-        color:var(--g6);
-        margin-bottom:12px;
-        font-style:italic;
-    }
-    .sentence-card .vietnamese-text {
-        font-size:1.05rem;
-        color:var(--g8);
-        margin-bottom:16px;
-        line-height:1.5;
-    }
-    .sentence-card .matched-words {
-        display:flex;
-        flex-wrap:wrap;
-        gap:6px;
-        margin-bottom:16px;
-    }
-    .sentence-card .matched-word {
-        background:var(--g1);
-        padding:4px 10px;
-        border-radius:12px;
-        font-size:0.85rem;
-        color:var(--p);
-        font-weight:500;
-    }
-    .sentence-card .actions {
-        display:flex;
-        gap:8px;
-        flex-wrap:wrap;
-    }
-    
-    .sentence-tabs {
-        display:flex;
-        gap:8px;
-        margin-bottom:20px;
-        border-bottom:2px solid var(--g2);
-        padding-bottom:0;
-    }
-    .sentence-tab {
-        padding:12px 24px;
-        border:none;
-        background:transparent;
-        cursor:pointer;
-        font-weight:600;
-        color:var(--g6);
-        border-bottom:3px solid transparent;
-        transition:all .3s;
-        margin-bottom:-2px;
-    }
-    .sentence-tab:hover {
-        color:var(--p);
-        background:var(--g1);
-    }
-    .sentence-tab.active {
-        color:var(--p);
-        border-bottom-color:var(--p);
-    }
-    .sentence-sub-page {
-        display:none;
-    }
-    .sentence-sub-page.active {
-        display:block;
-    }
-
-    @media (max-width:768px) { 
-        .grid, .fc-grid-6 { grid-template-columns:1fr; }
-        .stroke-char { width:150px; height:150px; }
-        .nav { padding:6px; gap:4px; }
-        .tab { min-width:80px; padding:10px 8px; font-size:0.85rem; }
-        .stats { gap:10px; font-size:0.85rem; }
-        .stat { padding:6px 10px; }
-        .filters { gap:6px; padding:12px; }
-        .fbtn { padding:6px 12px; font-size:0.8rem; }
-        .card { padding:16px; min-height:120px; gap:12px; }
-        /* Smaller buttons on mobile: 38x38px */
-        .card .action-btn { width:38px; height:38px; font-size:1.1rem; }
-        .fc { padding:24px 16px; min-height:180px; }
-        .fc-chinese { font-size:1.8rem; }
-        .fc-pinyin { font-size:1rem; }
-        .fc-viet { font-size:1rem; }
-        .btn { padding:10px 16px; font-size:0.9rem; }
-        .input-field { padding:12px 14px; font-size:0.95rem; }
-        .modal-content { 
-            padding:24px 12px 20px 12px !important; 
-            width:95%; 
-            max-height:90vh;
-            overflow-y:auto;
+        /* Toggle hide learned words */
+        .hide-learned-toggle { 
+            display:flex; 
+            align-items:center; 
+            gap:12px; 
+            padding:12px 16px; 
+            background:var(--g1); 
+            border-radius:12px; 
+            margin-bottom:16px;
+            cursor:pointer;
+            user-select:none;
         }
-        .stroke-container { gap:12px; }
-        .stroke-char { width:140px; height:140px; }
-        /* Mobile-specific stroke modal adjustments */
-        #stroke-modal .modal-content h2 {
-            font-size:1.4rem !important;
-            margin-bottom:8px !important;
+        .hide-learned-toggle:hover { background:var(--g2); }
+        .toggle-switch { 
+            position:relative; 
+            width:48px; 
+            height:26px; 
+            background:#ccc; 
+            border-radius:13px; 
+            transition:all .3s;
         }
-        #stroke-modal .modal-content > div:first-child {
-            margin-top:16px !important;
+        .toggle-switch.active { background:var(--s); }
+        .toggle-switch::after {
+            content:'';
+            position:absolute;
+            width:20px;
+            height:20px;
+            background:white;
+            border-radius:50%;
+            top:3px;
+            left:3px;
+            transition:all .3s;
         }
-        .page { padding:20px 16px; }
-        .c { padding:12px; }
-        .h1 { font-size:1.8rem; }
-        h2 { font-size:1.3rem; }
-        h3 { font-size:1.1rem; }
-        .config-section { padding:16px; }
-        .manual-section { padding:16px; }
-        .grid { gap:16px; }
-        .hide-learned-toggle { padding:10px 12px; font-size:0.9rem; }
-    }
-</style>
-```
+        .toggle-switch.active::after { left:25px; }
 
+        .filters { display:flex; flex-wrap:wrap; gap:10px; padding:16px; background:var(--g1); border-radius:12px; margin-bottom:24px; }
+        .fbtn { padding:8px 16px; border:2px solid var(--g2); background:white; border-radius:20px; font-size:.9rem; cursor:pointer; transition:all .3s; }
+        .fbtn.active { background:var(--p); color:white; border-color:var(--p); }
+
+        /* NEW CARD LAYOUT - Buttons vertical on right, badge on top-left */
+        .card { 
+            background:white; 
+            border:1px solid var(--g2); 
+            border-radius:16px; 
+            padding:20px; 
+            position:relative; 
+            transition:all .3s; 
+            display:grid;
+            grid-template-columns:1fr auto;
+            gap:16px;
+            align-items:start;
+            min-height:140px; 
+        }
+        .card:hover { transform:translateY(-4px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
+        
+        .card-content { 
+            display:flex; 
+            flex-direction:column; 
+            gap:4px;
+            padding-top:24px; /* Add space for badge */
+        }
+        
+        /* Badge moved to TOP-LEFT */
+        .card .badge { 
+            position:absolute; 
+            top:8px; 
+            left:8px;
+            padding:4px 10px; 
+            border-radius:12px; 
+            font-size:.75rem; 
+            font-weight:600;
+            z-index:1;
+        }
+        .card .badge.easy { background:#d4edda; color:#155724; }
+        
+        /* 3 buttons VERTICAL on RIGHT */
+        .card-actions { 
+            display:flex; 
+            flex-direction:column;  /* Changed to column for vertical layout */
+            gap:8px; 
+            align-items:flex-end;
+        }
+        
+        /* Larger buttons: 44x44px on desktop */
+        .card .action-btn { 
+            background:rgba(102,126,234,.1); 
+            border:none; 
+            border-radius:50%; 
+            width:44px; 
+            height:44px; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            cursor:pointer; 
+            transition:all .3s; 
+            font-size:1.3rem; 
+            flex-shrink:0;
+        }
+        .card .action-btn:hover { background:var(--p); color:white; transform:scale(1.1); }
+        .card .action-btn.learned { background:#d4edda; color:#155724; }
+        
+        .loading-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:9999; }
+        .loading-overlay.show { display:flex; }
+        .loading-content { background:white; padding:32px; border-radius:16px; text-align:center; max-width:400px; }
+        .loading-spinner { width:50px; height:50px; border:4px solid var(--g2); border-top:4px solid var(--p); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 16px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        .btn { padding:12px 24px; border:none; border-radius:12px; font-weight:600; cursor:pointer; display:inline-flex; gap:8px; align-items:center; transition:all .3s; background:linear-gradient(135deg,var(--p),var(--pd)); color:white; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(102,126,234,.3); }
+        .btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .btn-danger { background:linear-gradient(135deg,var(--d),#c53030); }
+        .btn-warning { background:linear-gradient(135deg,var(--w),#dd6b20); }
+
+        .fc { background:linear-gradient(135deg,var(--p),var(--pd)); color:white; border-radius:20px; padding:32px; cursor:pointer; min-height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,.15); transition:all .3s; position:relative; }
+        .fc:hover { transform:scale(1.02); }
+        .fc.showing-answer { background:linear-gradient(135deg,var(--s),#38a169); }
+        .fc-chinese { font-size:2.2rem; font-weight:700; margin-bottom:8px; }
+        .fc-pinyin { font-size:1.1rem; font-style:italic; margin-bottom:16px; opacity:0.9; }
+        .fc-viet { display:none; font-size:1.1rem; margin-top:12px; }
+
+        .input-field { width:100%; padding:14px 16px; border:2px solid var(--g2); border-radius:12px; font-size:1rem; margin-bottom:12px; }
+        .search-suggestions { margin:12px 0; display:flex; gap:8px; flex-wrap:wrap; }
+        .search-tag { padding:6px 12px; background:var(--g1); border-radius:16px; font-size:0.85rem; cursor:pointer; transition:all .3s; }
+        .search-tag:hover { background:var(--p); color:white; }
+
+        .status { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:12px 24px; border-radius:50px; box-shadow:0 10px 25px rgba(0,0,0,.15); font-weight:500; opacity:0; transition:all .3s; z-index:999; }
+        .status.show { opacity:1; }
+        .status.success { color:var(--s); }
+        .status.error { color:var(--d); }
+        .spin { width:18px; height:18px; border:2px solid #f3f3f3; border-top:2px solid currentColor; border-radius:50%; animation:s 1s linear infinite; display:none; }
+        @keyframes s { to{transform:rotate(360deg)} }
+
+        .config-section { background:#e0e7ff; padding:20px; border-radius:12px; margin:20px 0; }
+        
+        .tabs-container { display:flex; gap:8px; margin-bottom:20px; }
+        .mode-tab { padding:12px 24px; border-radius:12px; border:2px solid var(--g2); background:white; cursor:pointer; transition:all .3s; font-weight:600; }
+        .mode-tab.active { background:var(--p); color:white; border-color:var(--p); }
+        
+        .manual-section { background:#fef3c7; padding:20px; border-radius:12px; margin:20px 0; }
+        .manual-section label { display:block; font-weight:600; margin-bottom:6px; color:var(--g8); }
+
+        .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); }
+        .modal.show { display:flex; align-items:center; justify-content:center; }
+        .modal-content { background:white; padding:40px; border-radius:20px; max-width:600px; width:90%; }
+        .stroke-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin:20px 0; }
+        .stroke-char { width:200px; height:200px; }
+
+        .sentence-card { 
+            background:white; 
+            border:2px solid var(--g2); 
+            border-radius:16px; 
+            padding:24px; 
+            transition:all .3s;
+            position:relative;
+        }
+        .sentence-card:hover { 
+            transform:translateY(-4px); 
+            box-shadow:0 12px 30px rgba(0,0,0,.15); 
+            border-color:var(--p);
+        }
+        .sentence-card .match-badge {
+            position:absolute;
+            top:16px;
+            right:16px;
+            background:linear-gradient(135deg,var(--p),var(--pd));
+            color:white;
+            padding:6px 12px;
+            border-radius:20px;
+            font-size:0.85rem;
+            font-weight:600;
+        }
+        .sentence-card .chinese-text {
+            font-size:1.5rem;
+            font-weight:700;
+            color:var(--g8);
+            margin-bottom:8px;
+            line-height:1.6;
+        }
+        .sentence-card .pinyin-text {
+            font-size:1rem;
+            color:var(--g6);
+            margin-bottom:12px;
+            font-style:italic;
+        }
+        .sentence-card .vietnamese-text {
+            font-size:1.05rem;
+            color:var(--g8);
+            margin-bottom:16px;
+            line-height:1.5;
+        }
+        .sentence-card .matched-words {
+            display:flex;
+            flex-wrap:wrap;
+            gap:6px;
+            margin-bottom:16px;
+        }
+        .sentence-card .matched-word {
+            background:var(--g1);
+            padding:4px 10px;
+            border-radius:12px;
+            font-size:0.85rem;
+            color:var(--p);
+            font-weight:500;
+        }
+        .sentence-card .actions {
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+        
+        .sentence-tabs {
+            display:flex;
+            gap:8px;
+            margin-bottom:20px;
+            border-bottom:2px solid var(--g2);
+            padding-bottom:0;
+        }
+        .sentence-tab {
+            padding:12px 24px;
+            border:none;
+            background:transparent;
+            cursor:pointer;
+            font-weight:600;
+            color:var(--g6);
+            border-bottom:3px solid transparent;
+            transition:all .3s;
+            margin-bottom:-2px;
+        }
+        .sentence-tab:hover {
+            color:var(--p);
+            background:var(--g1);
+        }
+        .sentence-tab.active {
+            color:var(--p);
+            border-bottom-color:var(--p);
+        }
+        .sentence-sub-page {
+            display:none;
+        }
+        .sentence-sub-page.active {
+            display:block;
+        }
+
+        @media (max-width:768px) { 
+            .grid, .fc-grid-6 { grid-template-columns:1fr; }
+            .stroke-char { width:150px; height:150px; }
+            .nav { padding:6px; gap:4px; }
+            .tab { min-width:80px; padding:10px 8px; font-size:0.85rem; }
+            .stats { gap:10px; font-size:0.85rem; }
+            .stat { padding:6px 10px; }
+            .filters { gap:6px; padding:12px; }
+            .fbtn { padding:6px 12px; font-size:0.8rem; }
+            .card { padding:16px; min-height:120px; gap:12px; }
+            /* Smaller buttons on mobile: 38x38px */
+            .card .action-btn { width:38px; height:38px; font-size:1.1rem; }
+            .fc { padding:24px 16px; min-height:180px; }
+            .fc-chinese { font-size:1.8rem; }
+            .fc-pinyin { font-size:1rem; }
+            .fc-viet { font-size:1rem; }
+            .btn { padding:10px 16px; font-size:0.9rem; }
+            .input-field { padding:12px 14px; font-size:0.95rem; }
+            .modal-content { 
+                padding:24px 12px 20px 12px !important; 
+                width:95%; 
+                max-height:90vh;
+                overflow-y:auto;
+            }
+            .stroke-container { gap:12px; }
+            .stroke-char { width:140px; height:140px; }
+            /* Mobile-specific stroke modal adjustments */
+            #stroke-modal .modal-content h2 {
+                font-size:1.4rem !important;
+                margin-bottom:8px !important;
+            }
+            #stroke-modal .modal-content > div:first-child {
+                margin-top:16px !important;
+            }
+            .page { padding:20px 16px; }
+            .c { padding:12px; }
+            .h1 { font-size:1.8rem; }
+            h2 { font-size:1.3rem; }
+            h3 { font-size:1.1rem; }
+            .config-section { padding:16px; }
+            .manual-section { padding:16px; }
+            .grid { gap:16px; }
+            .hide-learned-toggle { padding:10px 12px; font-size:0.9rem; }
+        }
+    </style>
 </head>
 <body>
 <div class="c">
@@ -329,261 +325,256 @@
         <button class="tab" onclick="show('config')">⚙️ Cấu hình</button>
     </div>
 
-```
-<div id="lib" class="page active">
-    <div class="stats">
-        <div class="stat">📊 <span class="n" id="total">0</span> Tổng</div>
-        <div class="stat">✅ <span class="n" id="learned">0</span> Đã học</div>
-        <div class="stat">📂 <span class="n" id="topics">0</span> Chủ đề</div>
-    </div>
-    <input type="text" id="lib-search" class="input-field" placeholder="🔍 Tìm kiếm...">
-    
-    <!-- NEW: Toggle hide learned words -->
-    <div class="hide-learned-toggle" onclick="toggleHideLearned()">
-        <div class="toggle-switch" id="hide-toggle"></div>
-        <div style="flex:1">
-            <strong>🙈 Ẩn từ đã học</strong>
-            <div style="font-size:0.85rem;color:var(--g6);margin-top:2px" id="hide-stats">
-                Hiện <span class="n" id="visible-count">0</span> từ
-            </div>
+    <div id="lib" class="page active">
+        <div class="stats">
+            <div class="stat">📊 <span class="n" id="total">0</span> Tổng</div>
+            <div class="stat">✅ <span class="n" id="learned">0</span> Đã học</div>
+            <div class="stat">📂 <span class="n" id="topics">0</span> Chủ đề</div>
         </div>
-    </div>
-    
-    <div class="filters" id="filters"></div>
-    <div class="grid" id="list"></div>
-</div>
-
-<div id="add" class="page">
-    <h2>➕ Thêm từ vựng</h2>
-    
-    <div class="manual-section">
-        <h3 style="margin-bottom:16px">✍️ Nhập thông tin từ vựng</h3>
-        <p style="color:var(--g6);font-size:0.9rem;margin-bottom:20px">
-            💡 <strong>Tip:</strong> Tra trên Google Translate, paste tiếng Trung vào → Pinyin tự động xuất hiện!
-        </p>
+        <input type="text" id="lib-search" class="input-field" placeholder="🔍 Tìm kiếm...">
         
-        <label>Tiếng Việt <span style="color:red">*</span></label>
-        <input type="text" id="manual-vi" class="input-field" placeholder="VD: bệnh viện">
-        
-        <label>Tiếng Trung <span style="color:red">*</span></label>
-        <input type="text" id="manual-zh" class="input-field" placeholder="VD: 医院">
-        
-        <label>
-            Pinyin 
-            <span style="color:var(--s);font-size:0.85rem" id="pinyin-status">✨ Tự động</span>
-        </label>
-        <input type="text" id="manual-py" class="input-field" placeholder="VD: yi1 yuan4" readonly style="background:#f0f9ff">
-        <div style="font-size:0.8rem;color:var(--g6);margin-top:4px">
-            ℹ️ Pinyin tự động tạo khi bạn nhập/paste tiếng Trung
-        </div>
-        
-        <label>English <span style="color:var(--g6)">(tùy chọn)</span></label>
-        <input type="text" id="manual-en" class="input-field" placeholder="VD: hospital">
-        
-        <button class="btn" id="manual-add-btn" style="width:100%;margin-top:8px;font-size:1.1rem">
-            ➕ Thêm vào thư viện
-        </button>
-    </div>
-
-    <div style="margin-top:20px">
-        <label style="display:block;font-weight:600;margin-bottom:8px">Chủ đề</label>
-        <select id="topic" class="input-field">
-            <option value="">Chọn chủ đề...</option>
-        </select>
-        <div style="display:flex;gap:8px;margin-top:8px">
-            <input type="text" id="newti" placeholder="Tên chủ đề mới..." class="input-field" style="margin:0;flex:1">
-            <button class="btn" onclick="createTopic()">Tạo</button>
-        </div>
-    </div>
-</div>
-
-<div id="fc" class="page">
-    <h2>🎴 Flashcard</h2>
-    <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
-        <select id="fc-topic" onchange="fcTopic=this.value;updateFlashcards()" class="input-field" style="flex:1;margin:0"></select>
-        <button class="btn" onclick="togglePinyin()" id="pinyin-toggle-btn">👁️ Hiện Pinyin</button>
-        <button class="btn" onclick="nextCards()">🔄 Thẻ mới</button>
-    </div>
-    <div id="fc-container" class="fc-grid-6"></div>
-</div>
-
-<div id="sentences" class="page">
-    <h2>💬 Mẫu câu</h2>
-    
-    <!-- Sub-tabs -->
-    <div class="sentence-tabs">
-        <button class="sentence-tab active" onclick="showSentenceSubTab('list')">📋 Danh sách</button>
-        <button class="sentence-tab" onclick="showSentenceSubTab('search')">🔍 Thêm mới</button>
-    </div>
-    
-    <!-- Sub-page: Danh sách -->
-    <div id="sentence-list" class="sentence-sub-page active">
-        <div style="background:var(--g1);padding:16px;border-radius:12px;margin-bottom:20px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                <span style="font-weight:600">
-                    📚 <span class="n" id="saved-sentences-count">0</span> mẫu câu đã lưu
-                </span>
-                <button class="btn" onclick="filterSavedSentences('')" style="padding:6px 12px;font-size:0.85rem">🔄 Tải lại</button>
-            </div>
-        </div>
-        
-        <div id="saved-sentences-list" style="display:grid;gap:20px"></div>
-        
-        <div id="saved-sentences-empty" style="text-align:center;padding:60px 20px;color:var(--g6)">
-            <p style="font-size:1.3rem;margin-bottom:12px">📭 Chưa có mẫu câu nào</p>
-            <p style="margin-bottom:20px">Vào tab "🔍 Thêm mới" để tìm và thêm mẫu câu!</p>
-            <button class="btn" onclick="showSentenceSubTab('search')">🔍 Tìm mẫu câu</button>
-        </div>
-    </div>
-    
-    <!-- Sub-page: Thêm mới (Search) -->
-    <div id="sentence-search" class="sentence-sub-page">
-        <div style="background:var(--g1);padding:20px;border-radius:12px;margin-bottom:24px">
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-                <span style="font-weight:600">Dựa trên <span class="n" id="learned-count-display">0</span> từ đã học:</span>
-                <div id="learned-words-preview" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-            </div>
-            
-            <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
-                <button class="btn" onclick="findSuggestedSentences()" id="find-sentences-btn">
-                    🔍 Tìm mẫu câu
-                </button>
-                <button class="btn" onclick="syncSentencesToSheets()" style="background:linear-gradient(135deg,var(--s),#38a169)">
-                    ☁️ Lưu vào Google Sheets
-                </button>
-            </div>
-            
-            <div id="sentences-filters" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--g2)">
-                <label style="display:block;margin-bottom:8px;font-weight:600">⚙️ Bộ lọc:</label>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-                    <label style="display:flex;align-items:center;gap:6px">
-                        <input type="number" id="min-match-words" value="2" min="1" max="10" style="width:60px;padding:4px 8px;border:1px solid var(--g2);border-radius:6px">
-                        <span style="font-size:0.9rem">Tối thiểu từ match</span>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px">
-                        <input type="number" id="max-sentence-length" value="20" min="5" max="50" style="width:60px;padding:4px 8px;border:1px solid var(--g2);border-radius:6px">
-                        <span style="font-size:0.9rem">Độ dài tối đa</span>
-                    </label>
+        <!-- NEW: Toggle hide learned words -->
+        <div class="hide-learned-toggle" onclick="toggleHideLearned()">
+            <div class="toggle-switch" id="hide-toggle"></div>
+            <div style="flex:1">
+                <strong>🙈 Ẩn từ đã học</strong>
+                <div style="font-size:0.85rem;color:var(--g6);margin-top:2px" id="hide-stats">
+                    Hiện <span class="n" id="visible-count">0</span> từ
                 </div>
             </div>
         </div>
         
-        <div id="sentences-loading" style="display:none;text-align:center;padding:40px;color:var(--g6)">
-            <div class="loading-spinner" style="margin:0 auto 16px"></div>
-            <p>Đang tìm mẫu câu phù hợp...</p>
-        </div>
-        
-        <div id="sentences-results" style="display:grid;gap:20px"></div>
-        
-        <div id="sentences-empty" style="display:none;text-align:center;padding:40px;color:var(--g6)">
-            <p style="font-size:1.2rem;margin-bottom:12px">📚 Chưa có mẫu câu</p>
-            <p>Hãy đánh dấu một số từ là "Đã học" và click "🔍 Tìm mẫu câu"</p>
-        </div>
+        <div class="filters" id="filters"></div>
+        <div class="grid" id="list"></div>
     </div>
-</div>
 
-<div id="config" class="page">
-    <h2>⚙️ Cấu hình</h2>
-    
-    <div class="config-section">
-        <h3>📦 GitHub Sync</h3>
-        <input type="text" id="github-token" placeholder="GitHub Personal Access Token" class="input-field">
-        <input type="text" id="github-repo" placeholder="username/repo-name" class="input-field">
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" onclick="saveGitHubConfig()">💾 Lưu</button>
-            <button class="btn" onclick="syncToGitHub()">☁️ Sync ngay</button>
+    <div id="add" class="page">
+        <h2>➕ Thêm từ vựng</h2>
+        
+        <div class="manual-section">
+            <h3 style="margin-bottom:16px">✍️ Nhập thông tin từ vựng</h3>
+            <p style="color:var(--g6);font-size:0.9rem;margin-bottom:20px">
+                💡 <strong>Tip:</strong> Tra trên Google Translate, paste tiếng Trung vào → Pinyin tự động xuất hiện!
+            </p>
+            
+            <label>Tiếng Việt <span style="color:red">*</span></label>
+            <input type="text" id="manual-vi" class="input-field" placeholder="VD: bệnh viện">
+            
+            <label>Tiếng Trung <span style="color:red">*</span></label>
+            <input type="text" id="manual-zh" class="input-field" placeholder="VD: 医院">
+            
+            <label>
+                Pinyin 
+                <span style="color:var(--s);font-size:0.85rem" id="pinyin-status">✨ Tự động</span>
+            </label>
+            <input type="text" id="manual-py" class="input-field" placeholder="VD: yi1 yuan4" readonly style="background:#f0f9ff">
+            <div style="font-size:0.8rem;color:var(--g6);margin-top:4px">
+                ℹ️ Pinyin tự động tạo khi bạn nhập/paste tiếng Trung
+            </div>
+            
+            <label>English <span style="color:var(--g6)">(tùy chọn)</span></label>
+            <input type="text" id="manual-en" class="input-field" placeholder="VD: hospital">
+            
+            <button class="btn" id="manual-add-btn" style="width:100%;margin-top:8px;font-size:1.1rem">
+                ➕ Thêm vào thư viện
+            </button>
+        </div>
+
+        <div style="margin-top:20px">
+            <label style="display:block;font-weight:600;margin-bottom:8px">Chủ đề</label>
+            <select id="topic" class="input-field">
+                <option value="">Chọn chủ đề...</option>
+            </select>
+            <div style="display:flex;gap:8px;margin-top:8px">
+                <input type="text" id="newti" placeholder="Tên chủ đề mới..." class="input-field" style="margin:0;flex:1">
+                <button class="btn" onclick="createTopic()">Tạo</button>
+            </div>
         </div>
     </div>
-    
-    <div class="config-section">
-        <h3>📊 Google Sheets</h3>
-        <input type="text" id="default-sheet-id" placeholder="Sheet ID..." class="input-field">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-            <button class="btn" onclick="saveDefaultSheet()">💾 Lưu</button>
-            <button class="btn" onclick="loadFromSheet()">📥 Load</button>
-            <button class="btn btn-warning" onclick="clearCacheAndReload()">🔄 Clear Cache & Load</button>
+
+    <div id="fc" class="page">
+        <h2>🎴 Flashcard</h2>
+        <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:center">
+            <select id="fc-topic" onchange="fcTopic=this.value;updateFlashcards()" class="input-field" style="flex:1;margin:0"></select>
+            <button class="btn" onclick="togglePinyin()" id="pinyin-toggle-btn">👁️ Hiện Pinyin</button>
+            <button class="btn" onclick="nextCards()">🔄 Thẻ mới</button>
+        </div>
+        <div id="fc-container" class="fc-grid-6"></div>
+    </div>
+
+    <div id="sentences" class="page">
+        <h2>💬 Mẫu câu</h2>
+        
+        <!-- Sub-tabs -->
+        <div class="sentence-tabs">
+            <button class="sentence-tab active" onclick="showSentenceSubTab('list')">📋 Danh sách</button>
+            <button class="sentence-tab" onclick="showSentenceSubTab('search')">🔍 Thêm mới</button>
         </div>
         
-        <!-- NEW: Sync Strategy -->
-        <div style="margin-top:16px;padding:16px;background:#fef3c7;border-radius:8px">
-            <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--g8)">🔄 Chiến lược đồng bộ:</label>
-            <select id="sync-strategy" class="input-field" style="margin-bottom:12px" onchange="saveSyncStrategy()">
-                <option value="always">Luôn luôn sync (mỗi lần load trang)</option>
-                <option value="daily">Sync 1 lần/ngày (tiết kiệm thời gian)</option>
-                <option value="manual">Chỉ sync thủ công</option>
-            </select>
-            <p style="font-size:0.85rem;color:var(--g6);margin-bottom:8px">
-                <strong>Luôn luôn sync:</strong> Load từ Sheets mỗi lần mở app (chậm hơn, data luôn mới)<br>
-                <strong>Sync 1 lần/ngày:</strong> Ưu tiên localStorage, chỉ sync nếu đã quá 24h (nhanh hơn)<br>
-                <strong>Chỉ thủ công:</strong> Không tự động sync, dùng localStorage (nhanh nhất)
-            </p>
-            <div style="font-size:0.85rem;color:var(--g6)">
-                Lần sync cuối: <strong id="last-sync-time">Chưa sync</strong>
+        <!-- Sub-page: Danh sách -->
+        <div id="sentence-list" class="sentence-sub-page active">
+            <div style="background:var(--g1);padding:16px;border-radius:12px;margin-bottom:20px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <span style="font-weight:600">
+                        📚 <span class="n" id="saved-sentences-count">0</span> mẫu câu đã lưu
+                    </span>
+                    <button class="btn" onclick="filterSavedSentences('')" style="padding:6px 12px;font-size:0.85rem">🔄 Tải lại</button>
+                </div>
+            </div>
+            
+            <div id="saved-sentences-list" style="display:grid;gap:20px"></div>
+            
+            <div id="saved-sentences-empty" style="text-align:center;padding:60px 20px;color:var(--g6)">
+                <p style="font-size:1.3rem;margin-bottom:12px">📭 Chưa có mẫu câu nào</p>
+                <p style="margin-bottom:20px">Vào tab "🔍 Thêm mới" để tìm và thêm mẫu câu!</p>
+                <button class="btn" onclick="showSentenceSubTab('search')">🔍 Tìm mẫu câu</button>
             </div>
         </div>
         
-        <p style="margin-top:12px;font-size:0.85rem;color:var(--g6)">
-            Sheet: <span id="current-sheet">Chưa cấu hình</span>
-        </p>
-        <p style="margin-top:8px;font-size:0.8rem;color:var(--g6);padding:8px;background:#fef3c7;border-radius:8px">
-            💡 <strong>Tip:</strong> Nếu dữ liệu cũ vẫn hiện sau khi xóa trong Sheets, click "🔄 Clear Cache & Load" để xóa cache và load lại.
-        </p>
-    </div>
-    
-    <div class="config-section">
-        <h3>📦 vocab.json URL</h3>
-        <input type="text" id="vocab-json-url" placeholder="https://your-domain.com/vocab.json" class="input-field">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-            <button class="btn" onclick="saveVocabJsonUrl()">💾 Lưu URL</button>
-            <button class="btn" onclick="loadFromVocabUrl()">📥 Load từ URL</button>
+        <!-- Sub-page: Thêm mới (Search) -->
+        <div id="sentence-search" class="sentence-sub-page">
+            <div style="background:var(--g1);padding:20px;border-radius:12px;margin-bottom:24px">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+                    <span style="font-weight:600">Dựa trên <span class="n" id="learned-count-display">0</span> từ đã học:</span>
+                    <div id="learned-words-preview" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+                </div>
+                
+                <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+                    <button class="btn" onclick="findSuggestedSentences()" id="find-sentences-btn">
+                        🔍 Tìm mẫu câu
+                    </button>
+                    <button class="btn" onclick="syncSentencesToSheets()" style="background:linear-gradient(135deg,var(--s),#38a169)">
+                        ☁️ Lưu vào Google Sheets
+                    </button>
+                </div>
+                
+                <div id="sentences-filters" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--g2)">
+                    <label style="display:block;margin-bottom:8px;font-weight:600">⚙️ Bộ lọc:</label>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                        <label style="display:flex;align-items:center;gap:6px">
+                            <input type="number" id="min-match-words" value="2" min="1" max="10" style="width:60px;padding:4px 8px;border:1px solid var(--g2);border-radius:6px">
+                            <span style="font-size:0.9rem">Tối thiểu từ match</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px">
+                            <input type="number" id="max-sentence-length" value="20" min="5" max="50" style="width:60px;padding:4px 8px;border:1px solid var(--g2);border-radius:6px">
+                            <span style="font-size:0.9rem">Độ dài tối đa</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="sentences-loading" style="display:none;text-align:center;padding:40px;color:var(--g6)">
+                <div class="loading-spinner" style="margin:0 auto 16px"></div>
+                <p>Đang tìm mẫu câu phù hợp...</p>
+            </div>
+            
+            <div id="sentences-results" style="display:grid;gap:20px"></div>
+            
+            <div id="sentences-empty" style="display:none;text-align:center;padding:40px;color:var(--g6)">
+                <p style="font-size:1.2rem;margin-bottom:12px">📚 Chưa có mẫu câu</p>
+                <p>Hãy đánh dấu một số từ là "Đã học" và click "🔍 Tìm mẫu câu"</p>
+            </div>
         </div>
-        <p style="margin-top:8px;font-size:0.85rem;color:var(--g6)">
-            URL hiện tại: <span id="current-vocab-url">Chưa cấu hình</span>
-        </p>
     </div>
-    
-    <div style="background:#ecfdf5;padding:20px;border-radius:12px;margin:20px 0">
-        <h3>💾 Dữ liệu</h3>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn" onclick="exportCSV()">💾 Export CSV</button>
-            <button class="btn" onclick="downloadVocabJSON()">📥 Download vocab.json</button>
-            <button class="btn" onclick="document.getElementById('upload-json').click()">📂 Upload vocab.json</button>
-            <input type="file" id="upload-json" accept=".json" style="display:none" onchange="uploadVocabJson(event)">
-            <button class="btn btn-warning" onclick="clearVocabJson()">🗑️ Clear Local</button>
-            <button class="btn btn-danger" onclick="clearVocabGitHub()">🗑️ Clear GitHub</button>
-            <button class="btn btn-danger" onclick="clearAll()">🗑️ Xóa tất cả</button>
+
+    <div id="config" class="page">
+        <h2>⚙️ Cấu hình</h2>
+        
+        <div class="config-section">
+            <h3>📦 GitHub Sync</h3>
+            <input type="text" id="github-token" placeholder="GitHub Personal Access Token" class="input-field">
+            <input type="text" id="github-repo" placeholder="username/repo-name" class="input-field">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn" onclick="saveGitHubConfig()">💾 Lưu</button>
+                <button class="btn" onclick="syncToGitHub()">☁️ Sync ngay</button>
+            </div>
         </div>
-        <p style="margin-top:12px;font-size:0.85rem;color:var(--g6)">
-            💡 <strong>Clear Local:</strong> Xóa data trong localStorage, giữ lại cấu hình (Sheet ID, URLs).<br>
-            💡 <strong>Clear GitHub:</strong> Xóa vocab.json trên GitHub repository (cần token & repo đã cấu hình).<br>
-            💡 <strong>Xóa tất cả:</strong> Xóa cả local data và config.
-        </p>
+        
+        <div class="config-section">
+            <h3>📊 Google Sheets</h3>
+            <input type="text" id="default-sheet-id" placeholder="Sheet ID..." class="input-field">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <button class="btn" onclick="saveDefaultSheet()">💾 Lưu</button>
+                <button class="btn" onclick="loadFromSheet()">📥 Load</button>
+                <button class="btn btn-warning" onclick="clearCacheAndReload()">🔄 Clear Cache & Load</button>
+            </div>
+            
+            <!-- NEW: Sync Strategy -->
+            <div style="margin-top:16px;padding:16px;background:#fef3c7;border-radius:8px">
+                <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--g8)">🔄 Chiến lược đồng bộ:</label>
+                <select id="sync-strategy" class="input-field" style="margin-bottom:12px" onchange="saveSyncStrategy()">
+                    <option value="always">Luôn luôn sync (mỗi lần load trang)</option>
+                    <option value="daily">Sync 1 lần/ngày (tiết kiệm thời gian)</option>
+                    <option value="manual">Chỉ sync thủ công</option>
+                </select>
+                <p style="font-size:0.85rem;color:var(--g6);margin-bottom:8px">
+                    <strong>Luôn luôn sync:</strong> Load từ Sheets mỗi lần mở app (chậm hơn, data luôn mới)<br>
+                    <strong>Sync 1 lần/ngày:</strong> Ưu tiên localStorage, chỉ sync nếu đã quá 24h (nhanh hơn)<br>
+                    <strong>Chỉ thủ công:</strong> Không tự động sync, dùng localStorage (nhanh nhất)
+                </p>
+                <div style="font-size:0.85rem;color:var(--g6)">
+                    Lần sync cuối: <strong id="last-sync-time">Chưa sync</strong>
+                </div>
+            </div>
+            
+            <p style="margin-top:12px;font-size:0.85rem;color:var(--g6)">
+                Sheet: <span id="current-sheet">Chưa cấu hình</span>
+            </p>
+            <p style="margin-top:8px;font-size:0.8rem;color:var(--g6);padding:8px;background:#fef3c7;border-radius:8px">
+                💡 <strong>Tip:</strong> Nếu dữ liệu cũ vẫn hiện sau khi xóa trong Sheets, click "🔄 Clear Cache & Load" để xóa cache và load lại.
+            </p>
+        </div>
+        
+        <div class="config-section">
+            <h3>📦 vocab.json URL</h3>
+            <input type="text" id="vocab-json-url" placeholder="https://your-domain.com/vocab.json" class="input-field">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <button class="btn" onclick="saveVocabJsonUrl()">💾 Lưu URL</button>
+                <button class="btn" onclick="loadFromVocabUrl()">📥 Load từ URL</button>
+            </div>
+            <p style="margin-top:8px;font-size:0.85rem;color:var(--g6)">
+                URL hiện tại: <span id="current-vocab-url">Chưa cấu hình</span>
+            </p>
+        </div>
+        
+        <div style="background:#ecfdf5;padding:20px;border-radius:12px;margin:20px 0">
+            <h3>💾 Dữ liệu</h3>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                <button class="btn" onclick="exportCSV()">💾 Export CSV</button>
+                <button class="btn" onclick="downloadVocabJSON()">📥 Download vocab.json</button>
+                <button class="btn" onclick="document.getElementById('upload-json').click()">📂 Upload vocab.json</button>
+                <input type="file" id="upload-json" accept=".json" style="display:none" onchange="uploadVocabJson(event)">
+                <button class="btn btn-warning" onclick="clearVocabJson()">🗑️ Clear Local</button>
+                <button class="btn btn-danger" onclick="clearVocabGitHub()">🗑️ Clear GitHub</button>
+                <button class="btn btn-danger" onclick="clearAll()">🗑️ Xóa tất cả</button>
+            </div>
+            <p style="margin-top:12px;font-size:0.85rem;color:var(--g6)">
+                💡 <strong>Clear Local:</strong> Xóa data trong localStorage, giữ lại cấu hình (Sheet ID, URLs).<br>
+                💡 <strong>Clear GitHub:</strong> Xóa vocab.json trên GitHub repository (cần token & repo đã cấu hình).<br>
+                💡 <strong>Xóa tất cả:</strong> Xóa cả local data và config.
+            </p>
+        </div>
     </div>
-</div>
-```
 
 </div>
 
 <div id="stroke-modal" class="modal">
     <div class="modal-content" style="position:relative;padding:28px 16px 24px 16px">
         <button onclick="closeStrokeModal()" style="position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:none;background:var(--g2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .3s;z-index:10" onmouseover="this.style.background='var(--d)';this.style.color='white'" onmouseout="this.style.background='var(--g2)';this.style.color='inherit'">✕</button>
-
-```
-    <div style="text-align:center;margin-bottom:12px;margin-top:20px">
-        <div id="stroke-word-info">
-            <div style="font-size:0.85rem;color:var(--g6);margin-bottom:4px;line-height:1.2" id="stroke-pinyin"></div>
-            <div style="font-size:0.95rem;color:var(--g8);font-weight:500;margin-bottom:10px;line-height:1.3" id="stroke-meaning"></div>
-            <h2 style="font-size:1.6rem;color:var(--p);margin-bottom:10px;line-height:1.2" id="stroke-chinese"></h2>
+        
+        <div style="text-align:center;margin-bottom:12px;margin-top:20px">
+            <div id="stroke-word-info">
+                <div style="font-size:0.85rem;color:var(--g6);margin-bottom:4px;line-height:1.2" id="stroke-pinyin"></div>
+                <div style="font-size:0.95rem;color:var(--g8);font-weight:500;margin-bottom:10px;line-height:1.3" id="stroke-meaning"></div>
+                <h2 style="font-size:1.6rem;color:var(--p);margin-bottom:10px;line-height:1.2" id="stroke-chinese"></h2>
+            </div>
+        </div>
+        <div class="stroke-container" id="stroke-container"></div>
+        <div style="display:flex;gap:8px;margin-top:16px;justify-content:center;flex-wrap:wrap">
+            <button class="btn" onclick="replayStrokeAnimation()" id="replay-btn" style="padding:8px 16px;font-size:0.9rem">🔄 Replay</button>
+            <button class="btn" onclick="startPracticeMode()" id="practice-btn" style="background:linear-gradient(135deg,var(--s),#38a169);padding:8px 16px;font-size:0.9rem">✍️ Tập viết</button>
         </div>
     </div>
-    <div class="stroke-container" id="stroke-container"></div>
-    <div style="display:flex;gap:8px;margin-top:16px;justify-content:center;flex-wrap:wrap">
-        <button class="btn" onclick="replayStrokeAnimation()" id="replay-btn" style="padding:8px 16px;font-size:0.9rem">🔄 Replay</button>
-        <button class="btn" onclick="startPracticeMode()" id="practice-btn" style="background:linear-gradient(135deg,var(--s),#38a169);padding:8px 16px;font-size:0.9rem">✍️ Tập viết</button>
-    </div>
-</div>
-```
-
 </div>
 
 <div id="loading-overlay" class="loading-overlay">
@@ -752,23 +743,36 @@ function renderLibrary() {
     const learnedCount = vocab.filter(w => w.learned).length;
     const hiddenCount = hideLearnedWords ? learnedCount : 0;
     
-    document.getElementById('total').textContent = vocab.length;
-    document.getElementById('learned').textContent = learnedCount;
-    document.getElementById('visible-count').textContent = filtered.length;
+    // Update stats with null checks
+    const totalEl = document.getElementById('total');
+    const learnedEl = document.getElementById('learned');
+    const visibleEl = document.getElementById('visible-count');
+    const hideStatsEl = document.getElementById('hide-stats');
+    
+    if (totalEl) totalEl.textContent = vocab.length;
+    if (learnedEl) learnedEl.textContent = learnedCount;
+    if (visibleEl) visibleEl.textContent = filtered.length;
     
     // Update hide stats text
-    const hideStats = document.getElementById('hide-stats');
-    if (hideLearnedWords && hiddenCount > 0) {
-        hideStats.innerHTML = `Hiện <span class="n">${filtered.length}</span> từ | Ẩn <span class="n">${hiddenCount}</span> từ đã học`;
-    } else {
-        hideStats.innerHTML = `Hiện <span class="n">${filtered.length}</span> từ`;
+    if (hideStatsEl) {
+        if (hideLearnedWords && hiddenCount > 0) {
+            hideStatsEl.innerHTML = `Hiện <span class="n">${filtered.length}</span> từ | Ẩn <span class="n">${hiddenCount}</span> từ đã học`;
+        } else {
+            hideStatsEl.innerHTML = `Hiện <span class="n">${filtered.length}</span> từ`;
+        }
     }
     
     const topics = [...new Set(vocab.map(w => w.topic))];
-    document.getElementById('topics').textContent = topics.length;
+    const topicsEl = document.getElementById('topics');
+    if (topicsEl) topicsEl.textContent = topics.length;
     
     // Render filters with DIRECT onclick - most reliable method
     const filtersDiv = document.getElementById('filters');
+    if (!filtersDiv) {
+        console.warn('⚠️ Filters div not found, skipping filter render');
+        return;
+    }
+    
     filtersDiv.innerHTML = `
         <button class="fbtn ${!currentFilter ? 'active' : ''}" onclick="window.filterTopic('')">Tất cả (${vocab.length})</button>
         ${topics.map(t => {
@@ -782,6 +786,10 @@ function renderLibrary() {
     
     // Render cards with NEW LAYOUT
     const listDiv = document.getElementById('list');
+    if (!listDiv) {
+        console.warn('⚠️ List div not found, skipping card render');
+        return;
+    }
     if (filtered.length === 0) {
         listDiv.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--g6)">Không tìm thấy từ nào</div>';
         return;
