@@ -1,10 +1,10 @@
 {
   "defaultConfig": {
-    "sheetsUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit",
+    "sheetsUrl": "https://docs.google.com/spreadsheets/d/1b0rr7I0Z1gVc9o4pR8-0RpWC-pdtNwjasD_hEZ2Wuxw/edit",
     "githubToken": "",
-    "githubRepo": "yourusername/your-repo",
+    "githubRepo": "tienhp11690/chinese",
     "githubFile": "data/vocab.json",
-    "vocabJsonUrl": "https://raw.githubusercontent.com/yourusername/your-repo/main/data/vocab.json",
+    "vocabJsonUrl": "https://raw.githubusercontent.com/tienhp11690/chinese/main/data/vocab.json",
     "syncStrategy": "sheets-first"
   },
   "notes": {
