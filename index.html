@@ -360,6 +360,10 @@
 
 <script>
 // ==================== GLOBAL STATE ====================
+
+// Default Google Sheets URL
+const DEFAULT_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1b0rr7I0Z1gVc9o4pR8-0RpWC-pdtNwjasD_hEZ2Wuxw/edit?gid=0#gid=0';
+
 let vocab = [];
 let currentFilter = '';
 let searchTerm = '';
@@ -375,6 +379,16 @@ let sentenceTemplates = [];
 // Config URL - THAY ĐỔI URL NÀY THÀNH REPO CỦA BẠN
 // Ví dụ: 'https://raw.githubusercontent.com/yourusername/chinese-vocab/main/config.json'
 const CONFIG_URL = 'https://raw.githubusercontent.com/yourusername/chinese-vocab/main/config.json';
+
+// ==================== HELPER FUNCTIONS ====================
+
+// Helper function to remove Vietnamese accents for search
+function removeVietnameseAccents(str) {
+    return str.normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove combining diacritical marks
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D');
+}
 
 // ==================== AUTO-LOAD CONFIG FROM GITHUB ====================
 
@@ -541,11 +555,14 @@ function renderLibrary() {
         if (hideLearnedWords && w.learned) return false;
         
         const matchFilter = !currentFilter || w.topic === currentFilter;
+        
+        // Normalize search term and fields for accent-insensitive search
+        const normalizedSearchTerm = removeVietnameseAccents(searchTerm);
         const matchSearch = !searchTerm || 
-            w.vietnamese.toLowerCase().includes(searchTerm) ||
+            removeVietnameseAccents(w.vietnamese.toLowerCase()).includes(normalizedSearchTerm) ||
             w.chinese.includes(searchTerm) ||
-            w.pinyin.toLowerCase().includes(searchTerm) ||
-            (w.meaning && w.meaning.toLowerCase().includes(searchTerm));
+            removeVietnameseAccents(w.pinyin.toLowerCase()).includes(normalizedSearchTerm) ||
+            (w.meaning && removeVietnameseAccents(w.meaning.toLowerCase()).includes(normalizedSearchTerm));
         return matchFilter && matchSearch;
     });
     
@@ -1031,6 +1048,12 @@ function addWord() {
 // ==================== CONFIG & SYNC ====================
 
 function updateConfig() {
+    // Load default Google Sheets URL if not set
+    if (!localStorage.getItem('sheets-url')) {
+        localStorage.setItem('sheets-url', DEFAULT_SHEETS_URL);
+        console.log('📥 Set default Google Sheets URL');
+    }
+    
     const sheetsUrl = localStorage.getItem('sheets-url') || '';
     const githubToken = localStorage.getItem('github-token') || '';
     const githubRepo = localStorage.getItem('github-repo') || '';
