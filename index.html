@@ -179,11 +179,36 @@
 
         .config-section { background:#e0e7ff; padding:20px; border-radius:12px; margin:20px 0; }
 
-        .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); }
-        .modal.show { display:flex; align-items:center; justify-content:center; }
-        .modal-content { background:white; padding:40px; border-radius:20px; max-width:600px; width:90%; }
-        .stroke-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; margin:20px 0; }
-        .stroke-char { width:200px; height:200px; }
+        .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); overflow-y:auto; }
+        .modal.show { display:flex; align-items:flex-start; justify-content:center; padding:20px; }
+        .modal-content { 
+            background:white; 
+            padding:30px 20px; 
+            border-radius:20px; 
+            max-width:600px; 
+            width:100%; 
+            margin:auto;
+            position:relative;
+            display:flex;
+            flex-direction:column;
+        }
+        .stroke-container { 
+            display:flex; 
+            flex-wrap:wrap; 
+            gap:15px; 
+            justify-content:center; 
+            margin:15px 0;
+            min-height:100px;
+        }
+        .stroke-char { width:180px; height:180px; flex-shrink:0; }
+        .stroke-buttons { 
+            display:flex; 
+            gap:10px; 
+            justify-content:center; 
+            flex-wrap:wrap; 
+            padding-top:15px;
+            margin-top:auto;
+        }
 
         .sentence-item { background:white; border:1px solid var(--g2); border-radius:12px; padding:16px; margin-bottom:12px; }
         .sentence-chinese { font-size:1.3rem; font-weight:600; color:var(--g8); margin-bottom:8px; }
@@ -197,7 +222,20 @@
         @media (max-width: 600px) { 
             .grid, .fc-grid-6 { grid-template-columns:1fr; }
             .card .action-btn { width:38px; height:38px; font-size:1.1rem; }
-            .stroke-char { width:150px; height:150px; }
+            
+            /* Stroke modal mobile */
+            .modal-content { padding:15px; padding-top:45px; }
+            .stroke-char { width:100px; height:100px; }
+            .stroke-container { gap:8px; margin:10px 0; }
+            .stroke-buttons { flex-direction:column; gap:8px; width:100%; }
+            .stroke-buttons .btn { width:100%; justify-content:center; padding:12px; }
+            #stroke-chinese { font-size:1.5rem !important; }
+            #stroke-pinyin { font-size:0.9rem !important; }
+            #stroke-meaning { font-size:0.95rem !important; }
+        }
+        
+        @media (max-width: 400px) {
+            .stroke-char { width:80px; height:80px; }
         }
     </style>
 </head>
@@ -247,8 +285,9 @@
             </div>
         </div>
         
-        <div style="display:flex;gap:16px;margin-bottom:24px">
+        <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
             <button class="btn" onclick="updateFlashcards()">🔄 Làm mới</button>
+            <button class="btn btn-warning" onclick="resetAllLearned()">🔄 Reset tất cả (đánh dấu chưa học)</button>
         </div>
         <div class="fc-grid-6" id="fc-container"></div>
     </div>
@@ -371,16 +410,16 @@
 
 <!-- Stroke Order Modal -->
 <div id="stroke-modal" class="modal">
-    <div class="modal-content" style="position:relative">
-        <button onclick="closeStrokeModal()" style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:var(--g2);cursor:pointer;font-size:1.2rem">✕</button>
+    <div class="modal-content">
+        <button onclick="closeStrokeModal()" style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:var(--g2);cursor:pointer;font-size:1.2rem;z-index:10">✕</button>
         
         <div style="text-align:center;margin-bottom:12px">
-            <div id="stroke-pinyin" style="font-size:0.9rem;color:var(--g6);margin-bottom:4px"></div>
-            <div id="stroke-meaning" style="font-size:1rem;color:var(--g8);margin-bottom:10px"></div>
-            <h2 id="stroke-chinese" style="font-size:1.8rem;color:var(--p);margin-bottom:10px"></h2>
+            <div id="stroke-pinyin" style="font-size:1rem;color:var(--g6);margin-bottom:4px"></div>
+            <div id="stroke-meaning" style="font-size:1.1rem;color:var(--g8);margin-bottom:10px;font-weight:500"></div>
+            <h2 id="stroke-chinese" style="font-size:2rem;color:var(--p);margin-bottom:10px"></h2>
         </div>
         <div class="stroke-container" id="stroke-container"></div>
-        <div style="display:flex;gap:8px;margin-top:16px;justify-content:center">
+        <div class="stroke-buttons">
             <button class="btn" onclick="replayStrokeAnimation()">🔄 Replay</button>
             <button class="btn" onclick="startPracticeMode()" style="background:linear-gradient(135deg,var(--s),#38a169)">✍️ Tập viết</button>
         </div>
@@ -428,21 +467,19 @@ const CONFIG_URL = 'https://raw.githubusercontent.com/yourusername/chinese-vocab
 
 // Fetch with timeout to prevent hanging requests
 async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    // Create a promise that rejects after timeout
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Request timeout after ${timeoutMs}ms`)), timeoutMs);
+    });
     
+    // Race between fetch and timeout
     try {
-        const response = await fetch(url, {
-            ...options,
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+        const response = await Promise.race([
+            fetch(url, options),
+            timeoutPromise
+        ]);
         return response;
     } catch (e) {
-        clearTimeout(timeoutId);
-        if (e.name === 'AbortError') {
-            throw new Error(`Request timeout after ${timeoutMs}ms`);
-        }
         throw e;
     }
 }
@@ -533,13 +570,53 @@ function generatePinyin(chinese) {
 }
 
 function speak(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'zh-CN';
-        utterance.rate = 0.8;
-        window.speechSynthesis.speak(utterance);
+    if (!('speechSynthesis' in window)) {
+        console.warn('⚠️ Speech synthesis not supported in this browser');
+        status('⚠️ Trình duyệt không hỗ trợ phát âm', 'error');
+        return;
     }
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.8;
+    
+    // Try to find a Chinese voice
+    const voices = window.speechSynthesis.getVoices();
+    const chineseVoice = voices.find(v => 
+        v.lang.includes('zh') || 
+        v.lang.includes('CN') || 
+        v.name.includes('Chinese') ||
+        v.name.includes('Mandarin')
+    );
+    
+    if (chineseVoice) {
+        utterance.voice = chineseVoice;
+        console.log('🔊 Using voice:', chineseVoice.name);
+    } else {
+        console.log('🔊 No Chinese voice found, using default. Available voices:', voices.map(v => v.lang));
+    }
+    
+    // Debug events
+    utterance.onstart = () => console.log('🔊 Speaking:', text);
+    utterance.onerror = (e) => {
+        console.error('🔊 Speech error:', e.error);
+        status('⚠️ Lỗi phát âm: ' + e.error, 'error');
+    };
+    
+    window.speechSynthesis.speak(utterance);
+}
+
+// Preload voices (some browsers load voices asynchronously)
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+        const voices = window.speechSynthesis.getVoices();
+        console.log('🔊 Voices loaded:', voices.length);
+    };
+    // Trigger voice loading
+    window.speechSynthesis.getVoices();
 }
 
 function save() {
@@ -828,45 +905,91 @@ function setFlashcardMode(mode) {
     updateFlashcards();
 }
 
+// Reset all words to "not learned"
+function resetAllLearned() {
+    if (vocab.length === 0) {
+        status('⚠️ Chưa có từ vựng nào!', 'error');
+        return;
+    }
+    
+    if (!confirm(`🔄 Reset ${vocab.length} từ về trạng thái "chưa học"?`)) {
+        return;
+    }
+    
+    vocab.forEach(word => {
+        word.learned = false;
+    });
+    
+    save();
+    usedFlashcardIndices.clear();
+    renderLibrary();
+    updateFlashcards();
+    status(`✅ Đã reset ${vocab.length} từ về trạng thái chưa học!`, 'success');
+}
+
 function updateFlashcards() {
     const container = document.getElementById('fc-container');
-    const availableWords = vocab.filter(v => !v.learned);
     
+    console.log('🃏 updateFlashcards called, vocab.length:', vocab.length);
+    
+    let availableWords = vocab.filter(v => !v.learned);
+    
+    console.log('🃏 Available words (not learned):', availableWords.length);
+    
+    // If no unlearned words, show all words instead
     if (availableWords.length === 0) {
-        container.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">📚 Không có từ nào để ôn tập!</p>';
-        return;
+        if (vocab.length === 0) {
+            container.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">📚 Chưa có từ vựng nào. Hãy thêm từ mới hoặc đồng bộ từ Google Sheets!</p>';
+            return;
+        }
+        
+        // Show all words if all are learned
+        console.log('🃏 All words learned, showing all words for review');
+        availableWords = [...vocab]; // Use all words
+        
+        // Show a notice
+        container.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;margin-bottom:20px;">
+                <p style="color:#48bb78;font-weight:600;margin-bottom:10px;">🎉 Chúc mừng! Bạn đã học hết ${vocab.length} từ!</p>
+                <p style="color:#666;font-size:0.9rem;">Đang hiển thị tất cả từ để ôn tập lại.</p>
+            </div>
+        `;
+    } else {
+        container.innerHTML = '';
     }
 
     const numCards = Math.min(6, availableWords.length);
     currentFlashcards = [];
-    const availableIndices = availableWords.map((_, idx) => idx).filter(idx => !usedFlashcardIndices.has(idx));
     
+    // Get indices not yet used
+    let availableIndices = availableWords.map((_, idx) => idx).filter(idx => !usedFlashcardIndices.has(idx));
+    
+    // If not enough unused indices, reset and get all
     if (availableIndices.length < numCards) {
         usedFlashcardIndices.clear();
-        availableIndices.push(...availableWords.map((_, idx) => idx));
+        availableIndices = availableWords.map((_, idx) => idx); // Reset to all indices
     }
     
-    for (let i = 0; i < numCards; i++) {
-        const randomIdx = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    // Select random cards
+    for (let i = 0; i < numCards && availableIndices.length > 0; i++) {
+        const randomPos = Math.floor(Math.random() * availableIndices.length);
+        const randomIdx = availableIndices[randomPos];
         currentFlashcards.push(availableWords[randomIdx]);
         usedFlashcardIndices.add(randomIdx);
-        availableIndices.splice(availableIndices.indexOf(randomIdx), 1);
+        availableIndices.splice(randomPos, 1); // Remove by position, not by value
     }
 
     // Render based on flashcardMode
-    if (flashcardMode === 'hanzi') {
-        // Mode Hanzi: Show Hanzi, click to reveal Pinyin + Vietnamese
-        container.innerHTML = currentFlashcards.map((word, idx) => `
+    const cardsHtml = flashcardMode === 'hanzi' 
+        ? currentFlashcards.map((word, idx) => `
             <div class="fc" id="fc-${idx}">
                 <div class="fc-chinese" onclick="revealFlashcard(${idx})">${word.chinese}</div>
                 <div class="fc-pinyin fc-hidden" id="fc-pinyin-${idx}" style="display:none;">${word.pinyin}</div>
                 <div class="fc-viet" id="fc-viet-${idx}" style="display:none;">${word.vietnamese}</div>
                 <button class="fc-write-btn" onclick="event.stopPropagation(); openFlashcardWriter(${idx})" title="Tập viết chữ này">✍️</button>
             </div>
-        `).join('');
-    } else {
-        // Mode Pinyin: Show Pinyin, click to reveal Hanzi + Vietnamese
-        container.innerHTML = currentFlashcards.map((word, idx) => `
+        `).join('')
+        : currentFlashcards.map((word, idx) => `
             <div class="fc" id="fc-${idx}">
                 <div class="fc-pinyin" style="font-size:1.8rem;font-weight:700;margin-bottom:8px;" onclick="revealFlashcard(${idx})">${word.pinyin}</div>
                 <div class="fc-chinese fc-hidden" id="fc-hanzi-${idx}" style="display:none;font-size:2.2rem;font-weight:700;">${word.chinese}</div>
@@ -874,7 +997,8 @@ function updateFlashcards() {
                 <button class="fc-write-btn" onclick="event.stopPropagation(); openFlashcardWriter(${idx})" title="Tập viết chữ này">✍️</button>
             </div>
         `).join('');
-    }
+    
+    container.innerHTML += cardsHtml;
 }
 
 function revealFlashcard(idx) {
@@ -1616,6 +1740,13 @@ async function init() {
     }
     
     renderLibrary();
+    
+    console.log('📊 Vocab state before updateFlashcards:', {
+        total: vocab.length,
+        learned: vocab.filter(v => v.learned).length,
+        notLearned: vocab.filter(v => !v.learned).length
+    });
+    
     updateFlashcards();
     updateConfig();
     
@@ -1685,6 +1816,7 @@ function waitForLibraries() {
     return new Promise((resolve) => {
         // Check immediately first
         if (typeof pinyinPro !== 'undefined' && typeof HanziWriter !== 'undefined') {
+            console.log('✅ Libraries loaded immediately');
             resolve();
             return;
         }
@@ -1692,16 +1824,17 @@ function waitForLibraries() {
         const checkInterval = setInterval(() => {
             if (typeof pinyinPro !== 'undefined' && typeof HanziWriter !== 'undefined') {
                 clearInterval(checkInterval);
+                console.log('✅ Libraries loaded');
                 resolve();
             }
         }, 50); // Check more frequently (50ms instead of 100ms)
         
-        // Reduced timeout: 2s instead of 5s - libraries should load fast
+        // Timeout: 3s - libraries should load fast from CDN
         setTimeout(() => {
             clearInterval(checkInterval);
             console.warn('⚠️ Libraries timeout - proceeding anyway');
             resolve();
-        }, 2000);
+        }, 3000);
     });
 }
 
