@@ -213,6 +213,16 @@
     <!-- Flashcard Page -->
     <div id="flashcard" class="page">
         <h2 style="margin-bottom:20px">🃏 Flashcard Ôn Tập</h2>
+        
+        <!-- Flashcard Mode Toggle -->
+        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+            <span style="font-weight:600;color:var(--g6);">Chế độ hiển thị:</span>
+            <div style="display:flex;gap:8px;">
+                <button class="fbtn active" id="mode-hanzi" onclick="setFlashcardMode('hanzi')">🀄 Hanzi → Pinyin</button>
+                <button class="fbtn" id="mode-pinyin" onclick="setFlashcardMode('pinyin')">🔤 Pinyin → Hanzi</button>
+            </div>
+        </div>
+        
         <div style="display:flex;gap:16px;margin-bottom:24px">
             <button class="btn" onclick="updateFlashcards()">🔄 Làm mới</button>
         </div>
@@ -372,6 +382,9 @@ let hideLearnedWords = false;
 // NEW: Flashcard improvements
 let usedFlashcardIndices = new Set();
 let currentFlashcards = [];
+
+// NEW: Flashcard display mode - 'hanzi' (show hanzi, reveal pinyin) or 'pinyin' (show pinyin, reveal hanzi)
+let flashcardMode = 'hanzi';
 
 // NEW: Sentence templates
 let sentenceTemplates = [];
@@ -753,6 +766,17 @@ function closeStrokeModal() {
 
 // ==================== FLASHCARDS - IMPROVED ====================
 
+function setFlashcardMode(mode) {
+    flashcardMode = mode;
+    
+    // Update button states
+    document.getElementById('mode-hanzi').classList.toggle('active', mode === 'hanzi');
+    document.getElementById('mode-pinyin').classList.toggle('active', mode === 'pinyin');
+    
+    // Re-render flashcards with new mode
+    updateFlashcards();
+}
+
 function updateFlashcards() {
     const container = document.getElementById('fc-container');
     const availableWords = vocab.filter(v => !v.learned);
@@ -778,25 +802,59 @@ function updateFlashcards() {
         availableIndices.splice(availableIndices.indexOf(randomIdx), 1);
     }
 
-    container.innerHTML = currentFlashcards.map((word, idx) => `
-        <div class="fc" id="fc-${idx}" onclick="revealFlashcard(${idx})">
-            <div class="fc-chinese">${word.chinese}</div>
-            <div class="fc-pinyin">${word.pinyin}</div>
-            <div class="fc-viet" id="fc-viet-${idx}">${word.vietnamese}</div>
-        </div>
-    `).join('');
+    // Render based on flashcardMode
+    if (flashcardMode === 'hanzi') {
+        // Mode Hanzi: Show Hanzi, click to reveal Pinyin + Vietnamese
+        container.innerHTML = currentFlashcards.map((word, idx) => `
+            <div class="fc" id="fc-${idx}" onclick="revealFlashcard(${idx})">
+                <div class="fc-chinese">${word.chinese}</div>
+                <div class="fc-pinyin fc-hidden" id="fc-pinyin-${idx}" style="display:none;">${word.pinyin}</div>
+                <div class="fc-viet" id="fc-viet-${idx}" style="display:none;">${word.vietnamese}</div>
+            </div>
+        `).join('');
+    } else {
+        // Mode Pinyin: Show Pinyin, click to reveal Hanzi + Vietnamese
+        container.innerHTML = currentFlashcards.map((word, idx) => `
+            <div class="fc" id="fc-${idx}" onclick="revealFlashcard(${idx})">
+                <div class="fc-pinyin" style="font-size:1.8rem;font-weight:700;margin-bottom:8px;">${word.pinyin}</div>
+                <div class="fc-chinese fc-hidden" id="fc-hanzi-${idx}" style="display:none;font-size:2.2rem;font-weight:700;">${word.chinese}</div>
+                <div class="fc-viet" id="fc-viet-${idx}" style="display:none;">${word.vietnamese}</div>
+            </div>
+        `).join('');
+    }
 }
 
 function revealFlashcard(idx) {
     const card = document.getElementById(`fc-${idx}`);
     const viet = document.getElementById(`fc-viet-${idx}`);
+    const isRevealed = viet.style.display === 'block';
     
-    if (viet.style.display === 'block') {
+    if (isRevealed) {
+        // Hide answer
         viet.style.display = 'none';
         card.classList.remove('showing-answer');
+        
+        // Hide mode-specific elements
+        if (flashcardMode === 'hanzi') {
+            const pinyin = document.getElementById(`fc-pinyin-${idx}`);
+            if (pinyin) pinyin.style.display = 'none';
+        } else {
+            const hanzi = document.getElementById(`fc-hanzi-${idx}`);
+            if (hanzi) hanzi.style.display = 'none';
+        }
     } else {
+        // Show answer
         viet.style.display = 'block';
         card.classList.add('showing-answer');
+        
+        // Show mode-specific elements
+        if (flashcardMode === 'hanzi') {
+            const pinyin = document.getElementById(`fc-pinyin-${idx}`);
+            if (pinyin) pinyin.style.display = 'block';
+        } else {
+            const hanzi = document.getElementById(`fc-hanzi-${idx}`);
+            if (hanzi) hanzi.style.display = 'block';
+        }
         
         // AUTO-PLAY VOICE
         const word = currentFlashcards[idx];
@@ -1330,6 +1388,106 @@ function confirmClearData() {
 
 // ==================== INITIALIZATION ====================
 
+// Helper function to load vocab from GitHub
+async function loadVocabFromGitHub() {
+    const vocabJsonUrl = localStorage.getItem('vocab-json-url');
+    const githubRepo = localStorage.getItem('github-repo');
+    
+    let githubUrl = vocabJsonUrl;
+    if (!githubUrl && githubRepo) {
+        const githubFile = localStorage.getItem('github-file') || 'data/vocab.json';
+        githubUrl = `https://raw.githubusercontent.com/${githubRepo}/main/${githubFile}`;
+    }
+    
+    if (!githubUrl) {
+        console.log('⚠️ No GitHub URL configured');
+        return null;
+    }
+    
+    try {
+        console.log('📥 Loading vocab from GitHub:', githubUrl);
+        const response = await fetch(githubUrl);
+        if (response.ok) {
+            const data = await response.json();
+            const vocabData = Array.isArray(data) ? data : data.vocab;
+            if (vocabData && vocabData.length > 0) {
+                console.log(`✅ Loaded ${vocabData.length} words from GitHub`);
+                return vocabData;
+            }
+        }
+    } catch (e) {
+        console.error('⚠️ Failed to load from GitHub:', e.message);
+    }
+    return null;
+}
+
+// Helper function to load new words from Google Sheet and merge with existing vocab
+async function mergeFromGoogleSheet(existingVocab) {
+    const sheetsUrl = localStorage.getItem('sheets-url');
+    if (!sheetsUrl) return { vocab: existingVocab, newCount: 0 };
+    
+    try {
+        const sheetIdMatch = sheetsUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (!sheetIdMatch) return { vocab: existingVocab, newCount: 0 };
+        
+        const sheetId = sheetIdMatch[1];
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        
+        console.log('📥 Loading from Google Sheets...');
+        const response = await fetch(csvUrl);
+        if (!response.ok) throw new Error('Google Sheets request failed');
+        
+        const csv = await response.text();
+        const lines = csv.split(/\r?\n/).filter(l => l.trim());
+        
+        if (lines.length <= 1) return { vocab: existingVocab, newCount: 0 };
+        
+        const dataLines = lines.slice(1);
+        const existingChineseSet = new Set(existingVocab.map(v => v.chinese));
+        let newCount = 0;
+        const mergedVocab = [...existingVocab];
+        
+        dataLines.forEach((line) => {
+            try {
+                const row = parseCSVLine(line);
+                if (row.length >= 4) {
+                    const chinese = row[0]?.trim() || '';
+                    const pinyin = row[2]?.trim() || '';
+                    const meaning = row[3]?.trim() || '';
+                    const topic = row[4]?.trim() || 'Sheet';
+                    const difficulty = row[5]?.trim() || 'easy';
+                    const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
+                    
+                    // Only add if NOT already in existing vocab
+                    if (chinese && !existingChineseSet.has(chinese)) {
+                        mergedVocab.push({
+                            id: Date.now() + newCount,
+                            vietnamese: meaning || chinese,
+                            chinese: chinese,
+                            pinyin: pinyin || generatePinyin(chinese),
+                            meaning: meaning || chinese,
+                            topic: topic,
+                            difficulty: difficulty,
+                            learned: learned,
+                            nextReview: Date.now(),
+                            reviewCount: 0
+                        });
+                        existingChineseSet.add(chinese);
+                        newCount++;
+                    }
+                }
+            } catch (e) {}
+        });
+        
+        console.log(`✅ Merged ${newCount} new words from Google Sheets`);
+        return { vocab: mergedVocab, newCount };
+        
+    } catch (e) {
+        console.error('⚠️ Google Sheets merge failed:', e.message);
+        return { vocab: existingVocab, newCount: 0, error: e.message };
+    }
+}
+
 async function init() {
     load();
     
@@ -1343,120 +1501,107 @@ async function init() {
     
     const syncStrategy = localStorage.getItem('sync-strategy') || 'sheets-first';
     const sheetsUrl = localStorage.getItem('sheets-url');
-    const githubToken = localStorage.getItem('github-token');
-    const githubRepo = localStorage.getItem('github-repo');
 
     if (sheetsUrl && syncStrategy === 'sheets-first') {
-        showLoading('Đang đồng bộ...', 'Tải từ Google Sheets...');
+        showLoading('Đang đồng bộ...', 'Bước 1: Tải dữ liệu từ GitHub...');
         
-        try {
-            const sheetIdMatch = sheetsUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            if (sheetIdMatch) {
-                const sheetId = sheetIdMatch[1];
-                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-                
-                const response = await fetch(csvUrl);
-                if (response.ok) {
-                    const csv = await response.text();
-                    const lines = csv.split(/\r?\n/).filter(l => l.trim());
-                    
-                    if (lines.length > 1) {
-                        vocab = [];
-                        const dataLines = lines.slice(1);
-                        let added = 0;
-                        
-                        dataLines.forEach((line) => {
-                            try {
-                                const row = parseCSVLine(line);
-                                if (row.length >= 4) {
-                                    const chinese = row[0]?.trim() || '';
-                                    const pinyin = row[2]?.trim() || '';
-                                    const meaning = row[3]?.trim() || '';
-                                    const topic = row[4]?.trim() || 'Sheet';
-                                    const difficulty = row[5]?.trim() || 'easy';
-                                    const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
-                                    
-                                    if (chinese && !vocab.some(v => v.chinese === chinese)) {
-                                        vocab.push({
-                                            id: Date.now() + added,
-                                            vietnamese: meaning || chinese,
-                                            chinese: chinese,
-                                            pinyin: pinyin || generatePinyin(chinese),
-                                            meaning: meaning || chinese,
-                                            topic: topic,
-                                            difficulty: difficulty,
-                                            learned: learned,
-                                            nextReview: Date.now(),
-                                            reviewCount: 0
-                                        });
-                                        added++;
-                                    }
-                                }
-                            } catch (e) {}
-                        });
-                        
-                        save();
-                        updateLastSyncTime();
-                        hideLoading();
-                        status(`✅ Đã đồng bộ ${added} từ!`, 'success');
-                    }
-                }
-            }
-        } catch (e) {
-            console.error('⚠️ Google Sheets sync failed:', e.message);
+        // STEP 1: Load base vocab from GitHub first
+        const githubVocab = await loadVocabFromGitHub();
+        
+        if (githubVocab && githubVocab.length > 0) {
+            // Have GitHub data - use as base and merge new from Sheet
+            showLoading('Đang đồng bộ...', 'Bước 2: Kiểm tra từ mới trên Google Sheets...');
+            
+            const { vocab: mergedVocab, newCount, error } = await mergeFromGoogleSheet(githubVocab);
+            
+            vocab = mergedVocab;
+            save();
             hideLoading();
             
-            // FALLBACK: Try to load from GitHub vocab.json
-            const vocabJsonUrl = localStorage.getItem('vocab-json-url');
-            const githubRepo = localStorage.getItem('github-repo');
-            
-            let fallbackUrl = vocabJsonUrl;
-            if (!fallbackUrl && githubRepo) {
-                // Construct URL from repo if not explicitly set
-                const githubFile = localStorage.getItem('github-file') || 'data/vocab.json';
-                fallbackUrl = `https://raw.githubusercontent.com/${githubRepo}/main/${githubFile}`;
+            if (error) {
+                status(`⚠️ Đã load ${vocab.length} từ từ GitHub (Sheet không khả dụng)`, 'success');
+            } else if (newCount > 0) {
+                status(`✅ Đã load ${githubVocab.length} từ từ GitHub + ${newCount} từ mới từ Sheet!`, 'success');
+            } else {
+                status(`✅ Đã load ${vocab.length} từ từ GitHub (không có từ mới trên Sheet)`, 'success');
             }
             
-            if (fallbackUrl) {
-                console.log('🔄 Attempting fallback: Loading from GitHub vocab.json...');
-                showLoading('Google Sheets không khả dụng...', 'Đang tải từ GitHub backup...');
-                
-                try {
-                    const githubResponse = await fetch(fallbackUrl);
-                    if (githubResponse.ok) {
-                        const githubData = await githubResponse.json();
+        } else {
+            // No GitHub data - try Google Sheet directly
+            showLoading('Đang đồng bộ...', 'Tải trực tiếp từ Google Sheets...');
+            
+            try {
+                const sheetIdMatch = sheetsUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (sheetIdMatch) {
+                    const sheetId = sheetIdMatch[1];
+                    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+                    
+                    const response = await fetch(csvUrl);
+                    if (response.ok) {
+                        const csv = await response.text();
+                        const lines = csv.split(/\r?\n/).filter(l => l.trim());
                         
-                        // Support both formats (direct array or nested object)
-                        let vocabData = Array.isArray(githubData) ? githubData : githubData.vocab;
-                        
-                        if (vocabData && vocabData.length > 0) {
-                            vocab = vocabData;
+                        if (lines.length > 1) {
+                            vocab = [];
+                            const dataLines = lines.slice(1);
+                            let added = 0;
+                            
+                            dataLines.forEach((line) => {
+                                try {
+                                    const row = parseCSVLine(line);
+                                    if (row.length >= 4) {
+                                        const chinese = row[0]?.trim() || '';
+                                        const pinyin = row[2]?.trim() || '';
+                                        const meaning = row[3]?.trim() || '';
+                                        const topic = row[4]?.trim() || 'Sheet';
+                                        const difficulty = row[5]?.trim() || 'easy';
+                                        const learned = row[6] ? (row[6].toLowerCase() === 'true' || row[6] === '1') : false;
+                                        
+                                        if (chinese && !vocab.some(v => v.chinese === chinese)) {
+                                            vocab.push({
+                                                id: Date.now() + added,
+                                                vietnamese: meaning || chinese,
+                                                chinese: chinese,
+                                                pinyin: pinyin || generatePinyin(chinese),
+                                                meaning: meaning || chinese,
+                                                topic: topic,
+                                                difficulty: difficulty,
+                                                learned: learned,
+                                                nextReview: Date.now(),
+                                                reviewCount: 0
+                                            });
+                                            added++;
+                                        }
+                                    }
+                                } catch (e) {}
+                            });
+                            
                             save();
+                            updateLastSyncTime();
                             hideLoading();
-                            status(`✅ Đã load ${vocab.length} từ từ GitHub backup!`, 'success');
-                            console.log('✅ Fallback successful: Loaded from GitHub');
-                            renderLibrary();
-                            return; // Exit early, no need for demo data
+                            status(`✅ Đã đồng bộ ${added} từ từ Google Sheets!`, 'success');
                         }
                     }
-                } catch (githubError) {
-                    console.error('⚠️ GitHub fallback also failed:', githubError.message);
                 }
-                
+            } catch (e) {
+                console.error('⚠️ Google Sheets sync failed:', e.message);
                 hideLoading();
-            }
-            
-            // LAST RESORT: Use demo data
-            if (vocab.length === 0) {
-                console.log('📝 Using demo data as last resort');
-                vocab = [
-                    {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'nǐ hǎo',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
-                    {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xiè xiè',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
-                    {id:3,vietnamese:'tạm biệt',chinese:'再见',pinyin:'zài jiàn',meaning:'goodbye',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0}
-                ];
-                save();
+                
+                // LAST RESORT: Use demo data
+                if (vocab.length === 0) {
+                    console.log('📝 Using demo data as last resort');
+                    vocab = [
+                        {id:1,vietnamese:'xin chào',chinese:'你好',pinyin:'nǐ hǎo',meaning:'hello',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
+                        {id:2,vietnamese:'cảm ơn',chinese:'谢谢',pinyin:'xiè xiè',meaning:'thank you',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0},
+                        {id:3,vietnamese:'tạm biệt',chinese:'再见',pinyin:'zài jiàn',meaning:'goodbye',topic:'Cơ bản',difficulty:'easy',learned:false,nextReview:Date.now(),reviewCount:0}
+                    ];
+                    save();
+                }
             }
         }
+    } else {
+        // No sheets-first strategy or no sheets URL
+        hideLoading();
     }
     
     if (vocab.length === 0) {
