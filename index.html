@@ -982,16 +982,16 @@ function updateFlashcards() {
     // Render based on flashcardMode
     const cardsHtml = flashcardMode === 'hanzi' 
         ? currentFlashcards.map((word, idx) => `
-            <div class="fc" id="fc-${idx}">
-                <div class="fc-chinese" onclick="revealFlashcard(${idx})">${word.chinese}</div>
+            <div class="fc" id="fc-${idx}" onclick="revealFlashcard(${idx})">
+                <div class="fc-chinese">${word.chinese}</div>
                 <div class="fc-pinyin fc-hidden" id="fc-pinyin-${idx}" style="display:none;">${word.pinyin}</div>
                 <div class="fc-viet" id="fc-viet-${idx}" style="display:none;">${word.vietnamese}</div>
                 <button class="fc-write-btn" onclick="event.stopPropagation(); openFlashcardWriter(${idx})" title="Tập viết chữ này">✍️</button>
             </div>
         `).join('')
         : currentFlashcards.map((word, idx) => `
-            <div class="fc" id="fc-${idx}">
-                <div class="fc-pinyin" style="font-size:1.8rem;font-weight:700;margin-bottom:8px;" onclick="revealFlashcard(${idx})">${word.pinyin}</div>
+            <div class="fc" id="fc-${idx}" onclick="revealFlashcard(${idx})">
+                <div class="fc-pinyin" style="font-size:1.8rem;font-weight:700;margin-bottom:8px;">${word.pinyin}</div>
                 <div class="fc-chinese fc-hidden" id="fc-hanzi-${idx}" style="display:none;font-size:2.2rem;font-weight:700;">${word.chinese}</div>
                 <div class="fc-viet" id="fc-viet-${idx}" style="display:none;">${word.vietnamese}</div>
                 <button class="fc-write-btn" onclick="event.stopPropagation(); openFlashcardWriter(${idx})" title="Tập viết chữ này">✍️</button>
