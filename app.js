@@ -3,6 +3,7 @@ let vocab = [];
 let currentFilter = '';
 let searchTerm = '';
 let hideLearnedWords = false;
+let groupsSearchTerm = '';
 
 // Flashcard state
 let usedFlashcardIndices = new Set();
@@ -406,9 +407,23 @@ window.renderGroups = function () {
     });
 
     // Filter recurring characters (appearing in > 1 word)
-    const recurringGroups = Object.entries(charMap)
-        .filter(([char, words]) => words.length > 1)
-        .sort((a, b) => b[1].length - a[1].length);
+    let recurringGroups = Object.entries(charMap)
+        .filter(([char, words]) => words.length > 1);
+
+    // Filter by search term
+    if (groupsSearchTerm) {
+        recurringGroups = recurringGroups.filter(([char, words]) =>
+            char.includes(groupsSearchTerm) ||
+            words.some(w =>
+                w.chinese.includes(groupsSearchTerm) ||
+                w.vietnamese.toLowerCase().includes(groupsSearchTerm.toLowerCase()) ||
+                w.pinyin.toLowerCase().includes(groupsSearchTerm.toLowerCase())
+            )
+        );
+    }
+
+    // Sort by frequency
+    recurringGroups.sort((a, b) => b[1].length - a[1].length);
 
     if (recurringGroups.length === 0) {
         listDiv.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--g6)">Chưa có đủ từ vựng để tạo nhóm (cần ít nhất 2 từ có chung chữ hán)</div>';
@@ -824,6 +839,14 @@ async function init() {
         searchInput.addEventListener('input', (e) => {
             searchTerm = e.target.value.toLowerCase();
             renderLibrary();
+        });
+    }
+
+    const groupsSearchInput = document.getElementById('groups-search');
+    if (groupsSearchInput) {
+        groupsSearchInput.addEventListener('input', (e) => {
+            groupsSearchTerm = e.target.value;
+            renderGroups();
         });
     }
 
