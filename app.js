@@ -4,6 +4,7 @@ let currentFilter = '';
 let searchTerm = '';
 let hideLearnedWords = false;
 let groupsSearchTerm = '';
+let groupsFilter = '';
 
 // Flashcard state
 let usedFlashcardIndices = new Set();
@@ -387,28 +388,48 @@ window.revealFlashcard = function (idx) {
     }
 };
 
+window.groupsFilter = '';
+
 // ==================== WORD GROUPS ====================
 
 window.renderGroups = function () {
     const listDiv = document.getElementById('groups-list');
-    if (!listDiv) return;
+    const filtersDiv = document.getElementById('groups-filters');
+    if (!listDiv || !filtersDiv) return;
 
-    const charMap = {};
+    // Render filter buttons
+    // Higher-order characters (most frequent)
+    const allCharsMap = {};
     vocab.forEach(item => {
-        // Get unique characters in this word
         const chars = [...new Set(item.chinese.split(''))];
         chars.forEach(char => {
-            // Regex for Han characters
             if (/[\u4e00-\u9fa5]/.test(char)) {
-                if (!charMap[char]) charMap[char] = [];
-                charMap[char].push(item);
+                if (!allCharsMap[char]) allCharsMap[char] = [];
+                allCharsMap[char].push(item);
             }
         });
     });
 
-    // Filter recurring characters (appearing in > 1 word)
-    let recurringGroups = Object.entries(charMap)
+    const topChars = Object.entries(allCharsMap)
+        .filter(([_, words]) => words.length > 1)
+        .sort((a, b) => b[1].length - a[1].length)
+        .slice(0, 15)
+        .map(entry => entry[0]);
+
+    filtersDiv.innerHTML = `
+        <button class="fbtn ${!groupsFilter ? 'active' : ''}" onclick="window.filterGroupsChar('')">Tất cả (${Object.keys(allCharsMap).filter(c => allCharsMap[c].length > 1).length})</button>
+        ${topChars.map(c => {
+        const isActive = groupsFilter === c ? 'active' : '';
+        return `<button class="fbtn ${isActive}" onclick="window.filterGroupsChar('${c}')">${c} (${allCharsMap[c].length})</button>`;
+    }).join('')}
+    `;
+
+    const filteredRecurring = Object.entries(allCharsMap)
         .filter(([char, words]) => words.length > 1);
+
+    let recurringGroups = groupsFilter
+        ? filteredRecurring.filter(([char]) => char === groupsFilter)
+        : filteredRecurring;
 
     // Filter by search term
     if (groupsSearchTerm) {
@@ -431,7 +452,7 @@ window.renderGroups = function () {
     }
 
     listDiv.innerHTML = recurringGroups.map(([char, words]) => `
-        <div class="group-card">
+        < div class="group-card" >
             <div class="group-header">
                 <div class="group-char-circle" onclick="showStrokeOrder('${char}')">${char}</div>
                 <div class="group-info">
@@ -449,8 +470,13 @@ window.renderGroups = function () {
                     </div>
                 `).join('')}
             </div>
-        </div>
-    `).join('');
+        </div >
+        `).join('');
+};
+
+window.filterGroupsChar = function (char) {
+    groupsFilter = char;
+    renderGroups();
 };
 
 // ==================== SENTENCES ====================
