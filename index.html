@@ -64,7 +64,16 @@
                 <div class="stat">📊 Từ đã học: <span class="n" id="sentences-learned-count">0</span></div>
                 <div class="stat">💬 Mẫu câu: <span class="n" id="sentences-total-count">0</span></div>
             </div>
-            <button class="btn" onclick="generateSentences()">🔄 Tạo mẫu câu mới</button>
+
+            <div class="header-actions">
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="mode-read" onclick="toggleSentenceMode('read')">📖 Đọc
+                        mẫu</button>
+                    <button class="mode-btn" id="mode-quiz" onclick="toggleSentenceMode('quiz')">📝 Luyện tập</button>
+                </div>
+                <button class="btn" onclick="generateSentences()">🔄 Tạo mẫu câu mới</button>
+            </div>
+
             <div id="sentences-list" style="margin-top:20px"></div>
         </div>
 

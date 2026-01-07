@@ -625,6 +625,8 @@ async function loadSentenceTemplates() {
     ].map(s => ({ ...s, words: [] }));
 }
 
+let isQuizMode = false;
+
 window.generateSentences = function () {
     const learnedWords = vocab.filter(v => v.learned);
     if (learnedWords.length < 2) {
@@ -633,17 +635,38 @@ window.generateSentences = function () {
     }
 
     const learnedChineseSet = new Set(learnedWords.map(w => w.chinese));
-    const matchedSentences = sentenceTemplates
-        .map(template => {
-            let wordsToMatch = template.words.length ? template.words : extractWordsFromSentence(template.chinese);
-            const matchedWords = wordsToMatch.filter(w => learnedChineseSet.has(w));
-            return { ...template, matchedWords, matchCount: matchedWords.length };
-        })
-        .filter(s => s.matchCount >= 1)
-        .sort((a, b) => b.matchCount - a.matchCount)
-        .slice(0, 15);
 
-    renderSentencesResult(matchedSentences);
+    // 1. Calculate scores for all templates
+    let candidates = sentenceTemplates.map(template => {
+        let wordsToMatch = template.words.length ? template.words : extractWordsFromSentence(template.chinese);
+        const matchedWords = wordsToMatch.filter(w => learnedChineseSet.has(w));
+        const matchCount = matchedWords.length;
+        const totalWords = wordsToMatch.length;
+
+        let score = matchCount * 10;
+
+        // Comprehensible Input Bonus: 70-90% known is sweet spot
+        const knownRatio = totalWords > 0 ? matchCount / totalWords : 0;
+        if (knownRatio >= 0.7 && knownRatio <= 0.95) score += 20;
+
+        // Length punishment (too short or too long for beginners)
+        if (totalWords < 3) score -= 5;
+        if (totalWords > 15) score -= 5;
+
+        // Random noise to ensure variety on refresh
+        score += Math.random() * 15;
+
+        return { ...template, matchedWords, matchCount, totalWords, score };
+    });
+
+    // 2. Filter valid sentences (must have at least 1 known word)
+    candidates = candidates.filter(s => s.matchCount >= 1);
+
+    // 3. Sort by noisy score and pick top 30 (increased from 15)
+    candidates.sort((a, b) => b.score - a.score);
+    const selectedSentences = candidates.slice(0, 30);
+
+    renderSentencesResult(selectedSentences);
 };
 
 window.renderSentences = function () {
@@ -651,38 +674,119 @@ window.renderSentences = function () {
     const totalEl = document.getElementById('sentences-total-count');
     if (learnedEl) learnedEl.textContent = vocab.filter(v => v.learned).length;
     if (totalEl) totalEl.textContent = sentenceTemplates.length;
+
+    // Initial generation if list is empty
+    const list = document.getElementById('sentences-list');
+    if (list && list.children.length === 0) {
+        generateSentences();
+    }
+};
+
+window.toggleSentenceMode = function (mode) {
+    isQuizMode = (mode === 'quiz');
+    const readBtn = document.getElementById('mode-read');
+    const quizBtn = document.getElementById('mode-quiz');
+
+    if (isQuizMode) {
+        readBtn.classList.remove('active');
+        quizBtn.classList.add('active');
+    } else {
+        readBtn.classList.add('active');
+        quizBtn.classList.remove('active');
+    }
+
+    // Re-render current list with new mode
+    // We trigger a re-generation or just re-render. 
+    // Ideally we just re-render the current list, but we don't store "currentList" globally. 
+    // Let's just regenerate for now to be simple, or we could store it.
+    // Better: regenerate to get fresh random sentences for the mode.
+    generateSentences();
 };
 
 function renderSentencesResult(sentences) {
     const container = document.getElementById('sentences-list');
     if (!container) return;
+
     if (sentences.length === 0) {
         container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;"><p>Chưa có mẫu câu phù hợp (cần học thêm từ).</p></div>';
         return;
     }
-    container.innerHTML = sentences.map(s => {
-        let highlightedChinese = s.chinese;
-        // Sort matched words by length (longest first) to avoid partial replacement of longer words
-        const sortedMatches = [...new Set(s.matchedWords)].sort((a, b) => b.length - a.length);
 
-        sortedMatches.forEach(word => {
-            const regex = new RegExp(word, 'g');
-            highlightedChinese = highlightedChinese.replace(regex, `<span class="highlight-word">${word}</span>`);
-        });
-
-        return `
-            <div class="sentence-item">
-                <div class="sentence-chinese">${highlightedChinese}</div>
-                <div class="sentence-pinyin">${s.pinyin}</div>
-                <div class="sentence-viet">${s.vietnamese}</div>
-                <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center">
-                    <span class="sentence-badge">${s.matchCount} từ đã học</span>
-                    <button class="action-btn" style="width:36px; height:36px; font-size:1.1rem" onclick="speak('${s.chinese.replace(/'/g, "\\'")}')">🔊</button>
-                </div>
-            </div>
-        `;
+    container.innerHTML = sentences.map((s, index) => {
+        if (isQuizMode) {
+            return renderQuizItem(s, index);
+        } else {
+            return renderReadItem(s);
+        }
     }).join('');
 }
+
+function renderReadItem(s) {
+    let highlightedChinese = s.chinese;
+    const sortedMatches = [...new Set(s.matchedWords)].sort((a, b) => b.length - a.length);
+
+    sortedMatches.forEach(word => {
+        const regex = new RegExp(word, 'g');
+        highlightedChinese = highlightedChinese.replace(regex, `<span class="highlight-word">${word}</span>`);
+    });
+
+    return `
+        <div class="sentence-item">
+            <div class="sentence-chinese">${highlightedChinese}</div>
+            <div class="sentence-pinyin">${s.pinyin}</div>
+            <div class="sentence-viet">${s.vietnamese}</div>
+            <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center">
+                <span class="sentence-badge">${s.matchCount} từ đã học</span>
+                <button class="action-btn" style="width:36px; height:36px; font-size:1.1rem" onclick="speak('${s.chinese.replace(/'/g, "\\'")}')">🔊</button>
+            </div>
+        </div>
+    `;
+}
+
+function renderQuizItem(s, index) {
+    // In quiz mode, we replace matched words with blanks
+    let quizContent = s.chinese;
+    const sortedMatches = [...new Set(s.matchedWords)].sort((a, b) => b.length - a.length);
+
+    // We only hide 1-2 words max per sentence to keep it doable, or all learned words?
+    // "Review" means testing learned words. Let's hide ALL learned words for maximum practice.
+    // Or randomly hide some? Let's hide all matched words (Cloze Deletion).
+
+    sortedMatches.forEach(word => {
+        const regex = new RegExp(word, 'g');
+        // Use a placeholder with data-answer attribute
+        quizContent = quizContent.replace(regex, `<span class="cloze-blank" onclick="revealCloze(this, '${word}')">?</span>`);
+    });
+
+    return `
+        <div class="sentence-item quiz-mode">
+            <div class="sentence-chinese">${quizContent}</div>
+            <!-- Hide Pinyin/Viet initially in quiz mode -->
+            <div class="quiz-details" id="quiz-details-${index}" style="display:none">
+                <div class="sentence-pinyin">${s.pinyin}</div>
+                <div class="sentence-viet">${s.vietnamese}</div>
+            </div>
+            
+            <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center">
+                <button class="btn btn-sm" onclick="toggleQuizDetails(${index})">👁️ Hiện nghĩa</button>
+                <button class="action-btn" style="width:36px; height:36px; font-size:1.1rem" onclick="speak('${s.chinese.replace(/'/g, "\\'")}')">🔊</button>
+            </div>
+        </div>
+    `;
+}
+
+window.revealCloze = function (el, answer) {
+    el.textContent = answer;
+    el.classList.add('revealed');
+    el.onclick = null; // Remove click handler
+};
+
+window.toggleQuizDetails = function (index) {
+    const el = document.getElementById(`quiz-details-${index}`);
+    if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+};
 
 // ==================== ADD WORD ====================
 

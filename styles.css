@@ -709,3 +709,83 @@ body {
     color: var(--p);
     font-style: italic;
 }
+
+/* Quiz / Cloze Mode Styles */
+.cloze-blank {
+    display: inline-block;
+    min-width: 40px;
+    height: 1.5em;
+    background: #e2e8f0;
+    border-bottom: 2px solid #cbd5e0;
+    border-radius: 4px;
+    color: transparent;
+    cursor: pointer;
+    margin: 0 4px;
+    vertical-align: bottom;
+    text-align: center;
+    transition: all 0.2s;
+    user-select: none;
+    padding: 0 8px;
+    color: #a0aec0;
+    /* Show question mark color */
+    font-weight: bold;
+}
+
+.cloze-blank:hover {
+    background: #cbd5e0;
+    color: #718096;
+}
+
+.cloze-blank.revealed {
+    background: #d4edda;
+    color: #155724;
+    border-bottom: 2px solid #28a745;
+    cursor: default;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.mode-toggle {
+    display: flex;
+    background: var(--g2);
+    padding: 4px;
+    border-radius: 12px;
+    margin-right: 12px;
+}
+
+.mode-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--g6);
+    transition: all 0.2s;
+}
+
+.mode-btn.active {
+    background: white;
+    color: var(--p);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
