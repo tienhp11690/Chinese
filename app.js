@@ -5,6 +5,7 @@ let searchTerm = '';
 let hideLearnedWords = false;
 let groupsSearchTerm = '';
 let groupsFilter = '';
+let groupsTopicFilter = '';
 
 // Flashcard state
 let usedFlashcardIndices = new Set();
@@ -198,12 +199,18 @@ function renderLibrary() {
     const filtersDiv = document.getElementById('filters');
     if (filtersDiv) {
         filtersDiv.innerHTML = `
-            <button class="fbtn ${!currentFilter ? 'active' : ''}" onclick="window.filterTopic('')">Tất cả (${vocab.length})</button>
-            ${topics.map(t => {
-            const escaped = t.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            const isActive = currentFilter === t ? 'active' : '';
-            return `<button class="fbtn ${isActive}" onclick="window.filterTopic('${escaped}')">${t} (${vocab.filter(w => w.topic === t).length})</button>`;
+            <div class="filters-container">
+                <div class="filter-group">
+                    <label>📚 Chủ đề:</label>
+                    <select class="select-field" onchange="window.filterTopic(this.value)">
+                        <option value="">Tất cả (${vocab.length} từ)</option>
+                        ${topics.map(t => {
+            const count = vocab.filter(w => w.topic === t).length;
+            return `<option value="${t}" ${currentFilter === t ? 'selected' : ''}>${t} (${count})</option>`;
         }).join('')}
+                    </select>
+                </div>
+            </div>
         `;
     }
 
@@ -397,39 +404,51 @@ window.renderGroups = function () {
     const filtersDiv = document.getElementById('groups-filters');
     if (!listDiv || !filtersDiv) return;
 
-    // Render filter buttons
-    // Higher-order characters (most frequent)
-    const allCharsMap = {};
-    vocab.forEach(item => {
+    const topics = [...new Set(vocab.map(w => w.topic))];
+
+    // 1. Calculate the initial maps to populate character dropdown (filtered by topic)
+    let vocabForDropdown = groupsTopicFilter ? vocab.filter(w => w.topic === groupsTopicFilter) : vocab;
+    const charsMapForDropdown = {};
+    vocabForDropdown.forEach(item => {
         const chars = [...new Set(item.chinese.split(''))];
         chars.forEach(char => {
             if (/[\u4e00-\u9fa5]/.test(char)) {
-                if (!allCharsMap[char]) allCharsMap[char] = [];
-                allCharsMap[char].push(item);
+                if (!charsMapForDropdown[char]) charsMapForDropdown[char] = [];
+                charsMapForDropdown[char].push(item);
             }
         });
     });
 
-    const topChars = Object.entries(allCharsMap)
+    const recurringGroupsList = Object.entries(charsMapForDropdown)
         .filter(([_, words]) => words.length > 1)
-        .sort((a, b) => b[1].length - a[1].length)
-        .slice(0, 15)
-        .map(entry => entry[0]);
+        .sort((a, b) => b[1].length - a[1].length);
 
+    // Render filters
     filtersDiv.innerHTML = `
-        <button class="fbtn ${!groupsFilter ? 'active' : ''}" onclick="window.filterGroupsChar('')">Tất cả (${Object.keys(allCharsMap).filter(c => allCharsMap[c].length > 1).length})</button>
-        ${topChars.map(c => {
-        const isActive = groupsFilter === c ? 'active' : '';
-        return `<button class="fbtn ${isActive}" onclick="window.filterGroupsChar('${c}')">${c} (${allCharsMap[c].length})</button>`;
+        <div class="filters-container">
+            <div class="filter-group">
+                <label>📁 Chủ đề:</label>
+                <select class="select-field" onchange="window.filterGroupsTopic(this.value)">
+                    <option value="">Tất cả chủ đề</option>
+                    ${topics.map(t => `<option value="${t}" ${groupsTopicFilter === t ? 'selected' : ''}>${t}</option>`).join('')}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>🔠 Chữ Hán:</label>
+                <select class="select-field" onchange="window.filterGroupsChar(this.value)">
+                    <option value="">Tất cả (${recurringGroupsList.length} chữ)</option>
+                    ${recurringGroupsList.map(([c, words]) => {
+        return `<option value="${c}" ${groupsFilter === c ? 'selected' : ''}>${c} (${words.length} từ)</option>`;
     }).join('')}
+                </select>
+            </div>
+        </div>
     `;
 
-    const filteredRecurring = Object.entries(allCharsMap)
-        .filter(([char, words]) => words.length > 1);
-
+    // 2. Determine groups to display
     let recurringGroups = groupsFilter
-        ? filteredRecurring.filter(([char]) => char === groupsFilter)
-        : filteredRecurring;
+        ? recurringGroupsList.filter(([char]) => char === groupsFilter)
+        : recurringGroupsList;
 
     // Filter by search term
     if (groupsSearchTerm) {
@@ -452,7 +471,7 @@ window.renderGroups = function () {
     }
 
     listDiv.innerHTML = recurringGroups.map(([char, words]) => `
-        < div class="group-card" >
+        <div class="group-card">
             <div class="group-header">
                 <div class="group-char-circle" onclick="showStrokeOrder('${char}')">${char}</div>
                 <div class="group-info">
@@ -476,6 +495,12 @@ window.renderGroups = function () {
 
 window.filterGroupsChar = function (char) {
     groupsFilter = char;
+    renderGroups();
+};
+
+window.filterGroupsTopic = function (topic) {
+    groupsTopicFilter = topic;
+    groupsFilter = ''; // Reset character filter when topic changes
     renderGroups();
 };
 

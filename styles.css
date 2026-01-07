@@ -174,13 +174,48 @@ body {
 }
 
 .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
     padding: 16px;
     background: var(--g1);
     border-radius: 12px;
     margin-bottom: 24px;
+}
+
+.filters-container {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--g6);
+}
+
+.select-field {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--g2);
+    border-radius: 10px;
+    background: white;
+    font-size: 0.95rem;
+    color: var(--g8);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.select-field:focus {
+    outline: none;
+    border-color: var(--p);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .fbtn {
