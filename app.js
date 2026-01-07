@@ -902,12 +902,45 @@ async function syncFromSheets(isBackground = false) {
         const lines = csv.split(/\r?\n/).filter(l => l.trim());
         if (lines.length <= 1) throw new Error('Dữ liệu trống');
 
+        // 1. Create a map of CURRENT local status to preserve progress
+        // Key: Chinese char (unique identifier)
+        const currentCheckMap = new Map();
+        vocab.forEach(v => {
+            currentCheckMap.set(v.chinese, {
+                learned: v.learned,
+                reviewCount: v.reviewCount || 0,
+                nextReview: v.nextReview || Date.now()
+            });
+        });
+
         const newVocab = [];
         lines.slice(1).forEach((line, idx) => {
             const row = parseCSVLine(line);
             if (row.length >= 4) {
                 const chinese = row[0]?.trim();
+
                 if (chinese && !newVocab.some(v => v.chinese === chinese)) {
+                    // Check if we have local progress for this word
+                    const localStatus = currentCheckMap.get(chinese);
+
+                    // Priority: Local Status > Sheet Status (if sheet has it) > Default false
+                    // NOTE: usually sheets won't have 'learned' column updated by app, so we trust local.
+                    // If sheet explicitly has 'TRUE' in learned column, we could respect it, 
+                    // BUT user requirement is "Safe Sync" -> Keep local progress.
+
+                    let isLearned = false;
+                    let reviewCount = 0;
+                    let nextReview = Date.now();
+
+                    if (localStatus) {
+                        isLearned = localStatus.learned;
+                        reviewCount = localStatus.reviewCount;
+                        nextReview = localStatus.nextReview;
+                    } else {
+                        // Inherit from sheet if provided (optional)
+                        isLearned = row[6]?.toLowerCase() === 'true' || row[6] === '1';
+                    }
+
                     newVocab.push({
                         id: Date.now() + idx,
                         vietnamese: row[3]?.trim() || chinese,
@@ -916,8 +949,9 @@ async function syncFromSheets(isBackground = false) {
                         meaning: row[3]?.trim() || chinese,
                         topic: row[4]?.trim() || 'Sheet',
                         difficulty: row[5]?.trim() || 'easy',
-                        learned: row[6]?.toLowerCase() === 'true' || row[6] === '1',
-                        nextReview: Date.now(), reviewCount: 0
+                        learned: isLearned,
+                        nextReview: nextReview,
+                        reviewCount: reviewCount
                     });
                 }
             }
@@ -928,7 +962,7 @@ async function syncFromSheets(isBackground = false) {
         updateLastSyncTime();
         if (!isBackground) {
             hideLoading();
-            status(`✅ Đã đồng bộ ${vocab.length} từ!`, 'success');
+            status(`✅ Đã đồng bộ ${vocab.length} từ (Giữ nguyên tiến độ)!`, 'success');
         }
         renderLibrary();
         return true;
