@@ -10,6 +10,7 @@ let groupsTopicFilter = '';
 // Flashcard state
 let usedFlashcardIndices = new Set();
 let currentFlashcards = [];
+let flashcardIncludeLearned = false;
 
 // Sentence templates
 let sentenceTemplates = [];
@@ -345,37 +346,64 @@ window.closeStrokeModal = function () {
 
 // ==================== FLASHCARDS ====================
 
+window.toggleFlashcardIncludeLearned = function () {
+    flashcardIncludeLearned = !flashcardIncludeLearned;
+    const toggle = document.getElementById('fc-include-learned-toggle');
+    if (toggle) {
+        if (flashcardIncludeLearned) toggle.classList.add('active');
+        else toggle.classList.remove('active');
+    }
+    updateFlashcards();
+};
+
 window.updateFlashcards = function () {
     const container = document.getElementById('fc-container');
     if (!container) return;
 
-    const availableWords = vocab.filter(v => !v.learned);
+    // Filter available words based on toggle
+    const availableWords = vocab.filter(v => flashcardIncludeLearned || !v.learned);
+
     if (availableWords.length === 0) {
-        container.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#666;">📚 Không có từ nào để ôn tập!</p>';
+        container.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:40px;background:var(--g1);border-radius:16px;border:2px dashed var(--g2)">
+                <p style="color:var(--g6);margin-bottom:12px">📚 Không có từ nào để ôn tập!</p>
+                <button class="btn" onclick="toggleFlashcardIncludeLearned()">Ôn cả từ đã thuộc</button>
+            </div>
+        `;
         return;
     }
 
     const numCards = Math.min(6, availableWords.length);
     currentFlashcards = [];
-    const availableIndices = availableWords.map((_, idx) => idx).filter(idx => !usedFlashcardIndices.has(idx));
+
+    // Reset used indices if we don't have enough fresh ones
+    let availableIndices = availableWords.map((_, idx) => idx).filter(idx => !usedFlashcardIndices.has(idx));
 
     if (availableIndices.length < numCards) {
         usedFlashcardIndices.clear();
-        availableIndices.push(...availableWords.map((_, idx) => idx));
+        availableIndices = availableWords.map((_, idx) => idx);
     }
 
+    // Pick random items
     for (let i = 0; i < numCards; i++) {
-        const randomIdx = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-        currentFlashcards.push(availableWords[randomIdx]);
-        usedFlashcardIndices.add(randomIdx);
-        availableIndices.splice(availableIndices.indexOf(randomIdx), 1);
+        const randomIndex = Math.floor(Math.random() * availableIndices.length);
+        const vocabIndex = availableIndices[randomIndex];
+        currentFlashcards.push(availableWords[vocabIndex]);
+        usedFlashcardIndices.add(vocabIndex);
+        availableIndices.splice(randomIndex, 1);
     }
 
     container.innerHTML = currentFlashcards.map((word, idx) => `
         <div class="fc" id="fc-${idx}" onclick="revealFlashcard(${idx})">
             <div class="fc-chinese">${word.chinese}</div>
             <div class="fc-pinyin">${word.pinyin}</div>
-            <div class="fc-viet" id="fc-viet-${idx}">${word.vietnamese}</div>
+            <div class="fc-viet" id="fc-viet-${idx}" style="display:none">
+                <div>${word.vietnamese}</div>
+                <div class="fc-actions" onclick="event.stopPropagation()">
+                    <button class="fc-btn fc-btn-learned" onclick="markFlashcardLearned(${idx}, true)">Đã thuộc</button>
+                    <button class="fc-btn fc-btn-retry" onclick="markFlashcardLearned(${idx}, false)">Học lại</button>
+                </div>
+            </div>
         </div>
     `).join('');
 };
@@ -392,6 +420,22 @@ window.revealFlashcard = function (idx) {
         viet.style.display = 'block';
         card.classList.add('showing-answer');
         speak(currentFlashcards[idx].chinese);
+    }
+};
+
+window.markFlashcardLearned = function (idx, isLearned) {
+    const word = currentFlashcards[idx];
+    if (word) {
+        word.learned = isLearned;
+        save();
+        status(`${isLearned ? '✅ Đã thuộc' : '🔁 Sẽ ôn lại'}: ${word.chinese}`, 'success');
+
+        // Optional: remove the card or just update UI
+        const card = document.getElementById(`fc-${idx}`);
+        if (card) {
+            card.style.opacity = '0.5';
+            card.style.pointerEvents = 'none';
+        }
     }
 };
 
@@ -532,26 +576,41 @@ async function loadSentenceTemplates() {
         try {
             const sheetId = sheetsUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
             if (sheetId) {
-                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=1`;
-                const response = await fetch(csvUrl);
+                const sentenceGid = localStorage.getItem('sheets-sentences-gid') || '1';
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${sentenceGid}`;
+
+                console.log(`📡 Fetching sentences from GID: ${sentenceGid}...`);
+                const response = await fetchWithTimeout(csvUrl, {}, 5000);
+
                 if (response.ok) {
                     const csv = await response.text();
                     const lines = csv.split(/\r?\n/).filter(l => l.trim()).slice(1);
+
                     if (lines.length > 0) {
-                        sentenceTemplates = lines.map(line => {
+                        const newTemplates = lines.map(line => {
                             const row = parseCSVLine(line);
                             if (row.length >= 3) {
                                 return {
                                     chinese: row[0]?.trim(),
                                     pinyin: row[1]?.trim(),
                                     vietnamese: row[2]?.trim(),
-                                    words: row[3]?.trim()?.split(',')?.map(w => w.trim()) || []
+                                    words: row[3]?.trim()?.split(',')?.map(w => w.trim()).filter(w => w) || []
                                 };
                             }
                         }).filter(s => s && s.chinese);
-                        console.log(`✅ Loaded ${sentenceTemplates.length} sentences from Sheets`);
-                        return;
+
+                        if (newTemplates.length > 0) {
+                            sentenceTemplates = newTemplates;
+                            console.log(`✅ Loaded ${sentenceTemplates.length} sentences from Sheets (GID: ${sentenceGid})`);
+                            return;
+                        } else {
+                            console.warn(`⚠️ Tab sentences (GID: ${sentenceGid}) không có dữ liệu hợp lệ.`);
+                        }
+                    } else {
+                        console.warn(`⚠️ Tab sentences (GID: ${sentenceGid}) trống.`);
                     }
+                } else {
+                    console.warn(`❌ Giao tiếp Sheets thất bại (Status: ${response.status}). Có thể sai GID hoặc chưa công khai tab.`);
                 }
             }
         } catch (e) { console.warn('⚠️ Sheets sentences load failed:', e); }
@@ -580,9 +639,9 @@ window.generateSentences = function () {
             const matchedWords = wordsToMatch.filter(w => learnedChineseSet.has(w));
             return { ...template, matchedWords, matchCount: matchedWords.length };
         })
-        .filter(s => s.matchCount >= 2)
+        .filter(s => s.matchCount >= 1)
         .sort((a, b) => b.matchCount - a.matchCount)
-        .slice(0, 10);
+        .slice(0, 15);
 
     renderSentencesResult(matchedSentences);
 };
@@ -601,17 +660,28 @@ function renderSentencesResult(sentences) {
         container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;"><p>Chưa có mẫu câu phù hợp (cần học thêm từ).</p></div>';
         return;
     }
-    container.innerHTML = sentences.map(s => `
-        <div class="sentence-item">
-            <div class="sentence-chinese">${s.chinese}</div>
-            <div class="sentence-pinyin">${s.pinyin}</div>
-            <div class="sentence-viet">${s.vietnamese}</div>
-            <div>
-                <span class="sentence-badge">${s.matchCount} từ đã học</span>
-                <button class="btn" style="float:right;padding:6px 12px;font-size:0.85rem;" onclick="speak('${s.chinese}')">🔊</button>
+    container.innerHTML = sentences.map(s => {
+        let highlightedChinese = s.chinese;
+        // Sort matched words by length (longest first) to avoid partial replacement of longer words
+        const sortedMatches = [...new Set(s.matchedWords)].sort((a, b) => b.length - a.length);
+
+        sortedMatches.forEach(word => {
+            const regex = new RegExp(word, 'g');
+            highlightedChinese = highlightedChinese.replace(regex, `<span class="highlight-word">${word}</span>`);
+        });
+
+        return `
+            <div class="sentence-item">
+                <div class="sentence-chinese">${highlightedChinese}</div>
+                <div class="sentence-pinyin">${s.pinyin}</div>
+                <div class="sentence-viet">${s.vietnamese}</div>
+                <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center">
+                    <span class="sentence-badge">${s.matchCount} từ đã học</span>
+                    <button class="action-btn" style="width:36px; height:36px; font-size:1.1rem" onclick="speak('${s.chinese.replace(/'/g, "\\'")}')">🔊</button>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // ==================== ADD WORD ====================
@@ -645,6 +715,7 @@ window.addWord = function () {
 function updateConfig() {
     const fields = {
         'sheets-url': 'sheets-url',
+        'sheets-sentences-gid': 'sheets-sentences-gid',
         'github-token': 'github-token',
         'github-repo': 'github-repo',
         'github-file': 'github-file',
@@ -663,7 +734,14 @@ function updateConfig() {
 
 window.saveConfig = function () {
     localStorage.setItem('sheets-url', document.getElementById('sheets-url').value.trim());
+    localStorage.setItem('sheets-sentences-gid', document.getElementById('sheets-sentences-gid').value.trim() || '1');
     status('💾 Đã lưu cấu hình!', 'success');
+
+    // Refresh sentences after GID update
+    loadSentenceTemplates().then(() => {
+        renderSentences();
+        status('🔄 Đã tải lại mẫu câu!', 'success');
+    });
 };
 
 window.saveSyncStrategy = function () {

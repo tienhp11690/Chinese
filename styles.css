@@ -437,6 +437,40 @@ body {
     display: none;
     font-size: 1.1rem;
     margin-top: 12px;
+    width: 100%;
+}
+
+.fc-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+.fc-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fc-btn-learned {
+    background: white;
+    color: var(--s);
+}
+
+.fc-btn-retry {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid white;
+}
+
+.fc-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .input-field {
@@ -554,7 +588,13 @@ body {
     color: white;
     border-radius: 12px;
     font-size: .8rem;
-    margin-top: 8px;
+}
+
+.highlight-word {
+    color: var(--p);
+    font-weight: 700;
+    border-bottom: 2px solid var(--p);
+    padding: 0 2px;
 }
 
 @media (max-width: 900px) {

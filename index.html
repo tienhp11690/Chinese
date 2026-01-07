@@ -47,8 +47,12 @@
         <!-- Flashcard Page -->
         <div id="flashcard" class="page">
             <h2 style="margin-bottom:20px">🃏 Flashcard Ôn Tập</h2>
-            <div style="display:flex;gap:16px;margin-bottom:24px">
+            <div style="display:flex;gap:16px;margin-bottom:24px;align-items:center;flex-wrap:wrap">
                 <button class="btn" onclick="updateFlashcards()">🔄 Làm mới</button>
+                <div class="hide-learned-toggle" onclick="toggleFlashcardIncludeLearned()" style="margin-bottom:0">
+                    <div class="toggle-switch" id="fc-include-learned-toggle"></div>
+                    <span>Ôn cả từ đã thuộc</span>
+                </div>
             </div>
             <div class="fc-grid-6" id="fc-container"></div>
         </div>
@@ -120,6 +124,13 @@
                 </p>
                 <input type="text" id="sheets-url" class="input-field"
                     placeholder="https://docs.google.com/spreadsheets/d/YOUR_ID/edit">
+
+                <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center;">
+                    <label style="white-space:nowrap; font-weight:600;">GID Mẫu câu:</label>
+                    <input type="text" id="sheets-sentences-gid" class="input-field"
+                        style="margin-bottom:0; width:100px;" placeholder="1">
+                    <span style="font-size:0.8rem; color:#666;">(Mặc định tab 2 là 1)</span>
+                </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button class="btn" onclick="saveConfig()">💾 Lưu cấu hình</button>
                     <button class="btn" onclick="syncFromSheets()">🔄 Sync ngay</button>
