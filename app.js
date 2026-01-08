@@ -27,6 +27,11 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
     return Promise.race([fetch(url, options), timeoutPromise]);
 }
 
+function removeAccents(str) {
+    if (!str) return '';
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 // ==================== AUTO-LOAD CONFIG FROM GITHUB ====================
 
 async function loadConfigFromGitHub() {
@@ -168,11 +173,14 @@ function renderLibrary() {
     let filtered = vocab.filter(w => {
         if (hideLearnedWords && w.learned) return false;
         const matchFilter = !currentFilter || w.topic === currentFilter;
+
+        const normSearch = removeAccents(searchTerm);
         const matchSearch = !searchTerm ||
-            w.vietnamese.toLowerCase().includes(searchTerm) ||
             w.chinese.includes(searchTerm) ||
-            w.pinyin.toLowerCase().includes(searchTerm) ||
-            (w.meaning && w.meaning.toLowerCase().includes(searchTerm));
+            removeAccents(w.vietnamese).includes(normSearch) ||
+            removeAccents(w.pinyin).includes(normSearch) ||
+            (w.meaning && removeAccents(w.meaning).includes(normSearch));
+
         return matchFilter && matchSearch;
     });
 
