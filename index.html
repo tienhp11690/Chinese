@@ -74,6 +74,21 @@
                 <button class="btn" onclick="generateSentences()">🔄 Tạo mẫu câu mới</button>
             </div>
 
+            <!-- Search UI -->
+            <div style="background:var(--g1); padding:16px; border-radius:12px; margin-bottom:20px;">
+                <div id="search-tags" class="tags-container"
+                    style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px: min-height:0px"></div>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                    <input type="text" id="sentence-search-input" class="input-field" list="vocab-datalist"
+                        placeholder="🔍 Thêm từ vào bộ lọc filters (tối đa 5)..."
+                        style="margin-bottom:0; flex:1; min-width:200px" onchange="addSearchWord(this.value)">
+                    <button class="btn" onclick="searchSentencesByWords()" style="background:var(--p)">🔎 Tìm
+                        kiếm</button>
+                </div>
+                <datalist id="vocab-datalist"></datalist>
+            </div>
+
             <div id="sentences-list" style="margin-top:20px"></div>
         </div>
 

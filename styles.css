@@ -710,6 +710,44 @@ body {
     font-style: italic;
 }
 
+/* Search Tags */
+.tags-container:empty {
+    display: none;
+}
+
+.search-tag {
+    display: inline-flex;
+    align-items: center;
+    background: white;
+    border: 1px solid var(--p);
+    color: var(--p);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    gap: 8px;
+    animation: f 0.3s;
+}
+
+.search-tag-remove {
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(245, 101, 101, 0.1);
+    transition: all 0.2s;
+}
+
+.search-tag-remove:hover {
+    background: var(--d);
+    color: white;
+}
+
 /* Quiz / Cloze Mode Styles */
 .cloze-blank {
     display: inline-block;

@@ -688,6 +688,161 @@ window.renderSentences = function () {
     if (list && list.children.length === 0) {
         generateSentences();
     }
+
+    updateVocabDatalist();
+};
+
+// ==================== SENTENCE SEARCH (MULTI-WORD) ====================
+
+let selectedSearchWords = []; // Array of string (Chinese words)
+
+window.updateVocabDatalist = function () {
+    const dataList = document.getElementById('vocab-datalist');
+    if (!dataList) return;
+
+    // Create unique list of vocab items for suggestions
+    const uniqueMap = new Map();
+    vocab.forEach(v => {
+        if (!selectedSearchWords.includes(v.chinese) && !uniqueMap.has(v.chinese)) {
+            uniqueMap.set(v.chinese, v);
+        }
+    });
+
+    const sortedVocab = Array.from(uniqueMap.values()).sort((a, b) => b.id - a.id);
+
+    // We put Chinese in value so it fills the input, and Pinyin/Viet in label/text for searching
+    dataList.innerHTML = sortedVocab.map(v => {
+        const normPinyin = removeAccents(v.pinyin);
+        const displayLabel = normPinyin !== v.pinyin
+            ? `${v.pinyin} (${normPinyin}) - ${v.vietnamese}`
+            : `${v.pinyin} - ${v.vietnamese}`;
+        return `<option value="${v.chinese}">${displayLabel}</option>`;
+    }).join('');
+};
+
+window.addSearchWord = function (val) {
+    const input = document.getElementById('sentence-search-input');
+    const word = val ? val.trim() : input.value.trim();
+
+    if (!word) return;
+
+    if (selectedSearchWords.length >= 5) {
+        status('⚠️ Tối đa 5 từ vựng!', 'error');
+        input.value = '';
+        return;
+    }
+
+    let chineseWord = word;
+
+    // If input is not Chinese (e.g. Pinyin or Viet), try to resolve it to Chinese
+    if (!/[\u4e00-\u9fa5]/.test(word)) {
+        const normInput = removeAccents(word);
+
+        // Find best match in vocab
+        const found = vocab.find(v =>
+            v.chinese === word || // Exact match (rare if not Chinese)
+            removeAccents(v.pinyin) === normInput ||
+            removeAccents(v.vietnamese) === normInput
+        );
+
+        if (found) {
+            chineseWord = found.chinese;
+        } else {
+            // If not found in vocab, invalid for "Finding sentences containing THIS word"
+            // But maybe user wants to search purely by text? 
+            // Our searchSentencesByWords uses t.chinese.includes(kw).
+            // So if kw is "hao" it won't find "好".
+            // So we MUST resolve to Chinese.
+            status('⚠️ Vui lòng chọn từ trong danh sách gợi ý!', 'warning');
+            return;
+        }
+    }
+
+    if (!selectedSearchWords.includes(chineseWord)) {
+        selectedSearchWords.push(chineseWord);
+        renderSearchTags();
+        input.value = '';
+        updateVocabDatalist();
+    }
+    input.focus();
+};
+
+window.removeSearchWord = function (word) {
+    selectedSearchWords = selectedSearchWords.filter(w => w !== word);
+    renderSearchTags();
+    updateVocabDatalist();
+};
+
+function renderSearchTags() {
+    const container = document.getElementById('search-tags');
+    if (!container) return;
+
+    container.innerHTML = selectedSearchWords.map(w => `
+        <div class="search-tag">
+            <span>${w}</span>
+            <span class="search-tag-remove" onclick="removeSearchWord('${w}')">✕</span>
+        </div>
+    `).join('');
+
+    // Show/hide logic is in CSS (:empty) but padding might need adjust
+    container.style.marginBottom = selectedSearchWords.length > 0 ? '8px' : '0';
+}
+
+window.searchSentencesByWords = function () {
+    if (selectedSearchWords.length === 0) {
+        // Fallback to random generation if no filters
+        generateSentences();
+        return;
+    }
+
+    // Find sentences that contain ANY or ALL of the words
+    // We prioritize "More matches"
+
+    const results = sentenceTemplates.map(t => {
+        let matchCount = 0;
+        let matchedKeywords = [];
+
+        selectedSearchWords.forEach(kw => {
+            if (t.chinese.includes(kw)) {
+                matchCount++;
+                matchedKeywords.push(kw);
+            }
+        });
+
+        // Match learned words for highlighting
+        const learnedWords = vocab.filter(v => v.learned);
+        const learnedChineseSet = new Set(learnedWords.map(w => w.chinese));
+        let allWords = t.words.length ? t.words : extractWordsFromSentence(t.chinese);
+        let knownMatches = allWords.filter(w => learnedChineseSet.has(w));
+
+        return {
+            ...t,
+            matchedWords: knownMatches,
+            matchCount: knownMatches.length,
+            searchMatchCount: matchCount,
+            searchKeywords: matchedKeywords
+        };
+    })
+        .filter(s => s.searchMatchCount > 0) // Must contain at least 1 searching word
+        .sort((a, b) => {
+            // 1. Sort by number of search keywords found (Desc)
+            if (b.searchMatchCount !== a.searchMatchCount) return b.searchMatchCount - a.searchMatchCount;
+            // 2. Sort by total learned words (Desc) - good for comprehensibility
+            return b.matchCount - a.matchCount;
+        })
+        .slice(0, 30);
+
+    if (results.length === 0) {
+        status('⚠️ Không tìm thấy câu nào chứa các từ này.', 'error');
+        const list = document.getElementById('sentences-list');
+        list.innerHTML = `<div style="text-align:center;padding:40px;color:#666;">
+            <p>Không tìm thấy mẫu câu chứa: <strong>${selectedSearchWords.join(', ')}</strong></p>
+         </div>`;
+        return;
+    }
+
+    renderSentencesResult(results);
+    status(`✅ Tìm thấy ${results.length} câu phù hợp!`, 'success');
 };
 
 window.toggleSentenceMode = function (mode) {
@@ -703,12 +858,12 @@ window.toggleSentenceMode = function (mode) {
         quizBtn.classList.remove('active');
     }
 
-    // Re-render current list with new mode
-    // We trigger a re-generation or just re-render. 
-    // Ideally we just re-render the current list, but we don't store "currentList" globally. 
-    // Let's just regenerate for now to be simple, or we could store it.
-    // Better: regenerate to get fresh random sentences for the mode.
-    generateSentences();
+    // If we have search tags, re-run search. If empty, run generate.
+    if (selectedSearchWords.length > 0) {
+        searchSentencesByWords();
+    } else {
+        generateSentences();
+    }
 };
 
 function renderSentencesResult(sentences) {
