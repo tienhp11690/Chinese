@@ -77,7 +77,7 @@
             <!-- Search UI -->
             <div style="background:var(--g1); padding:16px; border-radius:12px; margin-bottom:20px;">
                 <div id="search-tags" class="tags-container"
-                    style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px: min-height:0px"></div>
+                    style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; min-height:0px"></div>
 
                 <div style="display:flex; gap:8px; flex-wrap:wrap">
                     <input type="text" id="sentence-search-input" class="input-field" list="vocab-datalist"
@@ -229,6 +229,17 @@
                 <button class="btn" onclick="startPracticeMode()"
                     style="background:linear-gradient(135deg,var(--s),#38a169)">✍️ Tập viết</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Shared Words Modal -->
+    <div id="shared-modal" class="modal">
+        <div class="modal-content" style="position:relative; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+            <button onclick="closeSharedModal()"
+                style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:var(--g2);cursor:pointer;font-size:1.2rem">✕</button>
+
+            <h3 style="margin-bottom:16px; color:var(--g8)">Từ vựng liên quan</h3>
+            <div id="shared-list"></div>
         </div>
     </div>
 

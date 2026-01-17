@@ -827,3 +827,82 @@ body {
     gap: 12px;
     margin-bottom: 16px;
 }
+
+/* Shared Hanzi Feature */
+.shared-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    background: #e0f2fe;
+    color: #0284c7;
+    border: 1px solid #7dd3fc;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.shared-badge:hover {
+    background: #bae6fd;
+    transform: scale(1.05);
+}
+
+.shared-group-container {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--g2);
+}
+
+.shared-group-container:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.shared-char-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.shared-char {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--p);
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.shared-char-count {
+    color: var(--g6);
+    font-size: 0.9rem;
+}
+
+.shared-words-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+}
+
+.shared-word-chip {
+    background: var(--g1);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--g8);
+    border: 1px solid transparent;
+}
+
+.shared-word-chip:hover {
+    border-color: var(--p);
+    background: white;
+}

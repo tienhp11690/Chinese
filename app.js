@@ -7,6 +7,9 @@ let groupsSearchTerm = '';
 let groupsFilter = '';
 let groupsTopicFilter = '';
 
+// Shared Hanzi Map
+let charToWordsMap = {};
+
 // Flashcard state
 let usedFlashcardIndices = new Set();
 let currentFlashcards = [];
@@ -93,14 +96,31 @@ function save() {
 }
 
 function load() {
-    const data = localStorage.getItem('vocab-data');
     if (data) {
         try {
             vocab = JSON.parse(data);
+            buildCharMap();
         } catch (e) {
             vocab = [];
         }
     }
+}
+
+function buildCharMap() {
+    charToWordsMap = {};
+    vocab.forEach(word => {
+        // Get unique hanzi characters from the word
+        const chars = [...new Set(word.chinese.split(''))];
+        chars.forEach(char => {
+            // Filter only valid Chinese characters (basic range)
+            if (/[\u4e00-\u9fa5]/.test(char)) {
+                if (!charToWordsMap[char]) {
+                    charToWordsMap[char] = [];
+                }
+                charToWordsMap[char].push(word);
+            }
+        });
+    });
 }
 
 function status(msg, type = 'success') {
@@ -231,11 +251,33 @@ function renderLibrary() {
         return;
     }
 
-    listDiv.innerHTML = filtered.map(w => `
+    listDiv.innerHTML = filtered.map(w => {
+        // Calculate shared words
+        let relatedWordsCount = 0;
+        const chars = [...new Set(w.chinese.split(''))];
+        const relatedSet = new Set();
+
+        chars.forEach(char => {
+            if (charToWordsMap[char]) {
+                charToWordsMap[char].forEach(relatedWord => {
+                    if (relatedWord.id !== w.id) {
+                        relatedSet.add(relatedWord.id);
+                    }
+                });
+            }
+        });
+        relatedWordsCount = relatedSet.size;
+
+        return `
         <div class="card">
             <span class="badge ${w.difficulty}">${w.difficulty}</span>
             <div class="card-content">
-                <div style="font-size:1.5rem;font-weight:700;margin-bottom:4px">${w.chinese}</div>
+                <div style="font-size:1.5rem;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px">
+                    ${w.chinese}
+                    ${relatedWordsCount > 0 ?
+                `<span class="shared-badge" onclick="event.stopPropagation(); showSharedWords(${w.id})" title="Có ${relatedWordsCount} từ vựng khác dùng chung chữ Hán nãy">🔗 ${relatedWordsCount}</span>`
+                : ''}
+                </div>
                 <div style="color:var(--g6);font-size:0.9rem;margin-bottom:8px">${w.pinyin}</div>
                 <div style="color:var(--g8);font-weight:500">${w.vietnamese}</div>
                 <div style="color:var(--g6);font-size:0.8rem;margin-top:8px">📂 ${w.topic}</div>
@@ -248,7 +290,8 @@ function renderLibrary() {
                 </button>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 window.filterTopic = function (topic) {
@@ -350,6 +393,58 @@ window.closeStrokeModal = function () {
     const modal = document.getElementById('stroke-modal');
     if (modal) modal.classList.remove('show');
     currentWriters = [];
+};
+
+// ==================== SHARED WORD MODAL ====================
+
+window.showSharedWords = function (id) {
+    const word = vocab.find(w => w.id === id);
+    if (!word) return;
+
+    const modal = document.getElementById('shared-modal');
+    const list = document.getElementById('shared-list');
+    if (!modal || !list) return;
+
+    const chars = [...new Set(word.chinese.split(''))];
+    let html = '';
+    let hasShared = false;
+
+    chars.forEach(char => {
+        if (!/[\u4e00-\u9fa5]/.test(char)) return;
+
+        const related = charToWordsMap[char] ? charToWordsMap[char].filter(w => w.id !== id) : [];
+        if (related.length > 0) {
+            hasShared = true;
+            html += `
+                <div class="shared-group-container">
+                    <div class="shared-char-header">
+                        <div class="shared-char">${char}</div>
+                        <div class="shared-char-count">Xuất hiện trong ${related.length} từ khác</div>
+                    </div>
+                    <div class="shared-words-grid">
+                        ${related.map(w => `
+                            <div class="shared-word-chip" title="${w.vietnamese}">
+                                <div style="font-weight:600">${w.chinese}</div>
+                                <div style="font-size:0.75rem;color:var(--p)">${w.pinyin}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    if (!hasShared) {
+        html = '<p style="color:var(--g6);text-align:center">Không có từ vựng nào khác chia sẻ chữ Hán với từ này.</p>';
+    }
+
+    list.innerHTML = html;
+    modal.classList.add('show');
+};
+
+window.closeSharedModal = function () {
+    const modal = document.getElementById('shared-modal');
+    if (modal) modal.classList.remove('show');
 };
 
 // ==================== FLASHCARDS ====================
@@ -1122,6 +1217,7 @@ async function syncFromSheets(isBackground = false) {
 
         vocab = newVocab;
         save();
+        buildCharMap();
         updateLastSyncTime();
         if (!isBackground) {
             hideLoading();
@@ -1156,6 +1252,7 @@ async function syncFromGitHubFallback() {
             if (vocabData && vocabData.length > 0) {
                 vocab = vocabData;
                 save();
+                buildCharMap();
                 renderLibrary();
                 return true;
             }
@@ -1211,7 +1308,7 @@ window.importData = function (event) {
             const imported = JSON.parse(e.target.result);
             const vocabData = Array.isArray(imported) ? imported : imported.vocab;
             if (vocabData && vocabData.length > 0) {
-                vocab = vocabData; save(); renderLibrary(); status(`📤 Đã nhập ${vocab.length} từ!`, 'success');
+                vocab = vocabData; save(); buildCharMap(); renderLibrary(); status(`📤 Đã nhập ${vocab.length} từ!`, 'success');
             } else throw new Error('No vocab data found');
         } catch (err) { status(`❌ File không hợp lệ: ${err.message}`, 'error'); }
     };
@@ -1220,7 +1317,7 @@ window.importData = function (event) {
 
 window.confirmClearData = function () {
     if (confirm('🗑️ XÓA TẤT CẢ dữ liệu?')) {
-        vocab = []; save(); renderLibrary(); status('🗑️ Đã xóa!', 'success');
+        vocab = []; save(); buildCharMap(); renderLibrary(); status('🗑️ Đã xóa!', 'success');
     }
 };
 
@@ -1235,6 +1332,7 @@ async function init() {
             { id: 1, vietnamese: 'xin chào', chinese: '你好', pinyin: 'nǐ hǎo', meaning: 'hello', topic: 'Cơ bản', difficulty: 'easy', learned: false, nextReview: Date.now(), reviewCount: 0 },
             { id: 2, vietnamese: 'cảm ơn', chinese: '谢谢', pinyin: 'xiè xiè', meaning: 'thank you', topic: 'Cơ bản', difficulty: 'easy', learned: false, nextReview: Date.now(), reviewCount: 0 }
         ];
+        buildCharMap();
     }
     renderLibrary();
     updateConfig();
