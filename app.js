@@ -21,6 +21,15 @@ let sentenceTemplates = [];
 // Config URL - Updated to include fallback logic
 const CONFIG_URL = 'https://raw.githubusercontent.com/tienhp11690/chinese/main/config.json';
 
+const DEFAULT_CONFIG = {
+    "sheetsUrl": "https://docs.google.com/spreadsheets/d/1b0rr7I0Z1gVc9o4pR8-0RpWC-pdtNwjasD_hEZ2Wuxw/edit",
+    "githubToken": "",
+    "githubRepo": "tienhp11690/chinese",
+    "githubFile": "vocab.json",
+    "vocabJsonUrl": "https://raw.githubusercontent.com/tienhp11690/chinese/main/vocab.json",
+    "syncStrategy": "sheets-first"
+};
+
 // ==================== HELPER FUNCTIONS ====================
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
@@ -37,9 +46,33 @@ function removeAccents(str) {
 
 // ==================== AUTO-LOAD CONFIG FROM GITHUB ====================
 
+function applyConfigFromData(configData) {
+    if (!configData) return;
+    const keys = ['sheets-url', 'github-repo', 'github-file', 'vocab-json-url', 'sync-strategy'];
+    let applied = false;
+
+    keys.forEach(key => {
+        const configKey = key.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+        // Only trigger if local storage is missing AND we have a value
+        if (!localStorage.getItem(key) && configData[configKey]) {
+            localStorage.setItem(key, configData[configKey]);
+            console.log(`📥 Auto-filled: ${key}`);
+            applied = true;
+        }
+    });
+
+    if (applied) {
+        console.log('✅ Config applied successfully');
+        if (typeof updateConfig === 'function') updateConfig();
+    }
+}
+
 async function loadConfigFromGitHub() {
+    // 1. Apply local defaults first so the app works offline/local
+    applyConfigFromData(DEFAULT_CONFIG);
+
     if (CONFIG_URL.includes('yourusername')) {
-        console.log('⚠️ CONFIG_URL not configured. Skipping auto-load config.');
+        console.log('⚠️ CONFIG_URL not configured. Skipping remote auto-load config.');
         return;
     }
 
@@ -49,21 +82,7 @@ async function loadConfigFromGitHub() {
 
         if (response.ok) {
             const config = await response.json();
-            const defaultConfig = config.defaultConfig;
-
-            let applied = false;
-            const keys = ['sheets-url', 'github-repo', 'github-file', 'vocab-json-url', 'sync-strategy'];
-
-            keys.forEach(key => {
-                const configKey = key.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-                if (!localStorage.getItem(key) && defaultConfig[configKey]) {
-                    localStorage.setItem(key, defaultConfig[configKey]);
-                    console.log(`📥 Auto-filled: ${key}`);
-                    applied = true;
-                }
-            });
-
-            if (applied) console.log('✅ Config applied successfully');
+            applyConfigFromData(config.defaultConfig);
         }
     } catch (e) {
         console.warn('⚠️ Could not load config from GitHub:', e.message);
