@@ -5,6 +5,7 @@
     "githubRepo": "tienhp11690/chinese",
     "githubFile": "vocab.json",
     "vocabJsonUrl": "https://raw.githubusercontent.com/tienhp11690/chinese/main/vocab.json",
+    "sheetsSentencesGid": "681747827",
     "syncStrategy": "sheets-first"
   },
   "notes": {

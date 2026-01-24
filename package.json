@@ -1,0 +1,14 @@
+{
+    "name": "chinese-learning-app",
+    "version": "1.0.0",
+    "description": "App học tiếng Trung",
+    "scripts": {
+        "start": "npx http-server -c-1 -o"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "http-server": "^14.1.1"
+    }
+}
