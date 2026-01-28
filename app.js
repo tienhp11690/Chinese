@@ -469,6 +469,7 @@ window.showSharedWords = function (id) {
                             <div class="shared-word-chip" title="${w.vietnamese}">
                                 <div style="font-weight:600">${w.chinese}</div>
                                 <div style="font-size:0.75rem;color:var(--p)">${w.pinyin}</div>
+                                <div style="font-size:0.8rem;color:var(--g6);margin-top:2px">${w.vietnamese || w.meaning || ''}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -673,7 +674,7 @@ window.renderGroups = function () {
                     <div class="group-word-item">
                         <div>
                             <span class="group-word-text">${w.chinese}</span>
-                            <span style="font-size:0.85rem; color:var(--g6); margin-left:8px">${w.vietnamese}</span>
+                            <span style="font-size:0.85rem; color:var(--g6); margin-left:8px">${w.vietnamese || w.meaning || ''}</span>
                         </div>
                         <span class="group-word-pinyin">${w.pinyin}</span>
                     </div>
@@ -762,57 +763,81 @@ async function loadSentenceTemplates() {
         } catch (e) { console.warn('⚠️ Sheets sentences load failed:', e); }
     }
 
-    // Default templates
-    sentenceTemplates = [
-        { chinese: '我每天早上喝咖啡', pinyin: 'wǒ měi tiān zǎo shang hē kā fēi', vietnamese: 'Tôi uống cà phê mỗi sáng' },
-        { chinese: '我爸爸 là 医生', pinyin: 'wǒ bà ba shì yī shēng', vietnamese: 'Bố tôi là bác sĩ' },
-        { chinese: '我妈妈 là 漂亮', pinyin: 'wǒ mā ma hěn piào liang', vietnamese: 'Mẹ tôi rất đẹp' },
-        { chinese: '我喜欢吃中国菜', pinyin: 'wǒ xǐ huan chī zhōng guó cài', vietnamese: 'Tôi thích ăn đồ Trung Quốc' }
-    ].map(s => ({ ...s, words: [] }));
+    // Default templates (Only if empty)
+    if (sentenceTemplates.length === 0) {
+        sentenceTemplates = [
+            { chinese: '我每天早上喝咖啡', pinyin: 'wǒ měi tiān zǎo shang hē kā fēi', vietnamese: 'Tôi uống cà phê mỗi sáng' },
+            { chinese: '我爸爸 là 医生', pinyin: 'wǒ bà ba shì yī shēng', vietnamese: 'Bố tôi là bác sĩ' },
+            { chinese: '我妈妈 là 漂亮', pinyin: 'wǒ mā ma hěn piào liang', vietnamese: 'Mẹ tôi rất đẹp' },
+            { chinese: '我喜欢吃中国菜', pinyin: 'wǒ xǐ huan chī zhōng guó cài', vietnamese: 'Tôi thích ăn đồ Trung Quốc' }
+        ].map(s => ({ ...s, words: [] }));
+        console.log('⚠️ Using default sentence templates.');
+    }
 }
 
 let isQuizMode = false;
 
 window.generateSentences = function () {
-    const learnedWords = vocab.filter(v => v.learned);
-    if (learnedWords.length < 2) {
-        status('⚠️ Bạn cần học ít nhất 2 từ!', 'error');
-        return;
+    try {
+        console.log('Generating sentences... Vocab:', vocab.length, 'Templates:', sentenceTemplates.length);
+        const learnedWords = vocab.filter(v => v.learned);
+        if (learnedWords.length < 2) {
+            status('⚠️ Bạn cần học ít nhất 2 từ!', 'error');
+            return;
+        }
+
+        const learnedChineseSet = new Set(learnedWords.map(w => w.chinese));
+
+        // 1. Calculate scores for all templates
+        let candidates = sentenceTemplates.map(template => {
+            let wordsToMatch = template.words.length ? template.words : extractWordsFromSentence(template.chinese);
+            const matchedWords = wordsToMatch.filter(w => learnedChineseSet.has(w));
+            const matchCount = matchedWords.length;
+            const totalWords = wordsToMatch.length;
+
+            let score = matchCount * 10;
+
+            // Comprehensible Input Bonus: 70-90% known is sweet spot
+            const knownRatio = totalWords > 0 ? matchCount / totalWords : 0;
+            if (knownRatio >= 0.7 && knownRatio <= 0.95) score += 20;
+
+            // Length punishment (too short or too long for beginners)
+            if (totalWords < 3) score -= 5;
+            if (totalWords > 15) score -= 5;
+
+            // Random noise to ensure variety on refresh
+            score += Math.random() * 15;
+
+            return { ...template, matchedWords, matchCount, totalWords, score };
+        });
+
+        // 2. Filter valid sentences (minimum 2 learned words)
+        candidates = candidates.filter(s => s.matchCount >= 2);
+
+        if (candidates.length === 0) {
+            // Fallback if strict filter yields nothing: try min 1 word
+            candidates = sentenceTemplates.map(template => {
+                let wordsToMatch = template.words.length ? template.words : extractWordsFromSentence(template.chinese);
+                const matchedWords = wordsToMatch.filter(w => learnedChineseSet.has(w));
+                return { ...template, matchedWords, matchCount: matchedWords.length };
+            }).filter(s => s.matchCount >= 1);
+        }
+
+        // 3. Random Shuffle & Pick 10
+        // Fisher-Yates Shuffle
+        for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+
+        const selectedSentences = candidates.slice(0, 10);
+
+        renderSentencesResult(selectedSentences);
+        status('🔄 Đã tạo 10 mẫu câu ngẫu nhiên!', 'success');
+    } catch (err) {
+        console.error('Error generating sentences:', err);
+        status('❌ Lỗi tạo mẫu câu: ' + err.message, 'error');
     }
-
-    const learnedChineseSet = new Set(learnedWords.map(w => w.chinese));
-
-    // 1. Calculate scores for all templates
-    let candidates = sentenceTemplates.map(template => {
-        let wordsToMatch = template.words.length ? template.words : extractWordsFromSentence(template.chinese);
-        const matchedWords = wordsToMatch.filter(w => learnedChineseSet.has(w));
-        const matchCount = matchedWords.length;
-        const totalWords = wordsToMatch.length;
-
-        let score = matchCount * 10;
-
-        // Comprehensible Input Bonus: 70-90% known is sweet spot
-        const knownRatio = totalWords > 0 ? matchCount / totalWords : 0;
-        if (knownRatio >= 0.7 && knownRatio <= 0.95) score += 20;
-
-        // Length punishment (too short or too long for beginners)
-        if (totalWords < 3) score -= 5;
-        if (totalWords > 15) score -= 5;
-
-        // Random noise to ensure variety on refresh
-        score += Math.random() * 15;
-
-        return { ...template, matchedWords, matchCount, totalWords, score };
-    });
-
-    // 2. Filter valid sentences (must have at least 1 known word)
-    candidates = candidates.filter(s => s.matchCount >= 1);
-
-    // 3. Sort by noisy score and pick top 30 (increased from 15)
-    candidates.sort((a, b) => b.score - a.score);
-    const selectedSentences = candidates.slice(0, 30);
-
-    renderSentencesResult(selectedSentences);
 };
 
 window.renderSentences = function () {
@@ -1383,9 +1408,11 @@ async function init() {
     // 2. Start all async tasks in parallel without blocking UI
     console.log('🚀 Loading remote data in background...');
 
-    // Config and Templates can run in parallel
+    // Synchronize access: Load Config FIRST, then other tasks
+    await loadConfig();
+
+    // Now safe to load sentences with correct GID
     const setupTasks = [
-        loadConfig(),
         loadSentenceTemplates().then(() => renderSentences())
     ];
 
@@ -1422,7 +1449,7 @@ async function init() {
     }
 
     await Promise.allSettled(setupTasks);
-    console.log('✅ Initialization complete');
+    console.log('✅ Initialization complete - DEBUG V2');
 }
 
 document.addEventListener('DOMContentLoaded', init);
