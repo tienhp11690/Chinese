@@ -5,8 +5,19 @@
     "scripts": {
         "start": "npx http-server -c-1 -o"
     },
-    "keywords": [],
-    "author": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tienhp11690/Chinese.git"
+    },
+    "homepage": "https://github.com/tienhp11690/Chinese",
+    "keywords": [
+        "chinese",
+        "learning",
+        "vocab",
+        "flashcard",
+        "hanzi"
+    ],
+    "author": "tienhp11690",
     "license": "ISC",
     "dependencies": {
         "http-server": "^14.1.1"

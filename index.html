@@ -3,16 +3,40 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Học Tiếng Trung Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.16.0/dist/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tiếng Trung Pro">
+
+    <!-- Offline Scripts -->
+    <script src="pinyin-pro.min.js"></script>
+    <script>
+        if (typeof pinyinPro === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pinyin-pro/dist/index.js"><\/script>');
+        }
+    </script>
+    <script src="hanzi-writer.min.js"></script>
+    <script>
+        if (typeof HanziWriter === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"><\/script>');
+        }
+    </script>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
     <div class="c">
+        <div id="offline-badge" style="display:none; background:#f59e0b; color:#fff; text-align:center; padding:6px 12px; border-radius:8px; margin-bottom:12px; font-weight:600; font-size:0.85rem">
+            ⚡ Đang chạy chế độ Offline - Học từ vựng, flashcard & viết chữ bình thường!
+        </div>
         <h1 class="h1">📚 Học Tiếng Trung Pro</h1>
 
         <div class="nav">
@@ -20,6 +44,7 @@
             <button class="tab" onclick="switchPage('flashcard')">🃏 Flashcard</button>
             <button class="tab" onclick="switchPage('groups')">🔠 Nhóm Từ</button>
             <button class="tab" onclick="switchPage('sentences')">💬 Mẫu Câu</button>
+            <button class="tab" onclick="switchPage('stories')">🎭 Truyện & Hội Thoại</button>
             <button class="tab" onclick="switchPage('add')">➕ Thêm Từ</button>
             <button class="tab" onclick="switchPage('config')">⚙️ Cài Đặt</button>
         </div>
@@ -90,6 +115,145 @@
             </div>
 
             <div id="sentences-list" style="margin-top:20px"></div>
+        </div>
+
+        <!-- Stories & Conversations Page -->
+        <div id="stories" class="page">
+            <h2 style="margin-bottom:8px">🎭 Luyện Tập Theo Ngữ Cảnh: Hội Thoại & Truyện</h2>
+            <p style="color:var(--g6); margin-bottom:20px;">
+                Tự động tạo câu chuyện hoặc đoạn hội thoại tự nhiên từ kho từ vựng Google Sheets để ôn tập và phản xạ trong ngữ cảnh.
+            </p>
+
+            <div class="stats">
+                <div class="stat">📊 Tổng từ vựng: <span class="n" id="stories-vocab-total">0</span></div>
+                <div class="stat">✅ Đã thuộc: <span class="n" id="stories-vocab-learned">0</span></div>
+                <div class="stat">📚 Bài đã lưu: <span class="n" id="stories-saved-count">0</span></div>
+            </div>
+
+            <!-- Generator Control Panel -->
+            <div class="story-generator-panel">
+                <h3 style="margin-bottom:16px; color:var(--g8); font-size:1.15rem">⚙️ Tùy Chỉnh Bài Ôn Tập</h3>
+                
+                <div class="story-controls-grid">
+                    <!-- Format selector -->
+                    <div class="control-box">
+                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
+                            📝 Hình thức:
+                        </label>
+                        <div class="type-toggle-group">
+                            <button type="button" class="type-toggle-btn active" id="btn-type-conversation" onclick="setStoryType('conversation')">
+                                💬 Hội Thoại
+                            </button>
+                            <button type="button" class="type-toggle-btn" id="btn-type-story" onclick="setStoryType('story')">
+                                📖 Truyện Ngắn
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Vocabulary Source Filter -->
+                    <div class="control-box">
+                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
+                            🎯 Nguồn từ vựng:
+                        </label>
+                        <select id="story-vocab-source" class="select-field" onchange="onStorySourceChange()">
+                            <option value="unlearned" selected>⭕ Từ chưa thuộc (Ôn từ mới)</option>
+                            <option value="learned">✅ Chỉ từ đã học (Củng cố)</option>
+                            <option value="all">🌐 Tất cả từ vựng</option>
+                        </select>
+                    </div>
+
+                    <!-- Topic filter -->
+                    <div class="control-box">
+                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
+                            📁 Chủ đề:
+                        </label>
+                        <select id="story-topic-filter" class="select-field" onchange="onStoryTopicChange()">
+                            <option value="">Tất cả chủ đề</option>
+                        </select>
+                    </div>
+
+                    <!-- Length selector -->
+                    <div class="control-box">
+                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
+                            📏 Độ dài:
+                        </label>
+                        <select id="story-length" class="select-field">
+                            <option value="short">Ngắn (4 - 5 câu)</option>
+                            <option value="medium" selected>Vừa (6 - 8 câu)</option>
+                            <option value="long">Dài (9 - 12 câu)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Target Words Selection Container -->
+                <div class="target-words-wrapper">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px">
+                        <label style="font-size:0.9rem; font-weight:600; color:var(--g8)">
+                            🎯 Từ vựng mục tiêu ôn tập (<span id="target-words-count">0</span> từ):
+                        </label>
+                        <div style="display:flex; gap:8px">
+                            <button type="button" class="btn btn-sm" onclick="randomizeTargetWords()" style="padding:6px 14px; font-size:0.85rem">
+                                🎲 Đổi từ ngẫu nhiên
+                            </button>
+                            <button type="button" class="btn btn-sm" onclick="clearTargetWords()" style="padding:6px 14px; font-size:0.85rem; background:var(--g2); color:var(--g8)">
+                                🗑️ Xóa hết
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="target-words-tags" class="target-tags-container"></div>
+
+                    <div style="display:flex; gap:8px; margin-top:8px">
+                        <input type="text" id="target-word-input" class="input-field" list="story-vocab-datalist"
+                            placeholder="➕ Thêm từ vựng vào bài (chọn từ danh sách gợi ý hoặc gõ từ/pinyin/nghĩa)..."
+                            style="margin-bottom:0; flex:1" onchange="addCustomTargetWord(this.value)">
+                        <datalist id="story-vocab-datalist"></datalist>
+                    </div>
+                </div>
+
+                <!-- Engine Choice: Smart Built-in vs Gemini AI -->
+                <div class="engine-tabs">
+                    <button type="button" class="engine-tab active" id="tab-engine-builtin" onclick="switchEngine('builtin')">
+                        ⚡ Tạo Thông Minh Tự Động (Tức thì, Offline)
+                    </button>
+                    <button type="button" class="engine-tab" id="tab-engine-ai" onclick="switchEngine('ai')">
+                        🤖 Tạo Bằng AI (Google Gemini / LLM)
+                    </button>
+                </div>
+
+                <!-- AI Options (Visible only when AI tab active) -->
+                <div id="ai-engine-panel" style="display:none; background:#f0f4ff; border:1px solid #c7d2fe; border-radius:12px; padding:16px; margin-top:16px;">
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+                        <label style="font-weight:600; font-size:0.9rem">🔑 Gemini API Key:</label>
+                        <input type="password" id="story-gemini-key" class="input-field" style="margin-bottom:0; flex:1; min-width:240px"
+                            placeholder="Dán Gemini API Key (nhận miễn phí tại aistudio.google.com)...">
+                        <button type="button" class="btn" style="padding:10px 18px" onclick="saveGeminiKeyFromStory()">💾 Lưu Key</button>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap">
+                        <button type="button" class="btn btn-sm" onclick="copyAIPrompt()" style="background:#4f46e5">📋 1-Click Sao Chép Prompt Cho AI</button>
+                        <button type="button" class="btn btn-sm" onclick="toggleImportAIModal()" style="background:#0284c7">📥 Dán Kết Quả Từ ChatGPT / Claude / Gemini</button>
+                    </div>
+                </div>
+
+                <!-- Generate Action Button -->
+                <div style="margin-top:20px; display:flex; justify-content:center">
+                    <button type="button" class="btn" id="btn-generate-story" onclick="triggerStoryGeneration()" style="padding:14px 40px; font-size:1.15rem">
+                        ✨ Tạo Bài Ôn Tập Ngay
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Story View Container -->
+            <div id="current-story-container" style="display:none; margin-top:28px;"></div>
+
+            <!-- Saved Stories Section -->
+            <div class="saved-stories-section" style="margin-top:40px; padding-top:24px; border-top:2px solid var(--g2)">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+                    <h3 style="color:var(--g8)">📚 Các Bài Đã Lưu Để Ôn Lại</h3>
+                    <span id="saved-count-badge" class="sentence-badge" style="background:var(--p)">0 bài</span>
+                </div>
+                <div id="saved-stories-list" class="saved-stories-grid"></div>
+            </div>
         </div>
 
         <!-- Groups Page -->
@@ -177,6 +341,9 @@
                 <p style="margin:10px 0; font-size:0.9rem; color:#666;">
                     Đẩy dữ liệu lên GitHub để backup. Khi Google Sheets fail, app sẽ tự động load từ GitHub.
                 </p>
+                <div style="background:#f1f5f9; border:1px solid #cbd5e1; padding:8px 12px; border-radius:6px; margin-bottom:12px; font-size:0.85rem; color:#334155;">
+                    🔗 <strong>Repo URL:</strong> <a href="https://github.com/tienhp11690/Chinese" target="_blank" rel="noopener noreferrer" style="color:#2563eb; font-weight:600; text-decoration:none;">github.com/tienhp11690/Chinese</a>
+                </div>
                 <input type="text" id="github-token" class="input-field" placeholder="GitHub Personal Access Token">
                 <input type="text" id="github-repo" class="input-field" placeholder="username/repo-name">
                 <input type="text" id="github-file" class="input-field" placeholder="data/vocab.json"
@@ -196,6 +363,32 @@
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
                     <button class="btn" onclick="saveGitHubConfig()">💾 Lưu GitHub Config</button>
                     <button class="btn" onclick="syncToGitHub()">☁️ Push to GitHub</button>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>🤖 Cấu Hình AI (Google Gemini)</h3>
+                <p style="margin:10px 0; font-size:0.9rem; color:#666;">
+                    Gemini API Key miễn phí từ Google AI Studio giúp tạo truyện và hội thoại tự động theo kho từ vựng.
+                </p>
+                <input type="password" id="gemini-api-key" class="input-field" placeholder="AIzaSy... (Gemini API Key)">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                    <button class="btn" onclick="saveGeminiConfig()">💾 Lưu API Key</button>
+                    <button class="btn" onclick="testGeminiApiKey()">🔍 Kiểm tra kết nối</button>
+                </div>
+            </div>
+
+            <div class="config-section" id="pwa-install-box">
+                <h3>📱 Cài Đặt App Vào Điện Thoại (PWA Offline)</h3>
+                <p style="margin:10px 0; font-size:0.9rem; color:#666;">
+                    Cài đặt ứng dụng trực tiếp lên màn hình chính điện thoại (Android & iPhone) để mở học offline mọi lúc mà không cần mở trình duyệt.
+                </p>
+                <button class="btn" id="btn-install-app" style="display:none; background:linear-gradient(135deg, #10b981, #059669); font-weight:600; margin-bottom:10px">
+                    📲 Cài đặt App ngay
+                </button>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:0.85rem; color:#475569;">
+                    <div><strong>🍎 Dành cho iPhone / iPad (Safari):</strong> Bấm nút <em>Chia sẻ</em> (icon ô vuông có mũi tên lên) ➔ Chọn <strong>"Thêm vào MH chính" (Add to Home Screen)</strong>.</div>
+                    <div style="margin-top:6px"><strong>🤖 Dành cho Android (Chrome):</strong> Bấm menu <strong>⋮</strong> ở góc trên bên phải ➔ Chọn <strong>"Cài đặt ứng dụng"</strong> hoặc <strong>"Thêm vào màn hình chính"</strong>.</div>
                 </div>
             </div>
 
@@ -243,6 +436,162 @@
         </div>
     </div>
 
+    <!-- Import AI Modal -->
+    <div id="import-ai-modal" class="modal">
+        <div class="modal-content" style="position:relative; max-width:600px;">
+            <button onclick="toggleImportAIModal()"
+                style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:var(--g2);cursor:pointer;font-size:1.2rem">✕</button>
+
+            <h3 style="margin-bottom:8px; color:var(--g8)">📥 Dán Kết Quả Từ AI (ChatGPT / Gemini / Claude)</h3>
+            <p style="font-size:0.9rem; color:var(--g6); margin-bottom:12px">
+                Dán toàn bộ kết quả hoặc khối mã JSON do AI sinh ra vào đây để ứng dụng tự động hiển thị bài ôn tập:
+            </p>
+            <textarea id="ai-import-text" class="input-field" style="height:200px; font-family:monospace; font-size:0.85rem; resize:vertical;"
+                placeholder="Dán nội dung hoặc JSON từ AI vào đây..."></textarea>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px">
+                <button class="btn" style="background:var(--g2); color:var(--g8)" onclick="toggleImportAIModal()">Hủy</button>
+                <button class="btn" onclick="applyImportedAIContent()">✨ Hiển thị bài học</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word Detail Quick Modal -->
+    <div id="word-detail-modal" class="modal">
+        <div class="modal-content" style="position:relative; max-width:440px; text-align:center;">
+            <button onclick="closeWordDetailModal()"
+                style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:var(--g2);cursor:pointer;font-size:1.2rem">✕</button>
+
+            <!-- Word Status Badge -->
+            <div id="detail-word-badge" style="display:inline-block; padding:4px 14px; border-radius:20px; font-size:0.8rem; font-weight:600; margin-bottom:12px"></div>
+
+            <div id="detail-word-chinese" style="font-size:2.5rem; font-weight:700; color:var(--p); margin-bottom:4px"></div>
+            <div id="detail-word-pinyin" style="font-size:1.15rem; color:var(--g6); font-style:italic; margin-bottom:12px"></div>
+
+            <!-- Meaning Box -->
+            <div style="background:var(--g1); border:1px solid var(--g2); border-radius:12px; padding:12px 16px; margin-bottom:14px; text-align:left;">
+                <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--g6); margin-bottom:4px">📖 GIẢI NGHĨA TIẾNG VIỆT:</label>
+                <div id="detail-word-meaning" style="font-size:1.1rem; color:var(--g8); font-weight:600; margin-bottom:4px"></div>
+                <input type="text" id="detail-meaning-input" class="input-field" style="display:none; margin-bottom:0; padding:8px 12px; font-size:0.95rem" placeholder="Nhập hoặc chỉnh sửa nghĩa tiếng Việt...">
+            </div>
+
+            <!-- Meta / Topic Info -->
+            <div id="detail-meta-container" style="display:flex; gap:8px; justify-content:center; align-items:center; margin-bottom:16px; flex-wrap:wrap">
+                <span id="detail-word-meta" style="font-size:0.85rem; color:var(--g6)"></span>
+                <select id="detail-topic-select" class="select-field" style="display:none; width:auto; padding:6px 12px; font-size:0.85rem; margin-bottom:0">
+                    <option value="Từ mới">Chủ đề: Từ mới</option>
+                    <option value="Thời tiết">Chủ đề: Thời tiết</option>
+                    <option value="Chào hỏi">Chủ đề: Chào hỏi</option>
+                    <option value="Ăn uống">Chủ đề: Ăn uống</option>
+                    <option value="Du lịch">Chủ đề: Du lịch</option>
+                    <option value="Gia đình">Chủ đề: Gia đình</option>
+                    <option value="Cuộc sống">Chủ đề: Cuộc sống</option>
+                </select>
+            </div>
+
+            <!-- Action buttons for existing words in vocab -->
+            <div id="detail-existing-actions" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap">
+                <button class="btn btn-sm" id="btn-detail-speak" style="padding:8px 14px">🔊 Phát âm</button>
+                <button class="btn btn-sm" id="btn-detail-stroke" style="padding:8px 14px; background:#0ea5e9">✍️ Xem nét</button>
+                <button class="btn btn-sm" id="btn-detail-learn" style="padding:8px 14px; background:var(--s)">✅ Đã thuộc</button>
+            </div>
+
+            <!-- Action buttons for NEW words outside vocab -->
+            <div id="detail-new-actions" style="display:none; flex-direction:column; gap:10px; margin-top:8px">
+                <button class="btn" id="btn-detail-add-vocab" onclick="addCurrentModalWordToLibrary()" style="background:linear-gradient(135deg, #f59e0b, #d97706); width:100%; justify-content:center; font-size:1rem; padding:12px">
+                    ➕ Thêm Vào Thư Viện Từ Vựng
+                </button>
+                <div style="display:flex; gap:8px; justify-content:center">
+                    <button class="btn btn-sm" id="btn-detail-speak-new" style="padding:8px 14px">🔊 Phát âm</button>
+                    <button class="btn btn-sm" id="btn-detail-stroke-new" style="padding:8px 14px; background:#0ea5e9">✍️ Xem nét</button>
+                    <button class="btn btn-sm btn-outline" id="btn-detail-dict-lookup" onclick="lookupCurrentWordOnline()" style="padding:8px 14px">🌐 Tra từ điển</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jogging / Passive Listening Audio Player Floating Bar -->
+    <div id="jogging-player-container" class="jogging-player-container" style="display:none">
+        <!-- Jogging Settings Drawer / Popover -->
+        <div id="jog-settings-panel" class="jog-settings-panel" style="display:none">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+                <h4 style="margin:0; font-size:1rem; color:#fff">⚙️ Cài Đặt Nghe Chạy Bộ</h4>
+                <button class="jog-icon-btn" onclick="toggleJogSettingsModal()">✕</button>
+            </div>
+
+            <div class="jog-setting-row">
+                <label>🇻🇳 Đọc kèm dịch nghĩa tiếng Việt:</label>
+                <input type="checkbox" id="jog-opt-viet" checked onchange="updateJogSetting('includeViet', this.checked)">
+            </div>
+            <div class="jog-setting-row">
+                <label>🔄 Lặp lại toàn bài vô tận (cho chạy bộ):</label>
+                <input type="checkbox" id="jog-opt-loop" checked onchange="updateJogSetting('loopArticle', this.checked)">
+            </div>
+            <div class="jog-setting-row">
+                <label>🔂 Đọc tiếng Trung 2 lần trước khi dịch:</label>
+                <input type="checkbox" id="jog-opt-repeat-zh" onchange="updateJogSetting('repeatChinese', this.checked)">
+            </div>
+            <div class="jog-setting-row">
+                <label>⏱️ Thời gian nghỉ giữa các câu:</label>
+                <select id="jog-opt-delay" class="select-field jog-select" onchange="updateJogSetting('pauseBetweenSentences', parseInt(this.value))">
+                    <option value="1000">1 giây (Nhanh)</option>
+                    <option value="2000" selected>2 giây (Vừa - Khuyên dùng)</option>
+                    <option value="3500">3.5 giây (Dài - Dễ ngấm)</option>
+                    <option value="5000">5 giây (Thư thả)</option>
+                </select>
+            </div>
+            <div class="jog-setting-row">
+                <label>⚡ Tốc độ đọc tiếng Trung:</label>
+                <select id="jog-opt-rate" class="select-field jog-select" onchange="updateJogSetting('rateChinese', parseFloat(this.value))">
+                    <option value="0.7">0.7x (Chậm rõ từng âm)</option>
+                    <option value="0.85" selected>0.85x (Tự nhiên, dễ nghe)</option>
+                    <option value="1.0">1.0x (Chuẩn người bản xứ)</option>
+                    <option value="1.15">1.15x (Nhanh)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="jogging-player-bar">
+            <!-- Header bar with mode status and buttons -->
+            <div class="jog-header">
+                <div class="jog-status-badge">
+                    <span class="jog-pulse-icon">🏃‍♂️</span>
+                    <span id="jog-status-text">Đang nghe thụ động...</span>
+                </div>
+                <div class="jog-progress" id="jog-progress-text">Câu 1/8</div>
+                <div class="jog-header-actions">
+                    <button class="jog-icon-btn" onclick="toggleJogSettingsModal()" title="Cài đặt nghe (tốc độ, lặp lại, dịch)">⚙️</button>
+                    <button class="jog-icon-btn" onclick="toggleJogFullscreen()" title="Chế độ toàn màn hình chữ to">⛶</button>
+                    <button class="jog-icon-btn close" onclick="stopJoggingMode()" title="Tắt chế độ nghe">✕</button>
+                </div>
+            </div>
+
+            <!-- Current sentence display -->
+            <div class="jog-display">
+                <div class="jog-chinese" id="jog-current-chinese">你好</div>
+                <div class="jog-pinyin" id="jog-current-pinyin">nǐ hǎo</div>
+                <div class="jog-vietnamese" id="jog-current-viet">Xin chào</div>
+            </div>
+
+            <!-- Controls bar -->
+            <div class="jog-controls">
+                <button class="jog-btn" onclick="jogPrevSentence()" title="Câu trước (Lùi)">⏮️</button>
+                <button class="jog-btn-main" id="btn-jog-playpause" onclick="toggleJoggingPlayPause()" title="Phát / Tạm dừng">
+                    ⏸️
+                </button>
+                <button class="jog-btn" onclick="jogNextSentence()" title="Câu tiếp theo (Tiến)">⏭️</button>
+                <button class="jog-btn" onclick="jogReplayCurrent()" title="Lặp lại câu này">🔁</button>
+            </div>
+
+            <!-- Mini indicators row -->
+            <div class="jog-mini-indicators">
+                <span class="jog-indicator" id="jog-ind-viet">🇻🇳 Dịch: Bật</span>
+                <span class="jog-indicator" id="jog-ind-loop">🔄 Lặp cả bài</span>
+                <span class="jog-indicator" id="jog-ind-delay">⏱️ Nghỉ 2s</span>
+                <span class="jog-indicator" id="jog-ind-rate">⚡ Tốc độ 0.85x</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-content">
@@ -256,6 +605,47 @@
     <div class="status" id="status"></div>
 
     <script src="app.js"></script>
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('✅ PWA Service Worker registered:', reg.scope))
+                    .catch((err) => console.warn('⚠️ PWA Service Worker registration failed:', err));
+            });
+        }
+
+        // Offline / Online network listeners
+        function updateNetworkStatus() {
+            const badge = document.getElementById('offline-badge');
+            if (badge) {
+                badge.style.display = navigator.onLine ? 'none' : 'block';
+            }
+        }
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        updateNetworkStatus();
+
+        // PWA Install prompt handling
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('btn-install-app');
+            if (btn) {
+                btn.style.display = 'inline-flex';
+                btn.onclick = async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`User response to install: ${outcome}`);
+                        deferredPrompt = null;
+                        btn.style.display = 'none';
+                    }
+                };
+            }
+        });
+    </script>
 </body>
 
 </html>
