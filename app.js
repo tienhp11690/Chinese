@@ -2840,6 +2840,8 @@ window.renderCurrentStory = function () {
                             onclick="startJoggingMode(${index})" title="Nghe từ câu này kèm dịch nghĩa (Chạy bộ)">▶️</button>
                         <button class="action-btn" style="width:36px; height:36px; font-size:0.95rem"
                             onclick="speak('${line.chinese.replace(/'/g, "\\'")}')" title="Phát âm nhanh tiếng Trung">🔊</button>
+                        <button class="action-btn" style="width:36px; height:36px; font-size:0.85rem"
+                            onclick="downloadSentenceAudio('${line.chinese.replace(/'/g, "\\'")}', 'zh-CN', 'Cau_${index + 1}_TiengTrung.mp3')" title="Tải file MP3 câu này về máy">📥</button>
                     </div>
                 </div>
             `;
@@ -2858,6 +2860,8 @@ window.renderCurrentStory = function () {
                                 onclick="startJoggingMode(${index})" title="Nghe từ câu này kèm dịch nghĩa (Chạy bộ)">▶️</button>
                             <button class="action-btn" style="width:36px; height:36px; font-size:0.95rem"
                                 onclick="speak('${line.chinese.replace(/'/g, "\\'")}')" title="Phát âm nhanh tiếng Trung">🔊</button>
+                            <button class="action-btn" style="width:36px; height:36px; font-size:0.85rem"
+                                onclick="downloadSentenceAudio('${line.chinese.replace(/'/g, "\\'")}', 'zh-CN', 'Cau_${index + 1}_TiengTrung.mp3')" title="Tải file MP3 câu này về máy">📥</button>
                         </div>
                     </div>
                 </div>
@@ -2917,18 +2921,26 @@ window.renderCurrentStory = function () {
                     <span class="jog-pulse-icon" style="font-size:2rem; line-height:1">🏃‍♂️</span>
                     <div>
                         <div style="font-weight:700; font-size:1.05rem; color:#fff">Chế Độ Nghe Thụ Động Khi Chạy Bộ</div>
-                        <div style="font-size:0.85rem; color:#cbd5e1">Tự động đọc Tiếng Trung ➔ đọc Dịch nghĩa Tiếng Việt ➔ lặp lại liên tục, hỗ trợ điều khiển qua tai nghe Bluetooth.</div>
+                        <div style="font-size:0.85rem; color:#cbd5e1">Tự động đọc Tiếng Trung ➔ đọc Dịch nghĩa Tiếng Việt ➔ lặp lại liên tục, hỗ trợ chạy nền khi khóa màn hình & điều khiển qua tai nghe Bluetooth.</div>
                     </div>
                 </div>
-                <button class="btn" onclick="startJoggingMode(0)" style="background:linear-gradient(135deg, #10b981, #059669); font-weight:700; white-space:nowrap; padding:10px 20px; box-shadow:0 4px 15px rgba(16, 185, 129, 0.4)">
-                    ▶️ Bắt Đầu Nghe
-                </button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap">
+                    <button class="btn" onclick="startJoggingMode(0)" style="background:linear-gradient(135deg, #10b981, #059669); font-weight:700; white-space:nowrap; padding:10px 18px; box-shadow:0 4px 15px rgba(16, 185, 129, 0.4)">
+                        ▶️ Bắt Đầu Nghe
+                    </button>
+                    <button class="btn" onclick="openAudioDownloadModal()" style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.45); color:#fff; font-weight:600; white-space:nowrap; padding:10px 16px;">
+                        📥 Tải File Nghe MP3
+                    </button>
+                </div>
             </div>
 
             <!-- Toolbar -->
             <div class="story-toolbar">
                 <button class="story-tool-btn active-jogging" onclick="startJoggingMode(0)" title="Nghe tiếng Trung kèm dịch tiếng Việt liên tục khi chạy bộ">
                     🏃‍♂️ Nghe Chạy Bộ (Trung + Việt)
+                </button>
+                <button class="story-tool-btn" onclick="openAudioDownloadModal()" style="background:#0284c7; color:#fff; font-weight:600" title="Tải file MP3 hoặc Playlist .m3u về điện thoại">
+                    📥 Tải File Nghe MP3
                 </button>
                 <button class="story-tool-btn ${storyShowPinyin ? 'active' : ''}" onclick="toggleStoryPinyin()">
                     🔤 ${storyShowPinyin ? 'Ẩn Pinyin' : 'Hiện Pinyin'}
@@ -3016,8 +3028,77 @@ let jogSettings = {
     pauseAfterChinese: 900,      // Khoảng nghỉ sau tiếng Trung (ms)
     pauseBetweenSentences: 2000, // Khoảng nghỉ giữa các câu (ms)
     rateChinese: 0.85,           // Tốc độ tiếng Trung
-    rateVietnamese: 1.0          // Tốc độ tiếng Việt
+    rateVietnamese: 1.0,         // Tốc độ tiếng Việt
+    audioEngine: 'stream'        // 'stream' (HTML5 Audio Stream - khóa màn hình) hoặc 'speech' (Web Speech API)
 };
+
+// Tự động nạp cấu hình đã lưu
+try {
+    const savedJog = localStorage.getItem('jog-settings');
+    if (savedJog) {
+        jogSettings = Object.assign(jogSettings, JSON.parse(savedJog));
+    }
+} catch (e) {}
+
+// HTML5 Stream Audio Engine (chạy ngầm khi khóa màn hình điện thoại)
+let jogHtmlAudio = null;
+
+function getJogHtmlAudio() {
+    if (!jogHtmlAudio) {
+        jogHtmlAudio = new Audio();
+        jogHtmlAudio.preload = 'auto';
+        jogHtmlAudio.setAttribute('playsinline', '');
+        jogHtmlAudio.setAttribute('webkit-playsinline', '');
+    }
+    return jogHtmlAudio;
+}
+
+function stopStreamAudio() {
+    if (jogHtmlAudio) {
+        try {
+            jogHtmlAudio.pause();
+            jogHtmlAudio.currentTime = 0;
+            jogHtmlAudio.onended = null;
+            jogHtmlAudio.onerror = null;
+        } catch (e) {}
+    }
+}
+
+function getGoogleTTSUrl(text, lang) {
+    const targetLang = (lang === 'zh-CN' || lang === 'zh') ? 'zh-CN' : 'vi';
+    return `https://translate.google.com/translate_tts?ie=UTF-8&tl=${targetLang}&client=tw-ob&q=${encodeURIComponent((text || '').trim())}`;
+}
+
+function playStreamAudio(text, lang, rate, onEndCallback, onErrorCallback) {
+    stopStreamAudio();
+    const audio = getJogHtmlAudio();
+    const url = getGoogleTTSUrl(text, lang);
+    audio.src = url;
+    audio.playbackRate = rate || 1.0;
+
+    audio.onended = () => {
+        audio.onended = null;
+        audio.onerror = null;
+        if (typeof onEndCallback === 'function') onEndCallback();
+    };
+
+    audio.onerror = (e) => {
+        audio.onended = null;
+        audio.onerror = null;
+        console.warn('HTML5 Audio stream error, falling back:', e);
+        if (typeof onErrorCallback === 'function') onErrorCallback();
+    };
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(err => {
+            console.warn('Audio play() rejected or blocked:', err);
+            audio.onended = null;
+            audio.onerror = null;
+            if (typeof onErrorCallback === 'function') onErrorCallback();
+        });
+    }
+}
 
 // Background keepalive audio for mobile lock screen / jogging
 const SILENT_AUDIO_URI = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
@@ -3105,6 +3186,7 @@ window.stopJoggingMode = function () {
     isJoggingActive = false;
     isJoggingPaused = false;
     if (jogTimeoutId) clearTimeout(jogTimeoutId);
+    stopStreamAudio();
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
     }
@@ -3142,6 +3224,7 @@ window.toggleJoggingPlayPause = function () {
 function pauseJoggingPlayer() {
     isJoggingPaused = true;
     if (jogTimeoutId) clearTimeout(jogTimeoutId);
+    stopStreamAudio();
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
     }
@@ -3170,6 +3253,7 @@ function resumeJoggingPlayer() {
 window.jogNextSentence = function () {
     if (!currentStory || !currentStory.lines) return;
     if (jogTimeoutId) clearTimeout(jogTimeoutId);
+    stopStreamAudio();
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
     jogCurrentIndex = (jogCurrentIndex + 1) % currentStory.lines.length;
@@ -3184,6 +3268,7 @@ window.jogNextSentence = function () {
 window.jogPrevSentence = function () {
     if (!currentStory || !currentStory.lines) return;
     if (jogTimeoutId) clearTimeout(jogTimeoutId);
+    stopStreamAudio();
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
     jogCurrentIndex = (jogCurrentIndex - 1 + currentStory.lines.length) % currentStory.lines.length;
@@ -3197,6 +3282,7 @@ window.jogPrevSentence = function () {
 
 window.jogReplayCurrent = function () {
     if (jogTimeoutId) clearTimeout(jogTimeoutId);
+    stopStreamAudio();
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     jogChineseSpokenCount = 0;
     isJoggingPaused = false;
@@ -3253,12 +3339,7 @@ function speakChineseStep(currentLine) {
             : '🔊 Đang đọc tiếng Trung...';
     }
 
-    window.speechSynthesis.cancel();
-    const zhUtterance = new SpeechSynthesisUtterance(currentLine.chinese);
-    zhUtterance.lang = 'zh-CN';
-    zhUtterance.rate = jogSettings.rateChinese;
-
-    zhUtterance.onend = () => {
+    const onZhEnd = () => {
         if (!isJoggingActive || isJoggingPaused) return;
 
         jogChineseSpokenCount++;
@@ -3280,13 +3361,29 @@ function speakChineseStep(currentLine) {
         }
     };
 
-    zhUtterance.onerror = (e) => {
-        console.warn('ZH speech error, advancing:', e);
+    const onZhFallback = () => {
         if (!isJoggingActive || isJoggingPaused) return;
-        scheduleNextSentenceGap();
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const zhUtterance = new SpeechSynthesisUtterance(currentLine.chinese);
+            zhUtterance.lang = 'zh-CN';
+            zhUtterance.rate = jogSettings.rateChinese;
+            zhUtterance.onend = onZhEnd;
+            zhUtterance.onerror = (e) => {
+                console.warn('ZH speech fallback error, advancing:', e);
+                scheduleNextSentenceGap();
+            };
+            window.speechSynthesis.speak(zhUtterance);
+        } else {
+            scheduleNextSentenceGap();
+        }
     };
 
-    window.speechSynthesis.speak(zhUtterance);
+    if (jogSettings.audioEngine === 'stream') {
+        playStreamAudio(currentLine.chinese, 'zh-CN', jogSettings.rateChinese, onZhEnd, onZhFallback);
+    } else {
+        onZhFallback();
+    }
 }
 
 function speakVietnameseStep(currentLine) {
@@ -3295,23 +3392,34 @@ function speakVietnameseStep(currentLine) {
     const statusText = document.getElementById('jog-status-text');
     if (statusText) statusText.textContent = '🇻🇳 Đang đọc dịch nghĩa tiếng Việt...';
 
-    window.speechSynthesis.cancel();
-    const viUtterance = new SpeechSynthesisUtterance(currentLine.vietnamese);
-    viUtterance.lang = 'vi-VN';
-    viUtterance.rate = jogSettings.rateVietnamese;
-
-    viUtterance.onend = () => {
+    const onViEnd = () => {
         if (!isJoggingActive || isJoggingPaused) return;
         scheduleNextSentenceGap();
     };
 
-    viUtterance.onerror = (e) => {
-        console.warn('VI speech error, advancing:', e);
+    const onViFallback = () => {
         if (!isJoggingActive || isJoggingPaused) return;
-        scheduleNextSentenceGap();
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const viUtterance = new SpeechSynthesisUtterance(currentLine.vietnamese);
+            viUtterance.lang = 'vi-VN';
+            viUtterance.rate = jogSettings.rateVietnamese;
+            viUtterance.onend = onViEnd;
+            viUtterance.onerror = (e) => {
+                console.warn('VI speech fallback error, advancing:', e);
+                scheduleNextSentenceGap();
+            };
+            window.speechSynthesis.speak(viUtterance);
+        } else {
+            scheduleNextSentenceGap();
+        }
     };
 
-    window.speechSynthesis.speak(viUtterance);
+    if (jogSettings.audioEngine === 'stream') {
+        playStreamAudio(currentLine.vietnamese, 'vi', jogSettings.rateVietnamese, onViEnd, onViFallback);
+    } else {
+        onViFallback();
+    }
 }
 
 function scheduleNextSentenceGap() {
@@ -3378,7 +3486,118 @@ window.toggleJogFullscreen = function () {
 
 window.updateJogSetting = function (key, value) {
     jogSettings[key] = value;
+    try {
+        localStorage.setItem('jog-settings', JSON.stringify(jogSettings));
+    } catch (e) {}
     updateJogPlayerUI();
+};
+
+// ==================== AUDIO DOWNLOAD & EXPORT ====================
+
+window.downloadStoryPlaylistM3U = function () {
+    if (!currentStory || !currentStory.lines || currentStory.lines.length === 0) {
+        status('⚠️ Chưa có bài đọc nào để tải playlist!', 'warning');
+        return;
+    }
+
+    const title = currentStory.title || 'Bai_Hoc_Tieng_Trung';
+    const safeTitle = title.replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_');
+
+    let m3u = '#EXTM3U\n';
+    m3u += `#PLAYLIST: ${title}\n\n`;
+
+    currentStory.lines.forEach((line, idx) => {
+        const num = String(idx + 1).padStart(2, '0');
+        const zhUrl = getGoogleTTSUrl(line.chinese, 'zh-CN');
+        m3u += `#EXTINF:-1, [Câu ${num}] ${line.chinese}\n`;
+        m3u += `${zhUrl}\n\n`;
+
+        if (line.vietnamese) {
+            const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+            m3u += `#EXTINF:-1, [Dịch ${num}] ${line.vietnamese}\n`;
+            m3u += `${viUrl}\n\n`;
+        }
+    });
+
+    const blob = new Blob([m3u], { type: 'audio/x-mpegurl;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeTitle}.m3u`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+    status('✅ Đã tải file Playlist (.m3u)! Mở bằng ứng dụng VLC hoặc app nghe nhạc trên máy để nghe nền.', 'success');
+};
+
+window.downloadSentenceAudio = function (text, lang, filename) {
+    if (!text) return;
+    const url = getGoogleTTSUrl(text, lang);
+    const safeName = (filename || text.slice(0, 15)).replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_') + '.mp3';
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = safeName;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+
+window.openAudioDownloadModal = function () {
+    if (!currentStory || !currentStory.lines || currentStory.lines.length === 0) {
+        status('⚠️ Hãy tạo hoặc chọn một bài đọc trước khi tải file nghe!', 'warning');
+        return;
+    }
+
+    const modal = document.getElementById('audio-download-modal');
+    const listEl = document.getElementById('audio-download-sentence-list');
+    const titleEl = document.getElementById('audio-modal-story-title');
+    if (!modal) return;
+
+    if (titleEl) {
+        titleEl.textContent = currentStory.title || 'Bài học hiện tại';
+    }
+
+    if (listEl) {
+        listEl.innerHTML = currentStory.lines.map((line, idx) => {
+            const num = idx + 1;
+            const zhUrl = getGoogleTTSUrl(line.chinese, 'zh-CN');
+            const viUrl = line.vietnamese ? getGoogleTTSUrl(line.vietnamese, 'vi') : '';
+
+            return `
+                <div class="audio-download-row" style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:700; font-size:1rem; color:var(--g8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            <span style="color:#0ea5e9; margin-right:8px; font-weight:8px">#${num}</span>${line.chinese}
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--g6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+                            ${line.vietnamese || ''}
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <a href="${zhUrl}" download="Cau_${num}_TiengTrung.mp3" target="_blank" class="btn btn-sm" style="background:#0284c7; padding:7px 12px; font-size:0.82rem; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" title="Tải file MP3 tiếng Trung">
+                            🇨🇳 Tải MP3
+                        </a>
+                        ${line.vietnamese ? `
+                            <a href="${viUrl}" download="Cau_${num}_DichViet.mp3" target="_blank" class="btn btn-sm btn-outline" style="padding:7px 12px; font-size:0.82rem; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" title="Tải file MP3 dịch Việt">
+                                🇻🇳 Dịch MP3
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    modal.classList.add('show');
+};
+
+window.closeAudioDownloadModal = function () {
+    const modal = document.getElementById('audio-download-modal');
+    if (modal) modal.classList.remove('show');
 };
 
 window.speakStorySequence = function () {

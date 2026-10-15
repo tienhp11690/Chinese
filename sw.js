@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chinese-app-pwa-v2';
+const CACHE_NAME = 'chinese-app-pwa-v3';
 
 const STATIC_ASSETS = [
     './',
@@ -52,11 +52,12 @@ self.addEventListener('fetch', (event) => {
     const request = event.request;
     const url = new URL(request.url);
 
-    // Không can thiệp vào các API động (Google Sheets, Gemini AI, GitHub API)
+    // Không can thiệp vào các API động (Google Sheets, Gemini AI, GitHub API, Google Translate TTS)
     if (
         url.hostname.includes('googleapis.com') ||
         url.hostname.includes('docs.google.com') ||
         url.hostname.includes('api.github.com') ||
+        url.hostname.includes('translate.google.com') ||
         url.hostname.includes('mymemory.translated.net')
     ) {
         return; // Để trình duyệt gọi trực tiếp qua network

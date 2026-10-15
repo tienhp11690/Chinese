@@ -1829,3 +1829,26 @@ body {
     gap: 28px;
     margin-bottom: 24px;
 }
+
+/* Audio Download Modal Styles */
+.audio-download-row {
+    transition: all 0.2s ease;
+}
+
+.audio-download-row:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+    .audio-download-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    .audio-download-row > div:last-child {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

@@ -548,6 +548,13 @@
                     <option value="1.15">1.15x (Nhanh)</option>
                 </select>
             </div>
+            <div class="jog-setting-row">
+                <label>🎧 Chế độ phát âm thanh:</label>
+                <select id="jog-opt-engine" class="select-field jog-select" onchange="updateJogSetting('audioEngine', this.value)">
+                    <option value="stream" selected>🎵 HTML5 Stream (Khuyên dùng khi khóa màn hình)</option>
+                    <option value="speech">🗣️ Web Speech API (Giọng máy)</option>
+                </select>
+            </div>
         </div>
 
         <div class="jogging-player-bar">
@@ -559,7 +566,8 @@
                 </div>
                 <div class="jog-progress" id="jog-progress-text">Câu 1/8</div>
                 <div class="jog-header-actions">
-                    <button class="jog-icon-btn" onclick="toggleJogSettingsModal()" title="Cài đặt nghe (tốc độ, lặp lại, dịch)">⚙️</button>
+                    <button class="jog-icon-btn" onclick="openAudioDownloadModal()" title="Tải file âm thanh MP3 / Playlist về điện thoại">📥</button>
+                    <button class="jog-icon-btn" onclick="toggleJogSettingsModal()" title="Cài đặt nghe (tốc độ, lặp lại, dịch, bộ phát)">⚙️</button>
                     <button class="jog-icon-btn" onclick="toggleJogFullscreen()" title="Chế độ toàn màn hình chữ to">⛶</button>
                     <button class="jog-icon-btn close" onclick="stopJoggingMode()" title="Tắt chế độ nghe">✕</button>
                 </div>
@@ -588,6 +596,60 @@
                 <span class="jog-indicator" id="jog-ind-loop">🔄 Lặp cả bài</span>
                 <span class="jog-indicator" id="jog-ind-delay">⏱️ Nghỉ 2s</span>
                 <span class="jog-indicator" id="jog-ind-rate">⚡ Tốc độ 0.85x</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Download & Background Listening Modal -->
+    <div id="audio-download-modal" class="modal">
+        <div class="modal-content" style="max-width: 650px; max-height: 85vh; overflow-y: auto; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 2px solid var(--g2); padding-bottom: 12px;">
+                <div>
+                    <h3 style="margin:0; color:var(--g8); font-size:1.25rem;">🎧 Tải File Nghe Về Điện Thoại</h3>
+                    <div id="audio-modal-story-title" style="font-size:0.85rem; color:var(--p); font-weight:600; margin-top:2px;"></div>
+                </div>
+                <button class="action-btn" onclick="closeAudioDownloadModal()" style="font-size:1.2rem; width:36px; height:36px;">✕</button>
+            </div>
+
+            <!-- Banner giải thích khóa màn hình -->
+            <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:12px; padding:14px; margin-bottom:20px;">
+                <h4 style="margin:0 0 6px 0; color:#166534; font-size:1rem; display:flex; align-items:center; gap:6px;">
+                    🏃‍♂️ Bí quyết nghe khi chạy bộ & tắt màn hình:
+                </h4>
+                <p style="margin:0 0 8px 0; font-size:0.88rem; color:#15803d; line-height:1.5;">
+                    Trình duyệt di động (iOS Safari / Android Chrome) mặc định sẽ đóng băng giọng đọc máy khi màn hình bị khóa. App đã trang bị 2 giải pháp tối ưu cho bạn:
+                </p>
+                <div style="font-size:0.85rem; color:#166534; line-height:1.6;">
+                    • <strong>Cách 1 (Nghe trực tiếp trên web):</strong> Trong app, chọn chế độ <em>🎵 HTML5 Stream</em> (đã bật sẵn). Khi bấm nghe, bạn có thể khóa màn hình bỏ túi chạy bộ, audio vẫn tiếp tục phát và hiển thị điều khiển trên màn hình khóa!<br>
+                    • <strong>Cách 2 (Mở bằng app nghe nhạc chuyên dụng):</strong> Tải file <strong>Playlist (.m3u)</strong> bên dưới về máy, mở bằng <strong>VLC</strong> hoặc <strong>Musicolet</strong> trên điện thoại để nghe không giới hạn trong nền.
+                </div>
+            </div>
+
+            <!-- Nút tải trọn bộ playlist -->
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:16px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <div style="font-weight:700; color:var(--g8); font-size:1rem;">📦 Tải File Playlist (.m3u) Toàn Bài</div>
+                        <div style="font-size:0.82rem; color:var(--g6); margin-top:2px;">
+                            Phát liên tục câu tiếng Trung + dịch nghĩa tiếng Việt theo đúng bài học.
+                        </div>
+                    </div>
+                    <button class="btn" onclick="downloadStoryPlaylistM3U()" style="background:linear-gradient(135deg, #10b981, #059669); font-weight:700; padding:10px 18px; box-shadow:0 3px 10px rgba(16,185,129,0.3)">
+                        📥 Tải Playlist (.m3u)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Danh sách từng câu để tải file MP3 lẻ -->
+            <div>
+                <h4 style="margin:0 0 12px 0; color:var(--g8); font-size:0.95rem;">🎵 Tải File Âm Thanh MP3 Từng Câu:</h4>
+                <div id="audio-download-sentence-list" style="display:flex; flex-direction:column; gap:10px; max-height:280px; overflow-y:auto; padding-right:4px;">
+                    <!-- Render động -->
+                </div>
+            </div>
+
+            <div style="margin-top:20px; text-align:right;">
+                <button class="btn btn-outline" onclick="closeAudioDownloadModal()" style="padding:8px 20px;">Đóng</button>
             </div>
         </div>
     </div>
