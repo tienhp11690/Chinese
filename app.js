@@ -43,14 +43,14 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 
 function removeAccents(str) {
     if (!str) return '';
-    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase();
 }
 
 // ==================== AUTO-LOAD CONFIG FROM GITHUB ====================
 
 function applyConfigFromData(configData, force = false) {
     if (!configData) return;
-    const keys = ['sheets-url', 'sheets-sentences-gid', 'github-token', 'github-repo', 'github-file', 'vocab-json-url', 'sync-strategy'];
+    const keys = ['sheets-url', 'sheets-sentences-gid', 'github-token', 'github-repo', 'github-file', 'vocab-json-url', 'sync-strategy', 'gdrive-folder-url'];
     let applied = false;
 
     keys.forEach(key => {
@@ -471,7 +471,10 @@ window.switchPage = function (page) {
     const pageEl = document.getElementById(page);
     if (pageEl) pageEl.classList.add('active');
 
-    if (event && event.target) {
+    const tabEl = document.querySelector(`.tab[onclick*="'${page}'"]`);
+    if (tabEl) {
+        tabEl.classList.add('active');
+    } else if (typeof event !== 'undefined' && event && event.target && event.target.classList.contains('tab')) {
         event.target.classList.add('active');
     }
 
@@ -480,6 +483,7 @@ window.switchPage = function (page) {
     if (page === 'groups') renderGroups();
     if (page === 'sentences') renderSentences();
     if (page === 'stories') renderStoriesTab();
+    if (page === 'hsk-hub') renderHskHubPage();
     if (page === 'config') updateConfig();
 };
 
@@ -1176,11 +1180,14 @@ window.addSearchWord = function (val) {
     if (!/[\u4e00-\u9fa5]/.test(word)) {
         const normInput = removeAccents(word);
 
-        // Find best match in vocab
+        // Find best match in vocab (exact or partial fallback)
         const found = vocab.find(v =>
-            v.chinese === word || // Exact match (rare if not Chinese)
+            v.chinese === word ||
             removeAccents(v.pinyin) === normInput ||
             removeAccents(v.vietnamese) === normInput
+        ) || vocab.find(v =>
+            removeAccents(v.vietnamese).includes(normInput) ||
+            removeAccents(v.pinyin).includes(normInput)
         );
 
         if (found) {
@@ -1421,7 +1428,8 @@ function updateConfig() {
         'github-file': 'github-file',
         'vocab-json-url': 'vocab-json-url',
         'sync-strategy': 'sync-strategy',
-        'gemini-api-key': 'gemini-api-key'
+        'gemini-api-key': 'gemini-api-key',
+        'gdrive-folder-url': 'gdrive-folder-url'
     };
 
     Object.entries(fields).forEach(([id, key]) => {
@@ -1432,6 +1440,30 @@ function updateConfig() {
     const lastSyncEl = document.getElementById('last-sync-time');
     if (lastSyncEl) lastSyncEl.textContent = localStorage.getItem('last-sync-time') || 'Chưa sync';
 }
+
+window.saveGDriveConfig = function () {
+    const el = document.getElementById('gdrive-folder-url');
+    const url = el ? el.value.trim() : '';
+    localStorage.setItem('gdrive-folder-url', url);
+    status('💾 Đã lưu cấu hình Google Drive!', 'success');
+};
+
+window.openConfiguredGDriveFolder = function () {
+    const url = localStorage.getItem('gdrive-folder-url');
+    if (url && url.startsWith('http')) {
+        window.open(url, '_blank');
+        status('☁️ Đang mở thư mục Google Drive...', 'info');
+    } else {
+        const ask = prompt('Vui lòng nhập Link thư mục Google Drive để lưu trữ file audio:\n(Ví dụ: https://drive.google.com/drive/folders/YOUR_FOLDER_ID)');
+        if (ask && ask.trim().startsWith('http')) {
+            localStorage.setItem('gdrive-folder-url', ask.trim());
+            const el = document.getElementById('gdrive-folder-url');
+            if (el) el.value = ask.trim();
+            window.open(ask.trim(), '_blank');
+            status('💾 Đã lưu và mở Google Drive!', 'success');
+        }
+    }
+};
 
 window.saveGeminiConfig = function () {
     const key = document.getElementById('gemini-api-key')?.value.trim() || '';
@@ -2307,31 +2339,351 @@ window.clearTargetWords = function () {
     status('🗑️ Đã xóa danh sách từ mục tiêu', 'success');
 };
 
-window.addCustomTargetWord = function (val) {
-    const input = document.getElementById('target-word-input');
-    const wordStr = (val || (input ? input.value : '')).trim();
-    if (!wordStr) return;
+let currentTargetSuggestions = [];
+let activeSuggestionIndex = -1;
 
-    if (targetStoryWords.length >= 10) {
-        status('⚠️ Tối đa 10 từ mục tiêu cho một bài!', 'error');
-        if (input) input.value = '';
+window.onTargetWordInput = function (val) {
+    const clearBtn = document.getElementById('target-word-clear-btn');
+    if (clearBtn) {
+        clearBtn.style.display = val && val.trim() ? 'flex' : 'none';
+    }
+
+    const query = (val || '').trim();
+    if (!query) {
+        showQuickTargetSuggestions();
         return;
     }
 
-    const normInput = removeAccents(wordStr);
+    searchTargetVocab(query);
+};
+
+window.onTargetWordFocus = function () {
+    const input = document.getElementById('target-word-input');
+    const val = input ? input.value.trim() : '';
+    const clearBtn = document.getElementById('target-word-clear-btn');
+    if (clearBtn) {
+        clearBtn.style.display = val ? 'flex' : 'none';
+    }
+
+    if (!val) {
+        showQuickTargetSuggestions();
+    } else {
+        searchTargetVocab(val);
+    }
+};
+
+window.clearTargetWordInput = function () {
+    const input = document.getElementById('target-word-input');
+    const clearBtn = document.getElementById('target-word-clear-btn');
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+    if (clearBtn) clearBtn.style.display = 'none';
+    showQuickTargetSuggestions();
+};
+
+window.onTargetWordKeydown = function (e) {
+    const dropdown = document.getElementById('target-vocab-dropdown');
+    if (!dropdown || dropdown.style.display === 'none') {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            onAddTargetWordSubmit();
+        }
+        return;
+    }
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (currentTargetSuggestions.length > 0) {
+            activeSuggestionIndex = (activeSuggestionIndex + 1) % currentTargetSuggestions.length;
+            updateActiveSuggestionHighlight();
+        }
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentTargetSuggestions.length > 0) {
+            activeSuggestionIndex = (activeSuggestionIndex - 1 + currentTargetSuggestions.length) % currentTargetSuggestions.length;
+            updateActiveSuggestionHighlight();
+        }
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeSuggestionIndex >= 0 && activeSuggestionIndex < currentTargetSuggestions.length) {
+            selectTargetSuggestion(currentTargetSuggestions[activeSuggestionIndex].id || currentTargetSuggestions[activeSuggestionIndex].chinese);
+        } else if (currentTargetSuggestions.length > 0) {
+            const firstUnadded = currentTargetSuggestions.find(s => !s.isAdded);
+            if (firstUnadded) {
+                selectTargetSuggestion(firstUnadded.id || firstUnadded.chinese);
+            } else {
+                onAddTargetWordSubmit();
+            }
+        } else {
+            onAddTargetWordSubmit();
+        }
+    } else if (e.key === 'Escape') {
+        hideTargetSuggestions();
+    }
+};
+
+function updateActiveSuggestionHighlight() {
+    const items = document.querySelectorAll('.target-vocab-dropdown .sugg-item');
+    items.forEach((el, idx) => {
+        if (idx === activeSuggestionIndex) {
+            el.classList.add('active');
+            el.scrollIntoView({ block: 'nearest' });
+        } else {
+            el.classList.remove('active');
+        }
+    });
+}
+
+function searchTargetVocab(query) {
+    if (!vocab || vocab.length === 0) return;
+
+    activeSuggestionIndex = -1;
+    const qNorm = removeAccents(query);
+    const qLower = query.toLowerCase();
+    const qTokens = qNorm.split(/\s+/).filter(Boolean);
+    const targetSet = new Set(targetStoryWords.map(w => w.chinese));
+
+    const scored = [];
+
+    for (let i = 0; i < vocab.length; i++) {
+        const v = vocab[i];
+        const c = v.chinese || '';
+        const p = v.pinyin || '';
+        const pNorm = removeAccents(p);
+        const viet = v.vietnamese || v.meaning || '';
+        const vNorm = removeAccents(viet);
+
+        let score = 0;
+
+        // Chinese character match
+        if (c === query) {
+            score = 100;
+        } else if (c.startsWith(query)) {
+            score = 85;
+        } else if (c.includes(query)) {
+            score = 70;
+        }
+
+        // Vietnamese match
+        if (vNorm === qNorm) {
+            score = Math.max(score, 95);
+        } else if (vNorm.startsWith(qNorm)) {
+            score = Math.max(score, 80);
+        } else if (vNorm.includes(qNorm)) {
+            score = Math.max(score, 65);
+        }
+
+        // Pinyin match
+        if (pNorm === qNorm || p.toLowerCase() === qLower) {
+            score = Math.max(score, 90);
+        } else if (pNorm.startsWith(qNorm)) {
+            score = Math.max(score, 75);
+        } else if (pNorm.includes(qNorm)) {
+            score = Math.max(score, 60);
+        }
+
+        // Multi-token match
+        if (qTokens.length > 1) {
+            const allTokensMatch = qTokens.every(tok => vNorm.includes(tok) || pNorm.includes(tok) || c.includes(tok));
+            if (allTokensMatch) {
+                score = Math.max(score, 72);
+            }
+        }
+
+        if (score > 0) {
+            const isAdded = targetSet.has(c);
+            if (storySelectedTopic && v.topic === storySelectedTopic) score += 3;
+            if (storyVocabSource === 'unlearned' && !v.learned) score += 2;
+            scored.push({
+                ...v,
+                score,
+                isAdded
+            });
+        }
+    }
+
+    // Sort by score desc, unadded first
+    scored.sort((a, b) => {
+        if (a.isAdded !== b.isAdded) return a.isAdded ? 1 : -1;
+        return b.score - a.score;
+    });
+
+    currentTargetSuggestions = scored.slice(0, 12);
+    renderTargetSuggestions(currentTargetSuggestions, query, false);
+}
+
+function showQuickTargetSuggestions() {
+    if (!vocab || vocab.length === 0) return;
+
+    activeSuggestionIndex = -1;
+    const targetSet = new Set(targetStoryWords.map(w => w.chinese));
+
+    let pool = vocab.filter(v => !targetSet.has(v.chinese));
+
+    if (storySelectedTopic) {
+        const topicPool = pool.filter(v => v.topic === storySelectedTopic);
+        if (topicPool.length > 0) pool = topicPool;
+    } else if (storyVocabSource === 'unlearned') {
+        const unlearnedPool = pool.filter(v => !v.learned);
+        if (unlearnedPool.length > 0) pool = unlearnedPool;
+    }
+
+    const suggestions = pool.slice(0, 8).map(v => ({
+        ...v,
+        score: 1,
+        isAdded: false
+    }));
+
+    currentTargetSuggestions = suggestions;
+    renderTargetSuggestions(suggestions, '', true);
+}
+
+function renderTargetSuggestions(items, query, isQuickSuggest) {
+    const dropdown = document.getElementById('target-vocab-dropdown');
+    if (!dropdown) return;
+
+    if (!items || items.length === 0) {
+        if (query) {
+            dropdown.innerHTML = `
+                <div class="sugg-header">
+                    <span>🔍 KẾT QUẢ TÌM KIẾM</span>
+                    <span style="font-weight:normal; cursor:pointer" onclick="hideTargetSuggestions()">✕ Đóng</span>
+                </div>
+                <div class="sugg-empty">
+                    Không tìm thấy từ vựng nào khớp với "<strong>${escapeHtml(query)}</strong>" trong kho từ.<br>
+                    <button type="button" class="btn btn-sm" onclick="addExplicitCustomWord('${escapeHtml(query.replace(/'/g, "\\'"))}')"
+                        style="margin-top:10px; background:var(--p)">
+                        ➕ Thêm "${escapeHtml(query)}" làm từ tùy chọn
+                    </button>
+                </div>
+            `;
+            dropdown.style.display = 'block';
+        } else {
+            dropdown.style.display = 'none';
+        }
+        return;
+    }
+
+    const headerTitle = isQuickSuggest
+        ? `💡 GỢI Ý TỪ ÔN TẬP ${storySelectedTopic ? `(Chủ đề: ${escapeHtml(storySelectedTopic)})` : '(Từ mới)'}`
+        : `🔍 TÌM THẤY ${items.length} TỪ PHÙ HỢP`;
+
+    let html = `
+        <div class="sugg-header">
+            <span>${headerTitle}</span>
+            <span style="font-weight:normal; cursor:pointer" onclick="hideTargetSuggestions()">✕ Đóng</span>
+        </div>
+        <div class="sugg-list">
+    `;
+
+    items.forEach((item, idx) => {
+        html += `
+            <div class="sugg-item ${idx === activeSuggestionIndex ? 'active' : ''} ${item.isAdded ? 'sugg-item-added' : ''}"
+                 onclick="selectTargetSuggestion('${item.id || item.chinese}')" data-idx="${idx}">
+                <div class="sugg-left">
+                    <div class="sugg-main-row">
+                        <span class="sugg-chinese">${escapeHtml(item.chinese)}</span>
+                        <span class="sugg-pinyin">${escapeHtml(item.pinyin || '')}</span>
+                    </div>
+                    <div class="sugg-viet">${escapeHtml(item.vietnamese || item.meaning || '')}</div>
+                </div>
+                <div class="sugg-right">
+                    ${item.topic ? `<span class="sugg-topic-badge">${escapeHtml(item.topic)}</span>` : ''}
+                    ${item.isAdded
+                        ? `<span class="sugg-btn-added">✓ Đã thêm</span>`
+                        : `<button type="button" class="sugg-btn-add">➕ Thêm</button>`
+                    }
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+
+    if (query) {
+        html += `
+            <div class="sugg-footer-custom" onclick="addExplicitCustomWord('${escapeHtml(query.replace(/'/g, "\\'"))}')">
+                <span>➕ Thêm từ tùy chọn: <strong>"${escapeHtml(query)}"</strong></span>
+            </div>
+        `;
+    }
+
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+}
+
+window.hideTargetSuggestions = function () {
+    const dropdown = document.getElementById('target-vocab-dropdown');
+    if (dropdown) dropdown.style.display = 'none';
+    activeSuggestionIndex = -1;
+};
+
+// Global click outside listener to close dropdown
+document.addEventListener('click', function (e) {
+    const wrapper = document.querySelector('.target-input-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        hideTargetSuggestions();
+    }
+});
+
+window.selectTargetSuggestion = function (idOrChinese) {
+    if (targetStoryWords.length >= 10) {
+        status('⚠️ Tối đa 10 từ mục tiêu cho một bài!', 'error');
+        return;
+    }
+
+    let found = vocab.find(v => (v.id && String(v.id) === String(idOrChinese)) || v.chinese === idOrChinese);
+    if (!found) {
+        found = currentTargetSuggestions.find(s => (s.id && String(s.id) === String(idOrChinese)) || s.chinese === idOrChinese);
+    }
+
+    if (!found) return;
+
+    if (targetStoryWords.some(w => w.chinese === found.chinese)) {
+        status(`ℹ️ Từ "${found.chinese}" đã có trong danh sách`, 'warning');
+        return;
+    }
+
+    targetStoryWords.push(found);
+    renderTargetWordsTags();
+    updateStoryVocabDatalist();
+
+    const input = document.getElementById('target-word-input');
+    const clearBtn = document.getElementById('target-word-clear-btn');
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    hideTargetSuggestions();
+    status(`➕ Đã thêm: ${found.chinese} (${found.pinyin || ''})`, 'success');
+};
+
+window.addExplicitCustomWord = function (wordStr) {
+    if (!wordStr || !wordStr.trim()) return;
+    const cleanWord = wordStr.trim();
+
+    if (targetStoryWords.length >= 10) {
+        status('⚠️ Tối đa 10 từ mục tiêu cho một bài!', 'error');
+        return;
+    }
+
+    // Check if it matches an existing vocab word
+    const normInput = removeAccents(cleanWord);
     let matchedWord = vocab.find(v =>
-        v.chinese === wordStr ||
+        v.chinese === cleanWord ||
         removeAccents(v.vietnamese) === normInput ||
         removeAccents(v.pinyin) === normInput
     );
 
     if (!matchedWord) {
+        const isChinese = /[\u4e00-\u9fa5]/.test(cleanWord);
         matchedWord = {
             id: Date.now(),
-            chinese: wordStr,
-            pinyin: generatePinyin(wordStr),
-            vietnamese: wordStr,
-            meaning: wordStr,
+            chinese: cleanWord,
+            pinyin: isChinese ? generatePinyin(cleanWord) : cleanWord,
+            vietnamese: cleanWord,
+            meaning: cleanWord,
             topic: 'Tự chọn',
             difficulty: 'easy',
             learned: false
@@ -2347,9 +2699,45 @@ window.addCustomTargetWord = function (val) {
         status(`ℹ️ Từ "${matchedWord.chinese}" đã có trong danh sách`, 'warning');
     }
 
-    if (input) {
-        input.value = '';
-        input.focus();
+    const input = document.getElementById('target-word-input');
+    const clearBtn = document.getElementById('target-word-clear-btn');
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    hideTargetSuggestions();
+};
+
+window.onAddTargetWordSubmit = function () {
+    const input = document.getElementById('target-word-input');
+    const wordStr = input ? input.value.trim() : '';
+
+    if (!wordStr) {
+        status('💡 Hãy gõ từ tiếng Trung, Pinyin hoặc nghĩa Tiếng Việt để thêm!', 'warning');
+        if (input) input.focus();
+        showQuickTargetSuggestions();
+        return;
+    }
+
+    // If there is an active highlighted suggestion, pick it
+    if (activeSuggestionIndex >= 0 && activeSuggestionIndex < currentTargetSuggestions.length) {
+        selectTargetSuggestion(currentTargetSuggestions[activeSuggestionIndex].id || currentTargetSuggestions[activeSuggestionIndex].chinese);
+        return;
+    }
+
+    // If there are suggestions, pick the best unadded one
+    const firstUnadded = currentTargetSuggestions.find(s => !s.isAdded);
+    if (firstUnadded) {
+        selectTargetSuggestion(firstUnadded.id || firstUnadded.chinese);
+        return;
+    }
+
+    addExplicitCustomWord(wordStr);
+};
+
+window.addCustomTargetWord = function (val) {
+    if (val && typeof val === 'string') {
+        addExplicitCustomWord(val);
+    } else {
+        onAddTargetWordSubmit();
     }
 };
 
@@ -3532,6 +3920,117 @@ window.downloadStoryPlaylistM3U = function () {
     status('✅ Đã tải file Playlist (.m3u)! Mở bằng ứng dụng VLC hoặc app nghe nhạc trên máy để nghe nền.', 'success');
 };
 
+window.downloadAutoMergeScript = function (type) {
+    if (!currentStory || !currentStory.lines || currentStory.lines.length === 0) {
+        status('⚠️ Chưa có bài đọc nào để tạo file ghép MP3!', 'warning');
+        return;
+    }
+
+    const title = currentStory.title || 'Bai_Hoc_Tieng_Trung';
+    const safeTitle = title.replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_');
+    const isWindows = (type !== 'sh');
+    const outFileName = `${safeTitle}_Tron_Bai.mp3`;
+
+    if (isWindows) {
+        let bat = `@echo off\r\n`;
+        bat += `chcp 65001 >nul\r\n`;
+        bat += `title Dang tao file MP3 tron bai: ${title}\r\n`;
+        bat += `echo ========================================================\r\n`;
+        bat += `echo  DANG TAI VA GHEP TOAN BO AM THANH BAI HOC THANH 1 FILE MP3\r\n`;
+        bat += `echo ========================================================\r\n`;
+        bat += `echo Bài học: ${title}\r\n`;
+        bat += `echo Tổng số câu: ${currentStory.lines.length}\r\n`;
+        bat += `echo.\r\n`;
+
+        const fileParts = [];
+
+        currentStory.lines.forEach((line, idx) => {
+            const num = String(idx + 1).padStart(2, '0');
+            const zhUrl = getGoogleTTSUrl(line.chinese, 'zh-CN');
+            const zhPart = `part_${num}_zh.mp3`;
+            fileParts.push(zhPart);
+            bat += `echo [${num}/${currentStory.lines.length}] Dang tai tieng Trung: ${line.chinese.slice(0, 25).replace(/"/g, '')}...\r\n`;
+            bat += `curl -s -L -A "Mozilla/5.0" "${zhUrl}" -o "${zhPart}"\r\n`;
+
+            if (line.vietnamese) {
+                const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                const viPart = `part_${num}_vi.mp3`;
+                fileParts.push(viPart);
+                bat += `echo [${num}/${currentStory.lines.length}] Dang tai dich Viet...\r\n`;
+                bat += `curl -s -L -A "Mozilla/5.0" "${viUrl}" -o "${viPart}"\r\n`;
+            }
+            bat += `\r\n`;
+        });
+
+        bat += `echo --------------------------------------------------------\r\n`;
+        bat += `echo Dang ghep thanh file MP3 duy nhat: ${outFileName}...\r\n`;
+        bat += `copy /b ${fileParts.map(p => `"${p}"`).join('+')} "${outFileName}" >nul\r\n\r\n`;
+        bat += `echo Dang don dep cac file tam...\r\n`;
+        bat += `del part_*.mp3 >nul 2>&1\r\n\r\n`;
+        bat += `echo ========================================================\r\n`;
+        bat += `echo  HOAN TAT! Da tao xong file: ${outFileName}\r\n`;
+        bat += `echo ========================================================\r\n`;
+        bat += `start "" "${outFileName}"\r\n`;
+        bat += `timeout /t 5 >nul\r\n`;
+
+        const blob = new Blob([bat], { type: 'application/x-bat;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Ghep_MP3_${safeTitle}.bat`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        status('✅ Đã tải file 1-Click (.bat)! Hãy mở file vừa tải để máy tính tự động ghép thành 1 file MP3.', 'success');
+    } else {
+        // Mac / Linux shell script
+        let sh = `#!/bin/bash\n`;
+        sh += `echo "========================================================"\n`;
+        sh += `echo " DANG TAI VA GHEP TOAN BO AM THANH BAI HOC THANH 1 FILE MP3"\n`;
+        sh += `echo "========================================================"\n`;
+        sh += `echo "Bài học: ${title}"\n\n`;
+
+        const fileParts = [];
+
+        currentStory.lines.forEach((line, idx) => {
+            const num = String(idx + 1).padStart(2, '0');
+            const zhUrl = getGoogleTTSUrl(line.chinese, 'zh-CN');
+            const zhPart = `part_${num}_zh.mp3`;
+            fileParts.push(zhPart);
+            sh += `echo "[${num}/${currentStory.lines.length}] Đang tải tiếng Trung..."\n`;
+            sh += `curl -s -L -A "Mozilla/5.0" "${zhUrl}" -o "${zhPart}"\n`;
+
+            if (line.vietnamese) {
+                const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                const viPart = `part_${num}_vi.mp3`;
+                fileParts.push(viPart);
+                sh += `echo "[${num}/${currentStory.lines.length}] Đang tải dịch Việt..."\n`;
+                sh += `curl -s -L -A "Mozilla/5.0" "${viUrl}" -o "${viPart}"\n`;
+            }
+        });
+
+        sh += `\necho "Đang ghép thành 1 file MP3 duy nhất..."\n`;
+        sh += `cat ${fileParts.map(p => `"${p}"`).join(' ')} > "${outFileName}"\n`;
+        sh += `rm -f part_*.mp3\n`;
+        sh += `echo "Hoàn tất: ${outFileName}"\n`;
+        sh += `open "${outFileName}" 2>/dev/null || xdg-open "${outFileName}" 2>/dev/null\n`;
+
+        const blob = new Blob([sh], { type: 'application/x-sh;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Ghep_MP3_${safeTitle}.sh`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        status('✅ Đã tải script (.sh)! Mở Terminal và chạy file để tự động gộp thành 1 file MP3.', 'success');
+    }
+};
+
 window.downloadSentenceAudio = function (text, lang, filename) {
     if (!text) return;
     const url = getGoogleTTSUrl(text, lang);
@@ -3932,6 +4431,1264 @@ function renderSavedStoriesList() {
     }).join('');
 }
 
+// ==================== HSK MATERIALS HUB & JOGGING AUDIO STUDIO ====================
+
+const HSK_DEFAULT_MATERIALS = [
+    // --- HSK 1 ---
+    {
+        id: 'hsk1-1',
+        level: 'HSK 1',
+        type: 'conversation',
+        category: 'Hội thoại',
+        duration: '1.5 phút',
+        title: '你好！认识你很高兴',
+        titlePinyin: 'Nǐ hǎo! Rènshí nǐ hěn gāoxìng',
+        titleViet: 'Chào bạn! Rất vui được làm quen',
+        theme: 'Chào hỏi & Giới thiệu bản thân',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '王小明', chinese: '你好！很高兴认识你。', pinyin: 'Nǐ hǎo! Hěn gāoxìng rènshí nǐ.', vietnamese: 'Chào bạn! Rất vui được quen biết bạn.' },
+            { id: 2, speaker: 'B', speakerName: '阮文南', chinese: '你好！我也很高兴认识你。你叫什么名字？', pinyin: 'Nǐ hǎo! Wǒ yě hěn gāoxìng rènshí nǐ. Nǐ jiào shénme míngzì?', vietnamese: 'Chào bạn! Tôi cũng rất vui được quen bạn. Bạn tên là gì?' },
+            { id: 3, speaker: 'A', speakerName: '王小明', chinese: '我叫王小明，我是中国学生。你呢？', pinyin: 'Wǒ jiào Wáng Xiǎomíng, wǒ shì Zhōngguó xuéshēng. Nǐ ne?', vietnamese: 'Tôi tên là Vương Tiểu Minh, tôi là học sinh Trung Quốc. Còn bạn?' },
+            { id: 4, speaker: 'B', speakerName: '阮文南', chinese: '我叫阮文南，我是越南人。我也在学中文。', pinyin: 'Wǒ jiào Ruǎn Wénnán, wǒ shì Yuènán rén. Wǒ yě zài xué zhōngwén.', vietnamese: 'Tôi tên là Nguyễn Văn Nam, tôi là người Việt Nam. Tôi cũng đang học tiếng Trung.' },
+            { id: 5, speaker: 'A', speakerName: '王小明', chinese: '你的中文说得很好！我们一起学习吧。', pinyin: 'Nǐ de zhōngwén shuō de hěn hǎo! Wǒmen yìqǐ xuéxí ba.', vietnamese: 'Tiếng Trung của bạn nói rất tốt! Chúng ta cùng nhau học nhé.' },
+            { id: 6, speaker: 'B', speakerName: '阮文南', chinese: '谢谢你！明天见。', pinyin: 'Xièxie nǐ! Míngtiān jiàn.', vietnamese: 'Cảm ơn bạn! Hẹn ngày mai gặp lại.' }
+        ]
+    },
+    {
+        id: 'hsk1-2',
+        level: 'HSK 1',
+        type: 'conversation',
+        category: 'Đời sống',
+        duration: '1.5 phút',
+        title: '在水果店买苹果',
+        titlePinyin: 'Zài shuǐguǒ diàn mǎi píngguǒ',
+        titleViet: 'Mua táo ở tiệm hoa quả',
+        theme: 'Mua sắm & Hỏi giá tiền',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '顾客', chinese: '请问，这个苹果多少钱一斤？', pinyin: 'Qǐngwèn, zhè ge píngguǒ duōshao qián yì jīn?', vietnamese: 'Xin hỏi, táo này bao nhiêu tiền một cân?' },
+            { id: 2, speaker: 'B', speakerName: '老板', chinese: '苹果三块钱一斤，很甜很好吃。', pinyin: 'Píngguǒ sān kuài qián yì jīn, hěn tián hěn hǎochī.', vietnamese: 'Táo ba tệ một cân, rất ngọt và ngon.' },
+            { id: 3, speaker: 'A', speakerName: '顾客', chinese: '太贵了，两块五一斤可以吗？', pinyin: 'Tài guì le, liǎng kuài wǔ yì jīn kěyǐ ma?', vietnamese: 'Đắt quá, hai tệ rưỡi một cân được không?' },
+            { id: 4, speaker: 'B', speakerName: '老板', chinese: '可以，你要买几斤？', pinyin: 'Kěyǐ, nǐ yào mǎi jǐ jīn?', vietnamese: 'Được rồi, bạn muốn mua mấy cân?' },
+            { id: 5, speaker: 'A', speakerName: '顾客', chinese: '我要买四斤，一共多少钱？', pinyin: 'Wǒ yào mǎi sì jīn, yígòng duōshao qián?', vietnamese: 'Tôi muốn mua bốn cân, tổng cộng bao nhiêu tiền?' },
+            { id: 6, speaker: 'B', speakerName: '老板', chinese: '一共十块钱，给你苹果。', pinyin: 'Yígòng shí kuài qián, gěi nǐ píngguǒ.', vietnamese: 'Tổng cộng mười tệ, gửi táo cho bạn đây.' }
+        ]
+    },
+    {
+        id: 'hsk1-3',
+        level: 'HSK 1',
+        type: 'conversation',
+        category: 'Hội thoại',
+        duration: '1.5 phút',
+        title: '现在几点？我们去喝茶吧',
+        titlePinyin: 'Xiànzài jǐ diǎn? Wǒmen qù hē chá ba',
+        titleViet: 'Bây giờ mấy giờ? Chúng mình đi uống trà đi',
+        theme: 'Hỏi giờ giấc & Hẹn hò',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '大卫', chinese: '小华，请问现在几点？', pinyin: 'Xiǎohuá, qǐngwèn xiànzài jǐ diǎn?', vietnamese: 'Tiểu Hoa, xin hỏi bây giờ là mấy giờ rồi?' },
+            { id: 2, speaker: 'B', speakerName: '小华', chinese: '现在下午两点半。', pinyin: 'Xiànzài xiàwǔ liǎng diǎn bàn.', vietnamese: 'Bây giờ là hai giờ rưỡi chiều.' },
+            { id: 3, speaker: 'A', speakerName: '大卫', chinese: '你今天下午有空吗？我们去喝茶吧。', pinyin: 'Nǐ jīntiān xiàwǔ yǒu kòng ma? Wǒmen qù hē chá ba.', vietnamese: 'Chiều nay bạn có rảnh không? Chúng mình đi uống trà đi.' },
+            { id: 4, speaker: 'B', speakerName: '小华', chinese: '好啊，我想喝中国绿茶。', pinyin: 'Hǎo a, wǒ xiǎng hē zhōngguó lǜchá.', vietnamese: 'Được thôi, tôi muốn uống trà xanh Trung Quốc.' },
+            { id: 5, speaker: 'A', speakerName: '大卫', chinese: '那我们三点在学校门口见！', pinyin: 'Nà wǒmen sān diǎn zài xuéxiào ménkǒu jiàn!', vietnamese: 'Vậy ba giờ chúng mình gặp nhau ở cổng trường nhé!' }
+        ]
+    },
+    {
+        id: 'hsk1-4',
+        level: 'HSK 1',
+        type: 'story',
+        category: 'Truyện ngắn',
+        duration: '1.5 phút',
+        title: '小明的一天',
+        titlePinyin: 'Xiǎomíng de yì tiān',
+        titleViet: 'Một ngày của Tiểu Minh',
+        theme: 'Sinh hoạt thường nhật',
+        lines: [
+            { id: 1, speaker: '', speakerName: '', chinese: '小明每天早上六点起床。', pinyin: 'Xiǎomíng měitiān zǎoshang liù diǎn qǐchuáng.', vietnamese: 'Tiểu Minh thức dậy lúc sáu giờ mỗi sáng.' },
+            { id: 2, speaker: '', speakerName: '', chinese: '他喜欢在公园一边跑步一边听中文。', pinyin: 'Tā xǐhuan zài gōngyuán yìbiān pǎobù yìbiān tīng zhōngwén.', vietnamese: 'Cậu ấy thích vừa chạy bộ trong công viên vừa nghe tiếng Trung.' },
+            { id: 3, speaker: '', speakerName: '', chinese: '七点半，他和家人一起吃早饭。', pinyin: 'Qī diǎn bàn, tā hé jiārén yìqǐ chī zǎofàn.', vietnamese: 'Bảy giờ rưỡi, cậu ấy ăn sáng cùng gia đình.' },
+            { id: 4, speaker: '', speakerName: '', chinese: '下午他在学校学习汉语，认识了很多新朋友。', pinyin: 'Xiàwǔ tā zài xuéxiào xuéxí hànyǔ, rènshí le hěn duō xīn péngyou.', vietnamese: 'Buổi chiều cậu học tiếng Hán ở trường, quen biết rất nhiều bạn mới.' },
+            { id: 5, speaker: '', speakerName: '', chinese: '晚上十点睡觉，他觉得今天过得很开心。', pinyin: 'Wǎnshang shí diǎn shuìjiào, tā juéde jīntiān guò de hěn kāixīn.', vietnamese: 'Mười giờ tối đi ngủ, cậu ấy cảm thấy hôm nay trôi qua rất vui vẻ.' }
+        ]
+    },
+
+    // --- HSK 2 ---
+    {
+        id: 'hsk2-1',
+        level: 'HSK 2',
+        type: 'conversation',
+        category: 'Đời sống',
+        duration: '2 phút',
+        title: '在饭馆点菜与买单',
+        titlePinyin: 'Zài fànguǎn diǎncài yǔ mǎidān',
+        titleViet: 'Gọi món và tính tiền ở nhà hàng',
+        theme: 'Ẩm thực & Quán xá',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '顾客', chinese: '服务员，请给我们看一下菜单。', pinyin: 'Fúwùyuán, qǐng gěi wǒmen kàn yíxià càidān.', vietnamese: 'Phục vụ ơi, làm ơn cho chúng tôi xem thực đơn một chút.' },
+            { id: 2, speaker: 'B', speakerName: '服务员', chinese: '欢迎光临！请问两位想吃点什么？', pinyin: 'Huānyíng guānglín! Qǐngwèn liǎng wèi xiǎng chī diǎn shénme?', vietnamese: 'Hoan nghênh quý khách! Xin hỏi hai vị muốn dùng món gì?' },
+            { id: 3, speaker: 'A', speakerName: '顾客', chinese: '我想吃宫保鸡丁和西红柿鸡蛋汤。', pinyin: 'Wǒ xiǎng chī gōngbǎo jīdīng hé xīhóngshì jīdàntāng.', vietnamese: 'Tôi muốn ăn gà Gongbao và canh cà chua trứng.' },
+            { id: 4, speaker: 'B', speakerName: '服务员', chinese: '好的，米饭要几碗？要喝点什么饮料吗？', pinyin: 'Hǎo de, mǐfàn yào jǐ wǎn? Yào hē diǎn shénme yǐnliào ma?', vietnamese: 'Dạ được, cơm lấy mấy bát ạ? Có muốn uống đồ uống gì không?' },
+            { id: 5, speaker: 'A', speakerName: '顾客', chinese: '来两碗米饭和一壶热茶，请少放一点辣。', pinyin: 'Lái liǎng wǎn mǐfàn hé yì hú rè chá, qǐng shǎo fàng yìdiǎn là.', vietnamese: 'Cho hai bát cơm và một ấm trà nóng, làm ơn cho bớt cay một chút nhé.' },
+            { id: 6, speaker: 'B', speakerName: '服务员', chinese: '没问题，菜马上就来。', pinyin: 'Méi wèntí, cài mǎshàng jiù lái.', vietnamese: 'Không vấn đề gì, món ăn sẽ lên ngay ạ.' },
+            { id: 7, speaker: 'A', speakerName: '顾客', chinese: '服务员，买单！微信支付可以吗？', pinyin: 'Fúwùyuán, mǎidān! Wēixìn zhīfù kěyǐ ma?', vietnamese: 'Phục vụ ơi tính tiền! Thanh toán bằng WeChat được không?' }
+        ]
+    },
+    {
+        id: 'hsk2-2',
+        level: 'HSK 2',
+        type: 'conversation',
+        category: 'Du lịch',
+        duration: '2 phút',
+        title: '周末你想去哪里旅游？',
+        titlePinyin: 'Zhōumò nǐ xiǎng qù nǎlǐ lǚyóu?',
+        titleViet: 'Cuối tuần bạn muốn đi du lịch ở đâu?',
+        theme: 'Kế hoạch du lịch & Giao thông',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '李强', chinese: '这个周末天气真好，你想去哪里玩？', pinyin: 'Zhè ge zhōumò tiānqì zhēn hǎo, nǐ xiǎng qù nǎlǐ wán?', vietnamese: 'Cuối tuần này thời tiết đẹp thật, bạn muốn đi đâu chơi?' },
+            { id: 2, speaker: 'B', speakerName: '王丽', chinese: '我打算去海边旅游，听说那里的风景非常漂亮。', pinyin: 'Wǒ dǎsuàn qù hǎibiān lǚyóu, tīngshuō nàlǐ de fēngjǐng fēicháng piàoliang.', vietnamese: 'Tôi dự định đi biển du lịch, nghe nói phong cảnh ở đó vô cùng đẹp.' },
+            { id: 3, speaker: 'A', speakerName: '李强', chinese: '你准备坐飞机去还是坐高铁去？', pinyin: 'Nǐ zhǔnbèi zuò fēijī qù háishì zuò gāotiě qù?', vietnamese: 'Bạn định đi máy bay hay đi tàu cao tốc?' },
+            { id: 4, speaker: 'B', speakerName: '王丽', chinese: '坐高铁只需要两个小时，而且票价比机票便宜。', pinyin: 'Zuò gāotiě zhǐ xūyào liǎng gè xiǎoshí, érqiě piàojià bǐ jīpiào piányi.', vietnamese: 'Đi tàu cao tốc chỉ mất hai tiếng thôi, mà giá vé lại rẻ hơn vé máy bay.' },
+            { id: 5, speaker: 'A', speakerName: '李强', chinese: '那太好了！我可以和你一起去吗？', pinyin: 'Nà tài hǎo le! Wǒ kěyǐ hé nǐ yìqǐ qù ma?', vietnamese: 'Vậy thì tuyệt quá! Tôi có thể đi cùng bạn được không?' },
+            { id: 6, speaker: 'B', speakerName: '王丽', chinese: '当然可以，我们现在就上网买车票和预订酒店吧。', pinyin: 'Dāngrán kěyǐ, wǒmen xiànzài jiù shàngwǎng mǎi chēpiào hé yùdìng jiǔdiàn ba.', vietnamese: 'Đương nhiên là được, chúng mình lên mạng đặt vé tàu và phòng khách sạn ngay nhé.' },
+            { id: 7, speaker: 'A', speakerName: '李强', chinese: '太棒了，祝我们的周末旅行顺利！', pinyin: 'Tài bàng le, zhù wǒmen de zhōumò lǚxíng shùnlì!', vietnamese: 'Tuyệt vời, chúc chuyến du lịch cuối tuần của chúng ta thuận lợi!' }
+        ]
+    },
+    {
+        id: 'hsk2-3',
+        level: 'HSK 2',
+        type: 'conversation',
+        category: 'Đời sống',
+        duration: '1.8 phút',
+        title: '在商场买衣服',
+        titlePinyin: 'Zài shāngchǎng mǎi yīfu',
+        titleViet: 'Mua sắm áo quần tại trung tâm thương mại',
+        theme: 'Mua sắm & Kích cỡ',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '客人', chinese: '你好，我想看一下这件蓝色的外套。', pinyin: 'Nǐ hǎo, wǒ xiǎng kàn yíxià zhè jiàn lánsè de wàitào.', vietnamese: 'Xin chào, tôi muốn xem chiếc áo khoác màu xanh lam này.' },
+            { id: 2, speaker: 'B', speakerName: '售货员', chinese: '这件外套是今年最流行的款式，您可以试穿一下。', pinyin: 'Zhè jiàn wàitào shì jīnnián zuì liúxíng de kuǎnshì, nín kěyǐ shìchuān yíxià.', vietnamese: 'Áo khoác này là mẫu thịnh hành nhất năm nay, bạn có thể mặc thử nhé.' },
+            { id: 3, speaker: 'A', speakerName: '客人', chinese: '穿起来很舒服，但是稍微有点大，有中号的吗？', pinyin: 'Chuān qǐlai hěn shūfu, dànshì shāowēi yǒudiǎn dà, yǒu zhōnghào de ma?', vietnamese: 'Mặc rất thoải mái, nhưng hơi rộng một chút, có cỡ vừa không ạ?' },
+            { id: 4, speaker: 'B', speakerName: '售货员', chinese: '有的，这是中号的，您再试一试。', pinyin: 'Yǒu de, zhè shì zhōnghào de, nín zài shì yi shì.', vietnamese: 'Có ạ, đây là cỡ vừa, bạn thử lại xem sao.' },
+            { id: 5, speaker: 'A', speakerName: '客人', chinese: '这个大小正合适，我很喜欢，就要这件了。', pinyin: 'Zhè ge dàxiǎo zhèng héshì, wǒ hěn xǐhuan, jiù yào zhè jiàn le.', vietnamese: 'Kích thước này vừa vặn rồi, tôi rất thích, lấy chiếc này nhé.' },
+            { id: 6, speaker: 'B', speakerName: '售货员', chinese: '好的，请到收银台结账，祝您购物愉快！', pinyin: 'Hǎo de, qǐng dào shōuyíntái jiézhàng, zhù nín gòuwù yúkuài!', vietnamese: 'Vâng, mời bạn ra quầy thu ngân thanh toán, chúc bạn mua sắm vui vẻ!' }
+        ]
+    },
+    {
+        id: 'hsk2-4',
+        level: 'HSK 2',
+        type: 'story',
+        category: 'Văn hóa',
+        duration: '2 phút',
+        title: '北京的四季天气',
+        titlePinyin: 'Běijīng de sìjì tiānqì',
+        titleViet: 'Thời tiết bốn mùa ở Bắc Kinh',
+        theme: 'Thời tiết & Khí hậu',
+        lines: [
+            { id: 1, speaker: '', speakerName: '', chinese: '北京的一年有四个季节：春、夏、秋、冬。', pinyin: 'Běijīng de yì nián yǒu sì gè jìjié: chūn, xià, qiū, dōng.', vietnamese: 'Một năm ở Bắc Kinh có bốn mùa: xuân, hạ, thu, đông.' },
+            { id: 2, speaker: '', speakerName: '', chinese: '春天虽然变暖和了，但是常常刮大风。', pinyin: 'Chūntiān suīrán biàn nuǎnhuo le, dànshì chángcháng guā dàfēng.', vietnamese: 'Mùa xuân tuy ấm áp dần lên, nhưng lại thường xuyên có gió lớn.' },
+            { id: 3, speaker: '', speakerName: '', chinese: '夏天天气很热，经常下雨，大家喜欢去游泳。', pinyin: 'Xiàtiān tiānqì hěn rè, jīngcháng xiàyǔ, dàjiā xǐhuan qù yóuyǒng.', vietnamese: 'Mùa hè thời tiết rất nóng, hay có mưa, mọi người thích đi bơi.' },
+            { id: 4, speaker: '', speakerName: '', chinese: '秋天是北京最好的季节，不冷也不热，蓝天白云很舒服。', pinyin: 'Qiūtiān shì Běijīng zuì hǎo de jìjié, bù lěng yě bù rè, lántiān báiyún hěn shūfu.', vietnamese: 'Mùa thu là mùa đẹp nhất ở Bắc Kinh, không lạnh cũng không nóng, trời xanh mây trắng rất dễ chịu.' },
+            { id: 5, speaker: '', speakerName: '', chinese: '冬天经常下雪，到处都是白色的，天气非常冷。', pinyin: 'Dōngtiān jīngcháng xiàxuě, dàochù dōu shì báisè de, tiānqì fēicháng lěng.', vietnamese: 'Mùa đông thường có tuyết rơi, khắp nơi đều một màu trắng xóa, thời tiết rất lạnh.' },
+            { id: 6, speaker: '', speakerName: '', chinese: '如果你想来北京旅游，九月和十月是最好的时候。', pinyin: 'Rúguǒ nǐ xiǎng lái Běijīng lǚyóu, jiǔ yuè hé shí yuè shì zuì hǎo de shíhou.', vietnamese: 'Nếu bạn muốn đến Bắc Kinh du lịch, tháng chín và tháng mười là thời điểm tuyệt vời nhất.' }
+        ]
+    },
+
+    // --- HSK 3 ---
+    {
+        id: 'hsk3-1',
+        level: 'HSK 3',
+        type: 'conversation',
+        category: 'Công việc',
+        duration: '2.5 phút',
+        title: '参加公司工作面试',
+        titlePinyin: 'Cānjiā gōngsī gōngzuò miànshì',
+        titleViet: 'Tham gia phỏng vấn xin việc',
+        theme: 'Phỏng vấn & Nghề nghiệp',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '面试官', chinese: '请进！请先简单介绍一下你自己。', pinyin: 'Qǐng jìn! Qǐng xiān jiǎndān jièshào yíxià nǐ zìjǐ.', vietnamese: 'Xin mời vào! Mời bạn trước hết hãy tự giới thiệu đơn giản về bản thân.' },
+            { id: 2, speaker: 'B', speakerName: '应聘者', chinese: '您好，我叫陈明，毕业于北京外国语大学，主修商务汉语。', pinyin: 'Nín hǎo, wǒ jiào Chén Míng, bìyè yú Běijīng Wàiguóyǔ Dàxué, zhǔxiū shāngwù hànyǔ.', vietnamese: 'Chào anh, tôi tên Trần Minh, tốt nghiệp Đại học Ngoại ngữ Bắc Kinh, chuyên ngành tiếng Hán thương mại.' },
+            { id: 3, speaker: 'A', speakerName: '面试官', chinese: '很好。你在上一家公司主要负责哪些工作？', pinyin: 'Hěn hǎo. Nǐ zài shàng yì jiā gōngsī zhǔyào fùzé nǎxiē gōngzuò?', vietnamese: 'Rất tốt. Ở công ty trước bạn chủ yếu phụ trách những công việc gì?' },
+            { id: 4, speaker: 'B', speakerName: '应聘者', chinese: '我主要负责跟外国客户沟通交流，并翻译各类合同文件。', pinyin: 'Wǒ zhǔyào fùzé gēn wàiguó kèhù gōutōng jiāoliú, bìng fānyì gèlèi hétong wénjiàn.', vietnamese: 'Tôi chủ yếu phụ trách giao tiếp với khách hàng nước ngoài và dịch các loại tài liệu hợp đồng.' },
+            { id: 5, speaker: 'A', speakerName: '面试官', chinese: '你觉得自己在工作中最大的优势是什么？', pinyin: 'Nǐ juéde zìjǐ zài gōngzuò zhōng zuì dà de yōushì shì shénme?', vietnamese: 'Bạn cảm thấy ưu điểm lớn nhất trong công việc của mình là gì?' },
+            { id: 6, speaker: 'B', speakerName: '应聘者', chinese: '我做事认真负责，学习新知识很快，而且有很强的团队合作精神。', pinyin: 'Wǒ zuòshì rènzhēn fùzé, xuéxí xīn zhīshi hěn kuài, érqiě yǒu hěn qiáng de tuánduì hézuò jīngshén.', vietnamese: 'Tôi làm việc cẩn thận trách nhiệm, học kiến thức mới rất nhanh, và có tinh thần làm việc nhóm cao.' },
+            { id: 7, speaker: 'A', speakerName: '面试官', chinese: '非常不错。我们会在三天之内通知你面试结果。', pinyin: 'Fēicháng búcuò. Wǒmen huì zài sān tiān zhīnèi tōngzhī nǐ miànshì jiéguǒ.', vietnamese: 'Rất tốt. Chúng tôi sẽ thông báo kết quả phỏng vấn cho bạn trong vòng ba ngày.' },
+            { id: 8, speaker: 'B', speakerName: '应聘者', chinese: '非常感谢您抽出宝贵时间，祝您工作顺利！', pinyin: 'Fēicháng gǎnxiè nín chōuchū bǎoguì shíjiān, zhù nín gōngzuò shùnlì!', vietnamese: 'Rất cảm ơn anh đã dành thời gian quý báu, chúc anh công việc thuận lợi!' }
+        ]
+    },
+    {
+        id: 'hsk3-2',
+        level: 'HSK 3',
+        type: 'conversation',
+        category: 'Đời sống',
+        duration: '2.5 phút',
+        title: '在医院看病与拿药',
+        titlePinyin: 'Zài yīyuàn kànbìng yǔ ná yào',
+        titleViet: 'Khám bệnh và lấy thuốc tại bệnh viện',
+        theme: 'Y tế & Sức khỏe',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '医生', chinese: '你好，请坐。你哪里觉得不舒服？', pinyin: 'Nǐ hǎo, qǐng zuò. Nǐ nǎlǐ juéde bù shūfu?', vietnamese: 'Chào bạn, mời ngồi. Bạn cảm thấy không khỏe ở chỗ nào?' },
+            { id: 2, speaker: 'B', speakerName: '病人', chinese: '医生，我从昨天晚上开始头疼，而且一直在发烧。', pinyin: 'Yīshēng, wǒ cóng zuótiān wǎnshang kāishǐ tóuténg, érqiě yìzhí zài fāshāo.', vietnamese: 'Bác sĩ ơi, từ tối hôm qua em bắt đầu bị đau đầu, lại còn sốt liên tục nữa.' },
+            { id: 3, speaker: 'A', speakerName: '医生', chinese: '先量一下体温。喉咙痛不痛？有没有咳嗽？', pinyin: 'Xiān liáng yíxià tǐwēn. Hóulóng tòng bu tòng? Yǒu méiyǒu késou?', vietnamese: 'Đo nhiệt độ trước nhé. Cổ họng có đau không? Có ho không?' },
+            { id: 4, speaker: 'B', speakerName: '病人', chinese: '喉咙有点疼，全身都没有力气。', pinyin: 'Hóulóng yǒudiǎn téng, quánshēn dōu méiyǒu lìqi.', vietnamese: 'Cổ họng hơi đau ạ, toàn thân không có chút sức lực nào.' },
+            { id: 5, speaker: 'A', speakerName: '医生', chinese: '三十八度五，你感冒了，扁桃体也有点发炎。', pinyin: 'Sānshí bā dù wǔ, nǐ gǎnmào le, biǎntáotǐ yě yǒudiǎn fāyán.', vietnamese: 'Ba mươi tám độ năm, bạn bị cảm cúm rồi, amidan cũng hơi bị viêm.' },
+            { id: 6, speaker: 'B', speakerName: '病人', chinese: '严重吗？需要打针或者输液吗？', pinyin: 'Yánzhòng ma? Xūyào dǎzhēn huòzhě shūyè ma?', vietnamese: 'Có nghiêm trọng không bác sĩ? Có cần tiêm hay truyền dịch không ạ?' },
+            { id: 7, speaker: 'A', speakerName: '医生', chinese: '不用打针，吃三天药就好。每天三次，饭后服用，记得多喝温水。', pinyin: 'Búyòng dǎzhēn, chī sān tiān yào jiù hǎo. Měitiān sān cì, fànhòu fúyòng, jìde duō hē wēnshuǐ.', vietnamese: 'Không cần tiêm đâu, uống thuốc ba ngày là khỏi. Mỗi ngày ba lần, uống sau ăn, nhớ uống nhiều nước ấm.' },
+            { id: 8, speaker: 'B', speakerName: '病人', chinese: '好的，谢谢医生！', pinyin: 'Hǎo de, xièxie yīshēng!', vietnamese: 'Vâng ạ, cảm ơn bác sĩ nhiều!' }
+        ]
+    },
+    {
+        id: 'hsk3-3',
+        level: 'HSK 3',
+        type: 'story',
+        category: 'Văn hóa',
+        duration: '2 phút',
+        title: '过中秋节吃月饼',
+        titlePinyin: 'Guò Zhōngqiūjié chī yuèbǐng',
+        titleViet: 'Đón Tết Trung Thu và ăn bánh nướng',
+        theme: 'Văn hóa & Lễ hội',
+        lines: [
+            { id: 1, speaker: '', speakerName: '', chinese: '农历八月十五是中国传统的中秋节。', pinyin: 'Nónglì bā yuè shíwǔ shì Zhōngguó chuántǒng de Zhōngqiūjié.', vietnamese: 'Ngày rằm tháng tám âm lịch là Tết Trung Thu truyền thống của Trung Quốc.' },
+            { id: 2, speaker: '', speakerName: '', chinese: '这一天，天上的月亮又大又圆，象征着全家人团团圆圆。', pinyin: 'Zhè yì tiān, tiān shàng de yuèliang yòu dà yòu yuán, xiàngzhēng zhe quán jiā rén tuántuán-yuányuán.', vietnamese: 'Vào ngày này, mặt trăng trên trời vừa to vừa tròn, tượng trưng cho cả gia đình đoàn viên sum họp.' },
+            { id: 3, speaker: '', speakerName: '', chinese: '到了晚上，一家人会围坐在一起吃团圆饭、赏月和吃月饼。', pinyin: 'Dào le wǎnshang, yì jiā rén huì wéizuò zài yìqǐ chī tuányuánfàn, shǎng yuè hé chī yuèbǐng.', vietnamese: 'Đến buổi tối, cả nhà sẽ quây quần bên nhau ăn bữa cơm đoàn viên, ngắm trăng và ăn bánh Trung Thu.' },
+            { id: 4, speaker: '', speakerName: '', chinese: '月饼有很多种口味，比如豆沙、莲蓉和五仁。', pinyin: 'Yuèbǐng yǒu hěn duō zhǒng kǒuwèi, bǐrú dòushā, liánróng hé wǔrén.', vietnamese: 'Bánh Trung Thu có rất nhiều hương vị, ví dụ như nhân đậu đỏ, hạt sen và thập cẩm.' },
+            { id: 5, speaker: '', speakerName: '', chinese: '那些不能回家的游子，也会抬头看月亮，思念远方的故乡。', pinyin: 'Nàxiē bù néng huíjiā de yóuzǐ, yě huì táitóu kàn yuèliang, sīniàn yuǎnfāng de gùxiāng.', vietnamese: 'Những người con xa xứ không thể về nhà cũng ngẩng đầu ngắm trăng, nhớ về quê hương phương xa.' },
+            { id: 6, speaker: '', speakerName: '', chinese: '正如古代诗人所写：“但愿人长久，千里共婵娟”。', pinyin: 'Zhèngrú gǔdài shīrén suǒ xiě: "Dàn yuàn rén chángjiǔ, qiānlǐ gòng chánjuān".', vietnamese: 'Đúng như nhà thơ xưa từng viết: "Chỉ mong người trường cửu, ngàn dặm chung ánh trăng".' },
+            { id: 7, speaker: '', speakerName: '', chinese: '中秋节不仅是一个节日，更是中国人对亲情与美好生活的期盼。', pinyin: 'Zhōngqiūjié bùjǐn shì yí gè jiérì, gèng shì Zhōngguó rén duì qīnqíng yǔ měihǎo shēnghuó de qīpàn.', vietnamese: 'Tết Trung Thu không chỉ là một ngày lễ, mà còn là niềm mong ước của người Trung Quốc về tình thân và cuộc sống tốt đẹp.' }
+        ]
+    },
+    {
+        id: 'hsk3-4',
+        level: 'HSK 3',
+        type: 'story',
+        category: 'Truyện ngắn',
+        duration: '2 phút',
+        title: '学好中文的日常习惯',
+        titlePinyin: 'Xué hǎo zhōngwén de rìcháng xíguàn',
+        titleViet: 'Thói quen hàng ngày để học giỏi tiếng Trung',
+        theme: 'Phương pháp học tập',
+        lines: [
+            { id: 1, speaker: '', speakerName: '', chinese: '很多人常问我，怎样才能在短时间内提高中文听说能力？', pinyin: 'Hěn duō rén cháng wèn wǒ, zěnyàng cáinéng zài duǎn shíjiān nèi tígāo zhōngwén tīngshuō nénglì?', vietnamese: 'Rất nhiều người thường hỏi tôi, làm thế nào để nâng cao khả năng nghe nói tiếng Trung trong thời gian ngắn?' },
+            { id: 2, speaker: '', speakerName: '', chinese: '我的秘诀其实很简单：养成每天听录音的好习惯。', pinyin: 'Wǒ de mìjué qíshí hěn jiǎndān: yǎngchéng měitiān tīng lùyīn de hǎo xíguàn.', vietnamese: 'Bí quyết của tôi thực ra rất đơn giản: xây dựng thói quen nghe bài thu âm mỗi ngày.' },
+            { id: 3, speaker: '', speakerName: '', chinese: '无论是早晨在公园跑步，还是下班坐公交车，我都会戴上耳机。', pinyin: 'Wúlùn shì zǎochén zài gōngyuán pǎobù, háishì xiàbān zuò gōngjiāochē, wǒ dōu huì dài shàng ěrjī.', vietnamese: 'Dù là buổi sáng chạy bộ trong công viên, hay lúc tan làm ngồi xe buýt, tôi đều đeo tai nghe.' },
+            { id: 4, speaker: '', speakerName: '', chinese: '我先听一句中文，再听一句越南语翻译，并跟着轻声重复模仿。', pinyin: 'Wǒ xiān tīng yí jù zhōngwén, zài tīng yí jù yuènányǔ fānyì, bìng gēnzhe qīngshēng chóngfù mófǎng.', vietnamese: 'Tôi nghe một câu tiếng Trung trước, sau đó nghe câu dịch tiếng Việt, và nhẩm theo bắt chước.' },
+            { id: 5, speaker: '', speakerName: '', chinese: '这种被动输入的方法让大脑自然而然地记住了汉字的发音和声调。', pinyin: 'Zhè zhǒng bèidòng shūrù de fāngfǎ ràng dànǎo zìrán-ér-rán de jìzhù le hànzì de fāyīn hé shēngdiào.', vietnamese: 'Phương pháp nạp thụ động này giúp não bộ tự nhiên ghi nhớ phát âm và thanh điệu của chữ Hán.' },
+            { id: 6, speaker: '', speakerName: '', chinese: '坚持三个月后，我发现自己跟中国人交流时反应快了很多。', pinyin: 'Jiānchí sān gè yuè hòu, wǒ fāxiàn zìjǐ gēn Zhōngguó rén jiāoliú shí fǎnyìng kuài le hěn duō.', vietnamese: 'Kiên trì sau ba tháng, tôi nhận ra phản xạ giao tiếp với người Trung Quốc của mình nhanh hơn rất nhiều.' },
+            { id: 7, speaker: '', speakerName: '', chinese: '只要每天坚持半小时，你也能轻松学好中文！', pinyin: 'Zhǐyào měitiān jiānchí bàn xiǎoshí, nǐ yě néng qīngsōng xué hǎo zhōngwén!', vietnamese: 'Chỉ cần mỗi ngày kiên trì nửa tiếng, bạn cũng có thể nhẹ nhàng học giỏi tiếng Trung!' }
+        ]
+    },
+
+    // --- HSK 4 ---
+    {
+        id: 'hsk4-1',
+        level: 'HSK 4',
+        type: 'conversation',
+        category: 'Công việc',
+        duration: '3 phút',
+        title: '商谈业务合作与签合同',
+        titlePinyin: 'Shāngtán yèwù hézuò yǔ qiān hétong',
+        titleViet: 'Đàm phán hợp tác kinh doanh và ký hợp đồng',
+        theme: 'Thương mại & Hợp đồng',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '张经理', chinese: '陈先生，非常欢迎您来到我们公司，请喝茶。', pinyin: 'Chén xiānsheng, fēicháng huānyíng nín lái dào wǒmen gōngsī, qǐng hē chá.', vietnamese: 'Chào ông Trần, rất hoan nghênh ông đến công ty chúng tôi, mời dùng trà.' },
+            { id: 2, speaker: 'B', speakerName: '陈总', chinese: '张经理您好，贵公司研发的新产品给我们留下了非常深刻的印象。', pinyin: 'Zhāng jīnglǐ nín hǎo, guì gōngsī yánfā de xīn chǎnpǐn gěi wǒmen liúxià le fēicháng shēnkè de yìnxiàng.', vietnamese: 'Chào giám đốc Trương, sản phẩm mới do quý công ty nghiên cứu phát triển để lại ấn tượng rất sâu sắc cho chúng tôi.' },
+            { id: 3, speaker: 'A', speakerName: '张经理', chinese: '谢谢您的肯定。关于这次订货的数量和交货期限，您有什么具体要求吗？', pinyin: 'Xièxie nín de kěndìng. Guānyú zhè cì dìnghuò de shùliàng hé jiāohuò qīxiàn, nín yǒu shénme jùtǐ yāoqiú ma?', vietnamese: 'Cảm ơn sự đánh giá cao của ông. Về số lượng đặt hàng và thời hạn giao hàng lần này, ông có yêu cầu cụ thể gì không?' },
+            { id: 4, speaker: 'B', speakerName: '陈总', chinese: '我们计划首批订购五千台设备，希望能在下个月底之前全部发货。', pinyin: 'Wǒmen jìhuà shǒupī dìnggòu wǔqiān tái shèbèi, xīwàng néng zài xià gè yuè dǐ zhīqián quánbù fāhuò.', vietnamese: 'Chúng tôi dự kiến đợt đầu đặt năm nghìn thiết bị, mong muốn có thể giao hàng toàn bộ trước cuối tháng sau.' },
+            { id: 5, speaker: 'A', speakerName: '张经理', chinese: '交货时间没有问题，不过如果在下周一前签署正式合同，我们能保证按时交付。', pinyin: 'Jiāohuò shíjiān méiyǒu wèntí, búguò rúguǒ zài xià zhōuyī qián qiānshǔ zhèngshì hétong, wǒmen néng bǎozhèng ànshí jiāofù.', vietnamese: 'Thời gian giao hàng không vấn đề gì, tuy nhiên nếu ký hợp đồng chính thức trước thứ hai tuần sau thì chúng tôi có thể đảm bảo giao đúng hạn.' },
+            { id: 6, speaker: 'B', speakerName: '陈总', chinese: '付款方式方面，我们建议采用百分之三十定金，验收合格后付清尾款。', pinyin: 'Fùkuǎn fāngshì fāngmiàn, wǒmen jiànyì cǎiyòng bǎifēnzhī sānshí dìngjīn, yànshōu hégé hòu fùqīng wěikuǎn.', vietnamese: 'Về phương thức thanh toán, chúng tôi đề xuất đặt cọc ba mươi phần trăm, sau khi nghiệm thu đạt chuẩn sẽ thanh toán nốt phần còn lại.' },
+            { id: 7, speaker: 'A', speakerName: '张经理', chinese: '这个付款条件很合理，我们完全赞同。', pinyin: 'Zhè ge fùkuǎn tiáojiàn hěn hélǐ, wǒmen wánquán zàntóng.', vietnamese: 'Điều kiện thanh toán này rất hợp lý, chúng tôi hoàn toàn nhất trí.' },
+            { id: 8, speaker: 'B', speakerName: '陈总', chinese: '太好了，预祝我们两家企业的合作取得圆满成功！', pinyin: 'Tài hǎo le, yùzhù wǒmen liǎng jiā qǐyè de hézuò qǔdé yuánmǎn chénggōng!', vietnamese: 'Tuyệt vời, chúc sự hợp tác giữa hai doanh nghiệp chúng ta đạt được thành công viên mãn!' },
+            { id: 9, speaker: 'A', speakerName: '张经理', chinese: '合作愉快！我们马上准备合同文本。', pinyin: 'Hézuò yúkuài! Wǒmen mǎshàng zhǔnbèi hétong wénběn.', vietnamese: 'Hợp tác vui vẻ! Chúng tôi sẽ chuẩn bị văn bản hợp đồng ngay.' }
+        ]
+    },
+    {
+        id: 'hsk4-2',
+        level: 'HSK 4',
+        type: 'story',
+        category: 'Đời sống',
+        duration: '2.5 phút',
+        title: '绿色出行与环境保护',
+        titlePinyin: 'Lǜsè chūxíng yǔ huánjìng bǎohù',
+        titleViet: 'Lối sống xanh và bảo vệ môi trường',
+        theme: 'Môi trường & Xã hội',
+        lines: [
+            { id: 1, speaker: '', speakerName: '', chinese: '随着现代社会的发展，空气污染和交通拥堵成为了大城市普遍面临的难题。', pinyin: 'Suízhe xiàndài shèhuì de fāzhǎn, kōngqì wūrǎn hé jiāotōng yōngdǔ chéngwéi le dà chéngshì pǔbiàn miànlín de nántí.', vietnamese: 'Cùng với sự phát triển của xã hội hiện đại, ô nhiễm không khí và tắc nghẽn giao thông đã trở thành vấn đề nan giải chung của các đô thị lớn.' },
+            { id: 2, speaker: '', speakerName: '', chinese: '为了改善环境质量，越来越多的人开始倡导“绿色出行”的生活理念。', pinyin: 'Wèile gǎishàn huánjìng zhìliàng, yuèláiyuè duō de rén kāishǐ chàngdǎo "lǜsè chūxíng" de shēnghuó lǐniàn.', vietnamese: 'Để cải thiện chất lượng môi trường, ngày càng nhiều người bắt đầu cổ vũ cho quan niệm sống "di chuyển xanh".' },
+            { id: 3, speaker: '', speakerName: '', chinese: '在短距离出行时，许多市民选择步行或者骑共享单车。', pinyin: 'Zài duǎn jùlí chūxíng shí, xǔduō shìmín xuǎnzé bùxíng huòzhě qí gòngxiǎng dānchē.', vietnamese: 'Khi di chuyển ở cự ly ngắn, nhiều người dân chọn đi bộ hoặc đạp xe đạp công cộng.' },
+            { id: 4, speaker: '', speakerName: '', chinese: '这不仅减少了汽车尾气的排放，还能达到强身健体的效果。', pinyin: 'Zhè bùjǐn jiǎnshǎo le qìchē wěiqì de páifàng, hái néng dádào qiángshēn jiàntǐ de xiàoguǒ.', vietnamese: 'Điều này không chỉ giảm thiểu khí thải phương tiện, mà còn đạt được hiệu quả rèn luyện sức khỏe.' },
+            { id: 5, speaker: '', speakerName: '', chinese: '如果需要去更远的地方，乘坐地铁和公交车则是经济又环保的选择。', pinyin: 'Rúguǒ xūyào qù gèng yuǎn de dìfang, chéngzuò dìtiě hé gōngjiāochē zé shì jīngjì yòu huánbǎo de xuǎnzé.', vietnamese: 'Nếu cần đi đến những nơi xa hơn, đi tàu điện ngầm và xe buýt là sự lựa chọn vừa kinh tế lại vừa thân thiện với môi trường.' },
+            { id: 6, speaker: '', speakerName: '', chinese: '与此同时，很多人在购物时自带环保袋，尽量减少塑料袋的使用。', pinyin: 'Yǔ cǐ tóngshí, hěn duō rén zài gòuwù shí zìdài huánbǎodài, jìnliàng jiǎnshǎo sùliàodài de shǐyòng.', vietnamese: 'Đồng thời, rất nhiều người khi mua sắm tự mang theo túi vải, hạn chế tối đa việc sử dụng túi ni-lông.' },
+            { id: 7, speaker: '', speakerName: '', chinese: '保护地球并不需要做什么惊天动地的大事，每个人改变一点小习惯就足够了。', pinyin: 'Bǎohù dìqiú bìng bù xūyào zuò shénme jīngtiāndòngdì de dàshì, měi gè rén gǎibiàn yìdiǎn xiǎo xíguàn jiù zúgòu le.', vietnamese: 'Bảo vệ trái đất không cần phải làm những điều to tát kinh thiên động địa, mỗi người thay đổi một thói quen nhỏ là đã đủ rồi.' },
+            { id: 8, speaker: '', speakerName: '', chinese: '从今天起，让我们共同行动，为子孙后代留下一片蓝天与绿水。', pinyin: 'Cóng jīntiān qǐ, ràng wǒmen gòngtóng xíngdòng, wèi zǐsūn hòudài liúxià yí piàn lántiān yǔ lǜshuǐ.', vietnamese: 'Kể từ hôm nay, chúng ta hãy cùng nhau hành động để để lại cho thế hệ mai sau một bầu trời xanh và dòng nước trong lành.' }
+        ]
+    },
+    {
+        id: 'hsk4-3',
+        level: 'HSK 4',
+        type: 'conversation',
+        category: 'Đời sống',
+        duration: '2.5 phút',
+        title: '退换商品与售后服务',
+        titlePinyin: 'Tuìhuàn shāngpǐn yǔ shòuhòu fúwù',
+        titleViet: 'Đổi trả hàng hóa và dịch vụ hậu mãi',
+        theme: 'Mua sắm & Quyền lợi',
+        lines: [
+            { id: 1, speaker: 'A', speakerName: '顾客', chinese: '您好，我上周在贵店购买了一台空气净化器，但机器运转时噪音很大。', pinyin: 'Nín hǎo, wǒ shàng zhōu zài guì diàn gòumǎi le yì tái kōngqì jìnghuàqì, dàn jīqì yùnzhuǎn shí zàoyīn hěn dà.', vietnamese: 'Chào bạn, tuần trước tôi có mua một chiếc máy lọc không khí ở tiệm mình, nhưng khi máy chạy thì tiếng ồn rất lớn.' },
+            { id: 2, speaker: 'B', speakerName: '客服', chinese: '非常抱歉给您带来不便！请问您带了发票和保修卡吗？', pinyin: 'Fēicháng bàoqiàn gěi nín dàilái búbiàn! Qǐngwèn nín dài le fāpiào hé bǎoxiūkǎ ma?', vietnamese: 'Rất xin lỗi vì đã gây bất tiện cho quý khách! Xin hỏi bạn có mang theo hóa đơn và phiếu bảo hành không ạ?' },
+            { id: 3, speaker: 'A', speakerName: '顾客', chinese: '都带来了，包装盒也保存得很完整。', pinyin: 'Dōu dài lái le, bāozhuānghé yě bǎocún de hěn wánzhěng.', vietnamese: 'Tôi mang đủ cả rồi, hộp đóng gói cũng còn giữ rất nguyên vẹn.' },
+            { id: 4, speaker: 'B', speakerName: '客服', chinese: '好的，根据国家三包规定，购买七天内出现质量问题可以免费退货或换新。', pinyin: 'Hǎo de, gēnjù guójiā sānbāo guīdìng, gòumǎi qī tiān nèi chūxiàn zhìliàng wèntí kěyǐ miǎnfèi tuìhuò huò huànxīn.', vietnamese: 'Dạ vâng, theo quy định bảo hành, trong vòng bảy ngày nếu phát sinh lỗi chất lượng có thể trả hàng hoàn tiền hoặc đổi máy mới miễn phí.' },
+            { id: 5, speaker: 'A', speakerName: '顾客', chinese: '我还是希望换一台同型号的新机器，可以现场测试一下吗？', pinyin: 'Wǒ háishì xīwàng huàn yì tái tóng xínghào de xīn jīqì, kěyǐ xiànchǎng cèshì yíxià ma?', vietnamese: 'Tôi vẫn muốn đổi lấy một máy mới cùng mẫu, có thể kiểm tra thử tại chỗ không?' },
+            { id: 6, speaker: 'B', speakerName: '客服', chinese: '没问题，我现在就去仓库为您调取一台全新的机器，并由技术人员为您检测。', pinyin: 'Méi wèntí, wǒ xiànzài jiù qù cāngkù wèi nín diàoqǔ yì tái quánxīn de jīqì, bìng yóu jìshù rényuán wèi nín jiǎncè.', vietnamese: 'Không vấn đề gì ạ, giờ em sẽ xuống kho lấy một máy hoàn toàn mới và nhờ nhân viên kỹ thuật kiểm tra cho bạn.' },
+            { id: 7, speaker: 'A', speakerName: '顾客', chinese: '你们的服务态度非常专业，我很满意。', pinyin: 'Nǐmen de fúwù tàidu fēicháng zhuānyè, wǒ hěn mǎnyì.', vietnamese: 'Thái độ phục vụ của các bạn rất chuyên nghiệp, tôi rất hài lòng.' },
+            { id: 8, speaker: 'B', speakerName: '客服', chinese: '感谢您的理解与支持，这是您的新机器与延保卡，请拿好！', pinyin: 'Gǎnxiè nín de lǐjiě yǔ zhīchí, zhè shì nín de xīn jīqì yǔ yánbǎokǎ, qǐng ná hǎo!', vietnamese: 'Cảm ơn sự thông cảm và ủng hộ của quý khách, đây là máy mới và thẻ gia hạn bảo hành, mời quý khách cầm cẩn thận ạ!' }
+        ]
+    },
+    {
+        id: 'hsk4-4',
+        level: 'HSK 4',
+        type: 'story',
+        category: 'Văn hóa',
+        duration: '2.5 phút',
+        title: '坚持与梦想的力量',
+        titlePinyin: 'Jiānchí yǔ mèngxiǎng de lìliang',
+        titleViet: 'Sức mạnh của ước mơ và sự kiên trì',
+        theme: 'Cảm hứng sống & Nỗ lực',
+        lines: [
+            { id: 1, speaker: '', speakerName: '', chinese: '在追逐梦想的道路上，每个人都会遇到挫折与挑战。', pinyin: 'Zài zhuīzhú mèngxiǎng de dàolù shàng, měi gè rén dōu huì yù dào cuòzhé yǔ tiǎozhàn.', vietnamese: 'Trên con đường theo đuổi ước mơ, bất kỳ ai cũng sẽ gặp phải những thử thách và trắc trở.' },
+            { id: 2, speaker: '', speakerName: '', chinese: '有的人因为害怕失败而中途放弃，而有的人则把困难当成了成长的机会。', pinyin: 'Yǒu de rén yīnwèi hàipà shībài ér zhōngtú fàngqì, ér yǒu de rén zé bǎ kùnnan dàngchéng le chéngzhǎng de jīhuì.', vietnamese: 'Có những người vì sợ hãi thất bại mà bỏ cuộc giữa chừng, nhưng cũng có những người coi khó khăn là cơ hội để trưởng thành.' },
+            { id: 3, speaker: '', speakerName: '', chinese: '成功往往不在于你起跑时有多快，而在于你能否一直坚持跑完全程。', pinyin: 'Chénggōng wǎngwǎng bú zàiyú nǐ qǐpǎo shí yǒu duō kuài, ér zàiyú nǐ néngfǒu yìzhí jiānchí pǎo wán quánchéng.', vietnamese: 'Thành công thường không nằm ở việc bạn xuất phát nhanh đến đâu, mà nằm ở chỗ bạn có thể kiên trì chạy hết chặng đường hay không.' },
+            { id: 4, speaker: '', speakerName: '', chinese: '就像水滴石穿一样，微小的力量只要日积月累，就能创造令人惊叹的奇迹。', pinyin: 'Jiù xiàng shuǐdīshíchuān yíyàng, wēixiǎo de lìliang zhǐyào rìjī-yuèlěi, jiù néng chuàngzào lìng rén jīngtàn de qíjì.', vietnamese: 'Cũng giống như giọt nước chảy đá mòn, những sức mạnh nhỏ bé chỉ cần tích lũy ngày qua ngày thì sẽ tạo nên kỳ tích đáng kinh ngạc.' },
+            { id: 5, speaker: '', speakerName: '', chinese: '学习一门外语同样如此，不可能在一夜之间就能说得流利自如。', pinyin: 'Xuéxí yì mén wàiyǔ tóngyàng rúcǐ, bù kěnéng zài yí yè zhījiān jiù néng shuō de liúlì zìrú.', vietnamese: 'Học một ngoại ngữ cũng vậy, không thể nào chỉ trong một đêm là có thể nói trôi chảy lưu loát ngay được.' },
+            { id: 6, speaker: '', speakerName: '', chinese: '每天积累几个词汇，坚持听几段录音，你的进步就已经在不知不觉中发生。', pinyin: 'Měitiān jīlěi jǐ gè cíhuì, jiānchí tīng jǐ duàn lùyīn, nǐ de jìnbù jiù yǐjīng zài bùzhī-bùjué zhōng fāshēng.', vietnamese: 'Mỗi ngày tích lũy vài từ vựng, kiên trì nghe vài đoạn băng, sự tiến bộ của bạn đã đang diễn ra mà chính bạn không hề hay biết.' },
+            { id: 7, speaker: '', speakerName: '', chinese: '不要轻视每一次微小的努力，因为它们正是通往成功的坚实台阶。', pinyin: 'Bú yào qīngshì měi yí cì wēixiǎo de nǔlì, yīnwèi tāmen zhèng shì tōngwǎng chénggōng de jiānshí táijiē.', vietnamese: 'Đừng bao giờ coi nhẹ mỗi nỗ lực nhỏ nhoi, bởi vì chúng chính là những bậc thang vững chắc dẫn lối đến thành công.' },
+            { id: 8, speaker: '', speakerName: '', chinese: '坚定你的信念，勇敢向前迈进，终有一天你会感谢那个曾经不言放弃的自己。', pinyin: 'Jiāndìng nǐ de xìnniàn, yǒnggǎn xiàng qián màijìn, zhōng yǒu yì tiān nǐ huì gǎnxiè nà ge céngjīng bù yán fàngqì de zìjǐ.', vietnamese: 'Hãy kiên định niềm tin, dũng cảm tiến bước về phía trước, sẽ có một ngày bạn thầm cảm ơn chính mình vì đã không từng buông xuôi.' }
+        ]
+    }
+];
+
+let hskMaterials = [];
+let currentHskMaterial = null;
+let hskActiveFilter = 'all';
+let hskActiveCategory = '';
+let hskSearchTerm = '';
+let hskJogPlaying = false;
+let hskJogIndex = 0;
+let hskJogTimer = null;
+
+function loadHskMaterials() {
+    try {
+        const savedCustom = localStorage.getItem('hsk-custom-materials-v1');
+        const customList = savedCustom ? JSON.parse(savedCustom) : [];
+        hskMaterials = [...customList, ...HSK_DEFAULT_MATERIALS];
+    } catch (e) {
+        console.warn('Error loading HSK materials:', e);
+        hskMaterials = [...HSK_DEFAULT_MATERIALS];
+    }
+}
+
+function saveHskCustomMaterials() {
+    try {
+        const customList = hskMaterials.filter(m => m.isCustom);
+        localStorage.setItem('hsk-custom-materials-v1', JSON.stringify(customList));
+    } catch (e) {
+        console.warn('Error saving HSK custom materials:', e);
+    }
+}
+
+window.renderHskHubPage = function () {
+    loadHskMaterials();
+    renderHskCatalog();
+
+    if (currentHskMaterial) {
+        renderHskStudio(currentHskMaterial);
+    } else {
+        const studio = document.getElementById('hsk-active-studio');
+        if (studio) studio.style.display = 'none';
+    }
+};
+
+window.filterHskMaterials = function (level) {
+    hskActiveFilter = level;
+    document.querySelectorAll('.hsk-pill').forEach(btn => {
+        if (btn.getAttribute('data-level') === level) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    renderHskCatalog();
+};
+
+window.onHskSearchInput = function (val) {
+    hskSearchTerm = (val || '').trim().toLowerCase();
+    renderHskCatalog();
+};
+
+window.onHskCategoryChange = function (cat) {
+    hskActiveCategory = (cat || '').trim();
+    renderHskCatalog();
+};
+
+function renderHskCatalog() {
+    const grid = document.getElementById('hsk-catalog-grid');
+    const countEl = document.getElementById('hsk-material-count');
+    if (!grid) return;
+
+    let filtered = hskMaterials.filter(m => {
+        if (hskActiveFilter !== 'all' && m.level !== hskActiveFilter) return false;
+        if (hskActiveCategory && m.category !== hskActiveCategory) return false;
+        if (hskSearchTerm) {
+            const term = removeAccents(hskSearchTerm);
+            const zhMatch = m.title.toLowerCase().includes(hskSearchTerm);
+            const pinyinMatch = removeAccents(m.titlePinyin || '').includes(term);
+            const viMatch = removeAccents(m.titleViet || '').includes(term);
+            const themeMatch = removeAccents(m.theme || '').includes(term);
+            const contentMatch = m.lines && m.lines.some(l => 
+                l.chinese.includes(hskSearchTerm) || 
+                removeAccents(l.vietnamese || '').includes(term) ||
+                removeAccents(l.pinyin || '').includes(term)
+            );
+            if (!zhMatch && !pinyinMatch && !viMatch && !themeMatch && !contentMatch) return false;
+        }
+        return true;
+    });
+
+    if (countEl) countEl.textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; padding: 32px 16px; text-align: center; color: var(--g6); background: white; border: 1.5px dashed var(--g2); border-radius: 16px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
+                <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 4px;">Không tìm thấy bài học nào phù hợp</div>
+                <div style="font-size: 0.88rem; margin-bottom: 16px;">Hãy thử tìm từ khóa khác hoặc bấm nút dưới đây để tạo bài mới:</div>
+                <button type="button" class="btn btn-sm" onclick="openHskImportModal('text')" style="background:#4f46e5;">✍️ Dán văn bản mới</button>
+                <button type="button" class="btn btn-sm" onclick="openHskImportModal('ai')" style="background:#0284c7; margin-left:8px;">🤖 Sinh bài bằng AI</button>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(m => {
+        const levelClass = m.level ? `level-${m.level.toLowerCase().replace(/\s+/g, '-')}` : 'level-hsk-1';
+        const isActive = currentHskMaterial && currentHskMaterial.id === m.id;
+        const lineCount = m.lines ? m.lines.length : 0;
+        const typeIcon = m.type === 'conversation' ? '💬' : '📖';
+
+        return `
+            <div class="hsk-card ${isActive ? 'active-material' : ''}" onclick="openHskMaterial('${m.id}')">
+                <div>
+                    <div class="hsk-card-badges">
+                        <span class="hsk-tag-level ${levelClass}">${m.level || 'HSK'}</span>
+                        <span class="hsk-tag-type">${typeIcon} ${m.category || 'Tư liệu'}</span>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <h4 class="hsk-card-title-zh">${m.title}</h4>
+                        <div class="hsk-card-title-pinyin">${m.titlePinyin || ''}</div>
+                        <div class="hsk-card-title-vi">${m.titleViet || ''}</div>
+                    </div>
+                </div>
+                <div class="hsk-card-footer">
+                    <span>⏱️ ${m.duration || '2 phút'} • ${lineCount} câu</span>
+                    <span style="color:var(--p); font-weight:700;">Học ngay ➔</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window.openHskMaterial = function (id) {
+    const found = hskMaterials.find(m => String(m.id) === String(id));
+    if (!found) return;
+
+    currentHskMaterial = found;
+    renderHskStudio(found);
+    renderHskCatalog();
+
+    const studio = document.getElementById('hsk-active-studio');
+    if (studio) {
+        studio.style.display = 'block';
+        studio.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
+
+window.closeHskStudio = function () {
+    stopHskJoggingMode();
+    const studio = document.getElementById('hsk-active-studio');
+    if (studio) studio.style.display = 'none';
+    currentHskMaterial = null;
+    renderHskCatalog();
+};
+
+function renderHskStudio(material) {
+    const studio = document.getElementById('hsk-active-studio');
+    if (!studio || !material) return;
+
+    const levelClass = material.level ? `level-${material.level.toLowerCase().replace(/\s+/g, '-')}` : 'level-hsk-1';
+    const safeTitle = (material.title || 'Bai_Hoc').replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_');
+    const defaultExportName = `[${material.level || 'HSK'}]_${safeTitle}.mp3`;
+
+    let html = `
+        <div class="hsk-studio-header">
+            <div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                    <span class="hsk-tag-level ${levelClass}">${material.level || 'HSK'}</span>
+                    <span class="hsk-tag-type">${material.type === 'conversation' ? '💬 Hội thoại' : '📖 Truyện ngắn'} • ${material.category || 'Đời sống'}</span>
+                    ${material.isCustom ? '<span style="background:#fee2e2; color:#b91c1c; font-size:0.75rem; padding:2px 8px; border-radius:10px; font-weight:600;">Tự nhập</span>' : ''}
+                </div>
+                <h3 style="font-size:1.6rem; font-weight:700; color:var(--g8); margin-bottom:4px;">${material.title}</h3>
+                ${material.titlePinyin ? `<div style="font-size:1rem; color:var(--p); font-style:italic; margin-bottom:4px;">${material.titlePinyin}</div>` : ''}
+                ${material.titleViet ? `<div style="font-size:1.05rem; color:var(--g6); font-weight:500;">${material.titleViet}</div>` : ''}
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm" onclick="exportHskAudio('bat')" style="background:#4f46e5;" title="Tải file 1-click tự động ghép MP3 cho Windows">
+                    💻 Xuất 1 File MP3
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="openConfiguredGDriveFolder()" title="Mở thư mục Google Drive để lưu trữ">
+                    ☁️ Google Drive
+                </button>
+                ${material.isCustom ? `<button type="button" class="btn btn-sm btn-danger" onclick="deleteHskCustomMaterial('${material.id}')" title="Xóa bài này">🗑️</button>` : ''}
+                <button type="button" class="action-btn" onclick="closeHskStudio()" title="Đóng studio">✕</button>
+            </div>
+        </div>
+
+        <!-- Jogging Audio Optimizer Box -->
+        <div class="hsk-jog-box">
+            <div class="hsk-jog-row">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="jog-pulse-icon" style="font-size:1.8rem;">🏃‍♂️</span>
+                    <div>
+                        <div style="font-weight:700; font-size:1.05rem; color:#fff;">Tối Ưu Nghe Chạy Bộ & Xuất File MP3 Toàn Bài</div>
+                        <div style="font-size:0.82rem; color:#cbd5e1;">Luyện phản xạ: Nghe câu tiếng Trung (lặp 2 lần) ➔ nghe dịch nghĩa tiếng Việt ➔ dừng nghỉ để ngấm.</div>
+                    </div>
+                </div>
+                <button type="button" class="btn" id="btn-hsk-play-jog" onclick="toggleHskJoggingMode()" 
+                    style="background:linear-gradient(135deg, #10b981, #059669); font-weight:700; padding:10px 18px; box-shadow:0 4px 15px rgba(16,185,129,0.4);">
+                    ▶️ Nghe Trực Tiếp
+                </button>
+            </div>
+
+            <!-- Jogging Audio Controls Grid -->
+            <div class="hsk-jog-controls-grid">
+                <div class="hsk-jog-ctrl-item">
+                    <label>🎧 Chế độ đọc:</label>
+                    <select id="hsk-jog-mode">
+                        <option value="repeat-zh" selected>🔁 Tiếng Trung x2 ➔ Dịch Việt (Tốt cho chạy bộ)</option>
+                        <option value="bilingual">🎧 Song ngữ (Trung x1 ➔ Dịch Việt)</option>
+                        <option value="zh-only">🇨🇳 Chỉ Tiếng Trung (Thuần luyện nghe)</option>
+                        <option value="vi-only">🇻🇳 Chỉ Tiếng Việt (Nghe hiểu cốt truyện)</option>
+                    </select>
+                </div>
+                <div class="hsk-jog-ctrl-item">
+                    <label>⚡ Tốc độ giọng đọc:</label>
+                    <select id="hsk-jog-rate">
+                        <option value="0.85" selected>0.85x (Chậm, rõ âm điệu khi chạy)</option>
+                        <option value="1.0">1.0x (Tốc độ tự nhiên bản ngữ)</option>
+                    </select>
+                </div>
+                <div class="hsk-jog-ctrl-item">
+                    <label>⏱️ Nghỉ giữa các câu:</label>
+                    <select id="hsk-jog-pause">
+                        <option value="1500" selected>1.5 giây (Tiêu chuẩn)</option>
+                        <option value="2500">2.5 giây (Rộng rãi để nhẩm theo)</option>
+                        <option value="3500">3.5 giây (Nghỉ dài)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Export Actions -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div class="hsk-jog-action-btns">
+                    <button type="button" class="btn btn-sm" onclick="exportHskAudio('bat')" style="background:#6366f1; font-weight:600;" title="Tải script 1-Click tự nối MP3 cho Windows">
+                        💻 Nối 1 File MP3 (.bat)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="exportHskAudio('sh')" style="color:#fff; border-color:rgba(255,255,255,0.4);" title="Tải script cho Mac/Linux">
+                        🍎 Mac/Linux (.sh)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="exportHskAudio('m3u')" style="color:#fff; border-color:rgba(255,255,255,0.4);" title="Tải Playlist nghe bằng VLC khi tắt màn hình">
+                        📦 Playlist (.m3u)
+                    </button>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" class="btn btn-sm" onclick="copyHskStandardFileName('${defaultExportName}')" 
+                        style="background:rgba(255,255,255,0.15); color:#fff; font-size:0.8rem;" title="Sao chép tên file chuẩn để quản lý trên Drive">
+                        📋 Copy tên file chuẩn
+                    </button>
+                    <button type="button" class="btn btn-sm" onclick="openConfiguredGDriveFolder()" 
+                        style="background:linear-gradient(135deg, #0284c7, #0369a1); font-weight:600;" title="Mở thư mục Google Drive để kéo thả file vào lưu trữ">
+                        ☁️ Mở Drive Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bilingual Sentence List -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h4 style="font-size:1.05rem; color:var(--g8); font-weight:700;">
+                📜 Danh Sách Từng Câu Song Ngữ (${material.lines.length} câu):
+            </h4>
+            <span style="font-size:0.82rem; color:var(--g6);">Chạm vào icon loa để nghe thử từng câu</span>
+        </div>
+
+        <div class="hsk-sentence-list">
+    `;
+
+    material.lines.forEach((line, idx) => {
+        const num = idx + 1;
+        const speakerTag = line.speaker ? `<span style="font-size:0.8rem; font-weight:700; color:var(--p); margin-right:6px;">[${line.speakerName || line.speaker}]:</span>` : '';
+
+        html += `
+            <div class="hsk-sentence-item" id="hsk-line-${idx}">
+                <div class="hsk-sentence-index">${num}</div>
+                <div class="hsk-sentence-content">
+                    <div class="hsk-sentence-zh">${speakerTag}${line.chinese}</div>
+                    ${line.pinyin ? `<div class="hsk-sentence-pinyin">${line.pinyin}</div>` : ''}
+                    ${line.vietnamese ? `<div class="hsk-sentence-vi">${line.vietnamese}</div>` : ''}
+                </div>
+                <div class="hsk-sentence-actions">
+                    <button type="button" class="hsk-btn-voice" onclick="speakHskSingleLine(${idx}, 'zh')" title="Đọc tiếng Trung">
+                        🇨🇳 Nghe
+                    </button>
+                    ${line.vietnamese ? `
+                        <button type="button" class="hsk-btn-voice" onclick="speakHskSingleLine(${idx}, 'vi')" title="Đọc dịch tiếng Việt">
+                            🇻🇳 Dịch
+                        </button>
+                    ` : ''}
+                    <button type="button" class="hsk-btn-voice" onclick="speakHskSingleLine(${idx}, 'both')" title="Đọc tiếng Trung rồi đọc dịch tiếng Việt">
+                        🔁 Cả hai
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    studio.innerHTML = html;
+    studio.style.display = 'block';
+}
+
+window.copyHskStandardFileName = function (name) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(name);
+        status(`📋 Đã copy tên file: "${name}"`, 'success');
+    } else {
+        prompt('Tên file chuẩn của bài học:', name);
+    }
+};
+
+window.speakHskSingleLine = function (idx, mode) {
+    if (!currentHskMaterial || !currentHskMaterial.lines || !currentHskMaterial.lines[idx]) return;
+    const line = currentHskMaterial.lines[idx];
+
+    // Highlight line
+    document.querySelectorAll('.hsk-sentence-item').forEach(el => el.classList.remove('hsk-sentence-speaking'));
+    const lineEl = document.getElementById(`hsk-line-${idx}`);
+    if (lineEl) lineEl.classList.add('hsk-sentence-speaking');
+
+    if (mode === 'zh') {
+        playStreamAudio(line.chinese, 'zh-CN', 1.0, () => {
+            if (lineEl) lineEl.classList.remove('hsk-sentence-speaking');
+        });
+    } else if (mode === 'vi') {
+        playStreamAudio(line.vietnamese || '', 'vi', 1.0, () => {
+            if (lineEl) lineEl.classList.remove('hsk-sentence-speaking');
+        });
+    } else {
+        // Both: zh -> vi
+        playStreamAudio(line.chinese, 'zh-CN', 1.0, () => {
+            setTimeout(() => {
+                playStreamAudio(line.vietnamese || '', 'vi', 1.0, () => {
+                    if (lineEl) lineEl.classList.remove('hsk-sentence-speaking');
+                });
+            }, 800);
+        });
+    }
+};
+
+window.toggleHskJoggingMode = function () {
+    if (hskJogPlaying) {
+        stopHskJoggingMode();
+    } else {
+        startHskJoggingMode(0);
+    }
+};
+
+function startHskJoggingMode(startIndex) {
+    if (!currentHskMaterial || !currentHskMaterial.lines || currentHskMaterial.lines.length === 0) return;
+
+    hskJogPlaying = true;
+    hskJogIndex = startIndex || 0;
+
+    const playBtn = document.getElementById('btn-hsk-play-jog');
+    if (playBtn) {
+        playBtn.innerHTML = '⏸️ Tạm Dừng';
+        playBtn.style.background = '#f59e0b';
+    }
+
+    status('🏃‍♂️ Đã bắt đầu chế độ nghe chạy bộ song ngữ!', 'success');
+    playNextHskJogSentence();
+}
+
+window.stopHskJoggingMode = function () {
+    hskJogPlaying = false;
+    clearTimeout(hskJogTimer);
+    stopStreamAudio();
+
+    document.querySelectorAll('.hsk-sentence-item').forEach(el => el.classList.remove('hsk-sentence-speaking'));
+
+    const playBtn = document.getElementById('btn-hsk-play-jog');
+    if (playBtn) {
+        playBtn.innerHTML = '▶️ Nghe Trực Tiếp';
+        playBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    }
+};
+
+function playNextHskJogSentence() {
+    if (!hskJogPlaying || !currentHskMaterial || !currentHskMaterial.lines) return;
+
+    if (hskJogIndex >= currentHskMaterial.lines.length) {
+        // Reached end: loop back or stop
+        status('🎉 Đã hoàn thành bài nghe!', 'success');
+        stopHskJoggingMode();
+        return;
+    }
+
+    const line = currentHskMaterial.lines[hskJogIndex];
+    const modeEl = document.getElementById('hsk-jog-mode');
+    const rateEl = document.getElementById('hsk-jog-rate');
+    const pauseEl = document.getElementById('hsk-jog-pause');
+
+    const jogMode = modeEl ? modeEl.value : 'repeat-zh';
+    const rate = rateEl ? parseFloat(rateEl.value) : 0.85;
+    const pauseMs = pauseEl ? parseInt(pauseEl.value) : 1500;
+
+    // Highlight sentence and scroll smoothly
+    document.querySelectorAll('.hsk-sentence-item').forEach(el => el.classList.remove('hsk-sentence-speaking'));
+    const lineEl = document.getElementById(`hsk-line-${hskJogIndex}`);
+    if (lineEl) {
+        lineEl.classList.add('hsk-sentence-speaking');
+        lineEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Lock screen media session
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: `[${currentHskMaterial.level}] ${currentHskMaterial.title}`,
+            artist: line.chinese,
+            album: line.vietnamese || 'Học Tiếng Trung Pro'
+        });
+    }
+
+    if (jogMode === 'zh-only') {
+        playStreamAudio(line.chinese, 'zh-CN', rate, () => {
+            hskJogTimer = setTimeout(() => {
+                hskJogIndex++;
+                playNextHskJogSentence();
+            }, pauseMs);
+        });
+    } else if (jogMode === 'vi-only') {
+        playStreamAudio(line.vietnamese || '', 'vi', 1.0, () => {
+            hskJogTimer = setTimeout(() => {
+                hskJogIndex++;
+                playNextHskJogSentence();
+            }, pauseMs);
+        });
+    } else if (jogMode === 'repeat-zh') {
+        // Chinese 1x -> pause -> Chinese 2x -> pause -> Vietnamese -> pause -> next
+        playStreamAudio(line.chinese, 'zh-CN', rate, () => {
+            hskJogTimer = setTimeout(() => {
+                playStreamAudio(line.chinese, 'zh-CN', rate, () => {
+                    hskJogTimer = setTimeout(() => {
+                        playStreamAudio(line.vietnamese || '', 'vi', 1.0, () => {
+                            hskJogTimer = setTimeout(() => {
+                                hskJogIndex++;
+                                playNextHskJogSentence();
+                            }, pauseMs);
+                        });
+                    }, 600);
+                });
+            }, 600);
+        });
+    } else {
+        // Standard bilingual: Chinese -> pause -> Vietnamese -> pause -> next
+        playStreamAudio(line.chinese, 'zh-CN', rate, () => {
+            hskJogTimer = setTimeout(() => {
+                playStreamAudio(line.vietnamese || '', 'vi', 1.0, () => {
+                    hskJogTimer = setTimeout(() => {
+                        hskJogIndex++;
+                        playNextHskJogSentence();
+                    }, pauseMs);
+                });
+            }, 600);
+        });
+    }
+}
+
+window.exportHskAudio = function (format) {
+    if (!currentHskMaterial || !currentHskMaterial.lines || currentHskMaterial.lines.length === 0) {
+        status('⚠️ Chưa có bài đọc nào để xuất file!', 'warning');
+        return;
+    }
+
+    const modeEl = document.getElementById('hsk-jog-mode');
+    const jogMode = modeEl ? modeEl.value : 'repeat-zh';
+
+    const title = currentHskMaterial.title || 'Bai_Hoc_HSK';
+    const safeTitle = title.replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_');
+    const levelTag = (currentHskMaterial.level || 'HSK').replace(/\s+/g, '');
+    const outFileName = `[${levelTag}]_${safeTitle}_Tron_Bai.mp3`;
+
+    if (format === 'm3u') {
+        let m3u = '#EXTM3U\n';
+        m3u += `#PLAYLIST: [${currentHskMaterial.level}] ${title}\n\n`;
+
+        currentHskMaterial.lines.forEach((line, idx) => {
+            const num = String(idx + 1).padStart(2, '0');
+            const zhUrl = getGoogleTTSUrl(line.chinese, 'zh-CN');
+
+            if (jogMode === 'zh-only') {
+                m3u += `#EXTINF:-1, [Câu ${num}] ${line.chinese}\n${zhUrl}\n\n`;
+            } else if (jogMode === 'vi-only') {
+                if (line.vietnamese) {
+                    const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                    m3u += `#EXTINF:-1, [Dịch ${num}] ${line.vietnamese}\n${viUrl}\n\n`;
+                }
+            } else if (jogMode === 'repeat-zh') {
+                m3u += `#EXTINF:-1, [Câu ${num}-L1] ${line.chinese}\n${zhUrl}\n\n`;
+                m3u += `#EXTINF:-1, [Câu ${num}-L2] ${line.chinese}\n${zhUrl}\n\n`;
+                if (line.vietnamese) {
+                    const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                    m3u += `#EXTINF:-1, [Dịch ${num}] ${line.vietnamese}\n${viUrl}\n\n`;
+                }
+            } else {
+                m3u += `#EXTINF:-1, [Câu ${num}] ${line.chinese}\n${zhUrl}\n\n`;
+                if (line.vietnamese) {
+                    const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                    m3u += `#EXTINF:-1, [Dịch ${num}] ${line.vietnamese}\n${viUrl}\n\n`;
+                }
+            }
+        });
+
+        const blob = new Blob([m3u], { type: 'audio/x-mpegurl;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `[${levelTag}]_${safeTitle}.m3u`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        status('✅ Đã tải file Playlist (.m3u)! Mở bằng VLC trên điện thoại để nghe ngầm khi chạy bộ.', 'success');
+        return;
+    }
+
+    if (format === 'bat') {
+        let bat = `@echo off\r\n`;
+        bat += `chcp 65001 >nul\r\n`;
+        bat += `title Dang tao file MP3: ${outFileName}\r\n`;
+        bat += `echo ========================================================\r\n`;
+        bat += `echo  DANG TAI VA GHEP TOAN BO AM THANH HSK THANH 1 FILE MP3\r\n`;
+        bat += `echo ========================================================\r\n`;
+        bat += `echo Trinh do: ${currentHskMaterial.level || 'HSK'}\r\n`;
+        bat += `echo Bai hoc: ${title}\r\n`;
+        bat += `echo Che do: ${jogMode}\r\n`;
+        bat += `echo.\r\n`;
+
+        const fileParts = [];
+        let partIdx = 1;
+
+        currentHskMaterial.lines.forEach((line, idx) => {
+            const num = String(idx + 1).padStart(2, '0');
+            const zhUrl = getGoogleTTSUrl(line.chinese, 'zh-CN');
+
+            if (jogMode === 'zh-only') {
+                const pName = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                fileParts.push(pName);
+                bat += `curl -s -L -A "Mozilla/5.0" "${zhUrl}" -o "${pName}"\r\n`;
+            } else if (jogMode === 'vi-only') {
+                if (line.vietnamese) {
+                    const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                    const pName = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                    fileParts.push(pName);
+                    bat += `curl -s -L -A "Mozilla/5.0" "${viUrl}" -o "${pName}"\r\n`;
+                }
+            } else if (jogMode === 'repeat-zh') {
+                const pZh1 = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                fileParts.push(pZh1);
+                bat += `echo [${num}] Dang tai tieng Trung (Lan 1)...\r\n`;
+                bat += `curl -s -L -A "Mozilla/5.0" "${zhUrl}" -o "${pZh1}"\r\n`;
+
+                const pZh2 = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                fileParts.push(pZh2);
+                bat += `echo [${num}] Dang nhan doi tieng Trung (Lan 2)...\r\n`;
+                bat += `copy "${pZh1}" "${pZh2}" >nul\r\n`;
+
+                if (line.vietnamese) {
+                    const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                    const pVi = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                    fileParts.push(pVi);
+                    bat += `echo [${num}] Dang tai dich Viet...\r\n`;
+                    bat += `curl -s -L -A "Mozilla/5.0" "${viUrl}" -o "${pVi}"\r\n`;
+                }
+            } else {
+                const pZh = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                fileParts.push(pZh);
+                bat += `echo [${num}] Dang tai tieng Trung...\r\n`;
+                bat += `curl -s -L -A "Mozilla/5.0" "${zhUrl}" -o "${pZh}"\r\n`;
+
+                if (line.vietnamese) {
+                    const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                    const pVi = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                    fileParts.push(pVi);
+                    bat += `echo [${num}] Dang tai dich Viet...\r\n`;
+                    bat += `curl -s -L -A "Mozilla/5.0" "${viUrl}" -o "${pVi}"\r\n`;
+                }
+            }
+            bat += `\r\n`;
+        });
+
+        bat += `echo --------------------------------------------------------\r\n`;
+        bat += `echo Dang ghep thanh file duy nhat: ${outFileName}...\r\n`;
+        bat += `copy /b ${fileParts.map(p => `"${p}"`).join('+')} "${outFileName}" >nul\r\n\r\n`;
+        bat += `echo Dang don dep cac file tam...\r\n`;
+        bat += `del part_*.mp3 >nul 2>&1\r\n\r\n`;
+        bat += `echo ========================================================\r\n`;
+        bat += `echo  HOAN TAT! Da tao xong file: ${outFileName}\r\n`;
+        bat += `echo ========================================================\r\n`;
+        bat += `start "" "${outFileName}"\r\n`;
+        bat += `timeout /t 5 >nul\r\n`;
+
+        const blob = new Blob([bat], { type: 'application/x-bat;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Ghep_MP3_${safeTitle}.bat`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        copyHskStandardFileName(outFileName);
+        status('✅ Đã tải file Script (.bat)! Nhấp đúp vào file để tạo 1 file MP3 duy nhất.', 'success');
+        return;
+    }
+
+    if (format === 'sh') {
+        let sh = `#!/bin/bash\n`;
+        sh += `echo "========================================================"\n`;
+        sh += `echo " DANG TAI VA GHEP TOAN BO AM THANH HSK THANH 1 FILE MP3"\n`;
+        sh += `echo "========================================================"\n`;
+        sh += `echo "Bài học: ${title}"\n\n`;
+
+        const fileParts = [];
+        let partIdx = 1;
+
+        currentHskMaterial.lines.forEach((line) => {
+            const zhUrl = getGoogleTTSUrl(line.chinese, 'zh-CN');
+            const pZh1 = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+            fileParts.push(pZh1);
+            sh += `curl -s -L -A "Mozilla/5.0" "${zhUrl}" -o "${pZh1}"\n`;
+
+            if (jogMode === 'repeat-zh') {
+                const pZh2 = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                fileParts.push(pZh2);
+                sh += `cp "${pZh1}" "${pZh2}"\n`;
+            }
+
+            if (jogMode !== 'zh-only' && line.vietnamese) {
+                const viUrl = getGoogleTTSUrl(line.vietnamese, 'vi');
+                const pVi = `part_${String(partIdx++).padStart(3, '0')}.mp3`;
+                fileParts.push(pVi);
+                sh += `curl -s -L -A "Mozilla/5.0" "${viUrl}" -o "${pVi}"\n`;
+            }
+        });
+
+        sh += `\necho "Đang ghép thành 1 file MP3 duy nhất..."\n`;
+        sh += `cat ${fileParts.map(p => `"${p}"`).join(' ')} > "${outFileName}"\n`;
+        sh += `rm -f part_*.mp3\n`;
+        sh += `echo "Hoàn tất: ${outFileName}"\n`;
+        sh += `open "${outFileName}" 2>/dev/null || xdg-open "${outFileName}" 2>/dev/null\n`;
+
+        const blob = new Blob([sh], { type: 'application/x-sh;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Ghep_MP3_${safeTitle}.sh`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        copyHskStandardFileName(outFileName);
+        status('✅ Đã tải script (.sh)! Mở Terminal và chạy file để tạo 1 file MP3.', 'success');
+    }
+};
+
+window.openHskImportModal = function (tab) {
+    const modal = document.getElementById('hsk-import-modal');
+    if (!modal) return;
+    switchHskModalTab(tab || 'text');
+    modal.classList.add('show');
+};
+
+window.closeHskImportModal = function () {
+    const modal = document.getElementById('hsk-import-modal');
+    if (modal) modal.classList.remove('show');
+};
+
+window.switchHskModalTab = function (tab) {
+    const btnText = document.getElementById('btn-mtab-text');
+    const btnAi = document.getElementById('btn-mtab-ai');
+    const panelText = document.getElementById('hsk-mtab-panel-text');
+    const panelAi = document.getElementById('hsk-mtab-panel-ai');
+    const titleEl = document.getElementById('hsk-modal-title');
+
+    if (tab === 'ai') {
+        if (btnAi) btnAi.classList.add('active');
+        if (btnText) btnText.classList.remove('active');
+        if (panelAi) panelAi.style.display = 'block';
+        if (panelText) panelText.style.display = 'none';
+        if (titleEl) titleEl.textContent = '🤖 Tạo Bài Học Chuẩn HSK Bằng Gemini AI';
+    } else {
+        if (btnText) btnText.classList.add('active');
+        if (btnAi) btnAi.classList.remove('active');
+        if (panelText) panelText.style.display = 'block';
+        if (panelAi) panelAi.style.display = 'none';
+        if (titleEl) titleEl.textContent = '✍️ Dán Văn Bản Tiếng Trung Để Tự Động Chuyển Thể';
+    }
+};
+
+window.processCustomHskText = async function () {
+    const textEl = document.getElementById('hsk-import-text');
+    const rawText = textEl ? textEl.value.trim() : '';
+
+    if (!rawText) {
+        status('⚠️ Vui lòng dán văn bản tiếng Trung cần chuyển thể!', 'warning');
+        return;
+    }
+
+    const titleEl = document.getElementById('hsk-import-title');
+    const levelEl = document.getElementById('hsk-import-level');
+    const typeEl = document.getElementById('hsk-import-type');
+
+    const level = levelEl ? levelEl.value : 'HSK 2';
+    const type = typeEl ? typeEl.value : 'conversation';
+
+    // 1. Split text into sentences by Chinese punctuation and linebreaks
+    const rawSentences = rawText.split(/[。！？!?\n]+/).map(s => s.trim()).filter(Boolean);
+    if (rawSentences.length === 0) {
+        status('⚠️ Không tìm thấy câu nào hợp lệ trong văn bản!', 'warning');
+        return;
+    }
+
+    showLoading('Đang phân tích và chuyển thể...', 'Đang tạo Pinyin có dấu và dịch nghĩa tiếng Việt...');
+
+    const parsedLines = [];
+    const apiKey = localStorage.getItem('gemini-api-key');
+
+    // 2. If Gemini API key is available, translate all sentences in one batch call
+    let translationsMap = {};
+    if (apiKey) {
+        try {
+            const prompt = `Bạn là dịch giả tiếng Trung chuyên nghiệp. Dịch danh sách các câu tiếng Trung sau sang tiếng Việt tự nhiên, chính xác:
+${JSON.stringify(rawSentences)}
+Trả về DUY NHẤT một mảng JSON các chuỗi dịch tiếng Việt tương ứng: ["bản dịch 1", "bản dịch 2", ...]`;
+
+            const res = await fetchWithTimeout(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { responseMimeType: 'application/json' }
+                    })
+                },
+                12000
+            );
+
+            if (res.ok) {
+                const data = await res.json();
+                const outText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (outText) {
+                    const parsed = JSON.parse(outText);
+                    if (Array.isArray(parsed)) {
+                        rawSentences.forEach((s, idx) => {
+                            translationsMap[idx] = parsed[idx] || '';
+                        });
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Gemini batch translation failed, falling back to basic translation:', e);
+        }
+    }
+
+    // 3. Assemble sentences with Pinyin & Vietnamese
+    for (let i = 0; i < rawSentences.length; i++) {
+        const sentence = rawSentences[i];
+        const pinyin = generatePinyin(sentence);
+        let vietnamese = translationsMap[i] || '';
+
+        // If not translated yet, try matching with vocabulary database
+        if (!vietnamese) {
+            const matchedWords = vocab.filter(v => v.chinese && sentence.includes(v.chinese));
+            if (matchedWords.length > 0) {
+                vietnamese = matchedWords.map(w => w.vietnamese || w.meaning).join('; ');
+            } else {
+                vietnamese = sentence; // fallback to sentence
+            }
+        }
+
+        parsedLines.push({
+            id: i + 1,
+            speaker: type === 'conversation' ? (i % 2 === 0 ? 'A' : 'B') : '',
+            speakerName: type === 'conversation' ? (i % 2 === 0 ? 'A' : 'B') : '',
+            chinese: sentence,
+            pinyin: pinyin,
+            vietnamese: vietnamese
+        });
+    }
+
+    hideLoading();
+
+    const titleZh = (titleEl && titleEl.value.trim()) || rawSentences[0].slice(0, 15) || 'Tư liệu tự nhập';
+    const titlePinyin = generatePinyin(titleZh);
+
+    const newMaterial = {
+        id: 'custom-' + Date.now(),
+        level: level,
+        type: type,
+        category: 'Tự chọn',
+        duration: `${Math.max(1, Math.round(parsedLines.length * 0.25))} phút`,
+        title: titleZh,
+        titlePinyin: titlePinyin,
+        titleViet: translationsMap[0] || titleZh,
+        theme: 'Tư liệu người dùng chuyển thể',
+        lines: parsedLines,
+        isCustom: true
+    };
+
+    hskMaterials.unshift(newMaterial);
+    saveHskCustomMaterials();
+
+    closeHskImportModal();
+    if (textEl) textEl.value = '';
+    if (titleEl) titleEl.value = '';
+
+    openHskMaterial(newMaterial.id);
+    status(`✨ Đã chuyển thể thành công ${parsedLines.length} câu song ngữ!`, 'success');
+};
+
+window.generateHskMaterialWithAI = async function () {
+    const apiKey = localStorage.getItem('gemini-api-key');
+    if (!apiKey) {
+        status('⚠️ Vui lòng nhập Gemini API Key trong mục Cài Đặt để dùng tính năng này!', 'error');
+        return;
+    }
+
+    const levelEl = document.getElementById('hsk-ai-level');
+    const typeEl = document.getElementById('hsk-ai-type');
+    const lengthEl = document.getElementById('hsk-ai-length');
+    const topicEl = document.getElementById('hsk-ai-topic');
+
+    const level = levelEl ? levelEl.value : 'HSK 2';
+    const type = typeEl ? typeEl.value : 'conversation';
+    const lengthVal = lengthEl ? lengthEl.value : 'medium';
+    const topic = (topicEl ? topicEl.value.trim() : '') || 'Đời sống giao tiếp hàng ngày';
+    const sentenceCount = lengthVal === 'short' ? '5-6' : (lengthVal === 'long' ? '10-12' : '7-9');
+
+    showLoading('🤖 AI đang sáng tác bài học...', `Đang tạo nội dung chuẩn ${level} về chủ đề "${topic}"...`);
+
+    const promptText = `Bạn là giáo viên tiếng Trung giàu kinh nghiệm. Hãy tạo một ${type === 'conversation' ? 'đoạn hội thoại tự nhiên giữa 2 nhân vật (A/B)' : 'mẩu chuyện ngắn sinh động'} tiếng Trung trình độ ${level}.
+Chủ đề: ${topic}.
+Số lượng câu: khoảng ${sentenceCount} câu.
+Tất cả từ vựng và ngữ pháp phải hoàn toàn phù hợp với chuẩn ${level}.
+
+YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdown block):
+{
+  "title": "Tiêu đề tiếng Trung chữ Hán",
+  "titlePinyin": "Pinyin có dấu của tiêu đề",
+  "titleViet": "Dịch nghĩa tiếng Việt của tiêu đề",
+  "theme": "${topic}",
+  "lines": [
+    {
+      "speaker": "A",
+      "speakerName": "Nhân vật",
+      "chinese": "Câu tiếng Trung",
+      "pinyin": "Pinyin câu có dấu",
+      "vietnamese": "Dịch tiếng Việt tự nhiên"
+    }
+  ]
+}`;
+
+    try {
+        const response = await fetchWithTimeout(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptText }] }],
+                    generationConfig: {
+                        responseMimeType: 'application/json',
+                        temperature: 0.7
+                    }
+                })
+            },
+            16000
+        );
+
+        hideLoading();
+
+        if (response.ok) {
+            const data = await response.json();
+            const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (textOutput) {
+                const cleaned = textOutput.replace(/```json/gi, '').replace(/```/g, '').trim();
+                const parsed = JSON.parse(cleaned);
+
+                const newMaterial = {
+                    id: 'ai-' + Date.now(),
+                    level: level,
+                    type: type,
+                    category: 'AI Tạo',
+                    duration: `${Math.max(1, Math.round((parsed.lines?.length || 6) * 0.25))} phút`,
+                    title: parsed.title || topic,
+                    titlePinyin: parsed.titlePinyin || '',
+                    titleViet: parsed.titleViet || '',
+                    theme: parsed.theme || topic,
+                    lines: (parsed.lines || []).map((l, i) => ({
+                        id: i + 1,
+                        speaker: l.speaker || '',
+                        speakerName: l.speakerName || '',
+                        chinese: l.chinese || '',
+                        pinyin: l.pinyin || generatePinyin(l.chinese),
+                        vietnamese: l.vietnamese || ''
+                    })),
+                    isCustom: true
+                };
+
+                hskMaterials.unshift(newMaterial);
+                saveHskCustomMaterials();
+
+                closeHskImportModal();
+                if (topicEl) topicEl.value = '';
+
+                openHskMaterial(newMaterial.id);
+                status(`✨ AI đã tạo xong bài học chuẩn ${level}!`, 'success');
+                return;
+            }
+        }
+        throw new Error(`Mã lỗi API: ${response.status}`);
+    } catch (err) {
+        hideLoading();
+        status(`⚠️ Lỗi khi tạo bài bằng AI: ${err.message}`, 'error');
+    }
+};
+
+window.deleteHskCustomMaterial = function (id) {
+    if (!confirm('Bạn có chắc muốn xóa bài học này không?')) return;
+    hskMaterials = hskMaterials.filter(m => String(m.id) !== String(id));
+    saveHskCustomMaterials();
+    closeHskStudio();
+    renderHskCatalog();
+    status('🗑️ Đã xóa bài học!', 'success');
+};
+
 // ==================== INITIALIZATION (OPTIMIZED) ====================
 
 async function init() {
@@ -3939,6 +5696,7 @@ async function init() {
     load();
     loadHideLearnedState();
     loadSavedStories();
+    loadHskMaterials();
     if (vocab.length === 0) {
         vocab = [
             { id: 1, vietnamese: 'xin chào', chinese: '你好', pinyin: 'nǐ hǎo', meaning: 'hello', topic: 'Cơ bản', difficulty: 'easy', learned: false, nextReview: Date.now(), reviewCount: 0 },

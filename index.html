@@ -45,6 +45,7 @@
             <button class="tab" onclick="switchPage('groups')">🔠 Nhóm Từ</button>
             <button class="tab" onclick="switchPage('sentences')">💬 Mẫu Câu</button>
             <button class="tab" onclick="switchPage('stories')">🎭 Truyện & Hội Thoại</button>
+            <button class="tab" id="tab-hsk-hub" onclick="switchPage('hsk-hub')">🎧 Tư Liệu HSK 1-4</button>
             <button class="tab" onclick="switchPage('add')">➕ Thêm Từ</button>
             <button class="tab" onclick="switchPage('config')">⚙️ Cài Đặt</button>
         </div>
@@ -203,11 +204,27 @@
 
                     <div id="target-words-tags" class="target-tags-container"></div>
 
-                    <div style="display:flex; gap:8px; margin-top:8px">
-                        <input type="text" id="target-word-input" class="input-field" list="story-vocab-datalist"
-                            placeholder="➕ Thêm từ vựng vào bài (chọn từ danh sách gợi ý hoặc gõ từ/pinyin/nghĩa)..."
-                            style="margin-bottom:0; flex:1" onchange="addCustomTargetWord(this.value)">
-                        <datalist id="story-vocab-datalist"></datalist>
+                    <!-- Search & Suggest Input Container -->
+                    <div class="target-input-wrapper">
+                        <div class="target-input-row">
+                            <div class="target-input-field-container">
+                                <span class="target-input-icon">🔍</span>
+                                <input type="text" id="target-word-input" class="input-field target-input-field"
+                                    placeholder="Gõ tiếng Trung, Pinyin hoặc nghĩa Tiếng Việt..."
+                                    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                                    oninput="onTargetWordInput(this.value)"
+                                    onfocus="onTargetWordFocus()"
+                                    onkeydown="onTargetWordKeydown(event)">
+                                <button type="button" id="target-word-clear-btn" class="target-input-clear-btn"
+                                    onclick="clearTargetWordInput()" title="Xóa tìm kiếm" style="display:none">✕</button>
+                            </div>
+                            <button type="button" class="btn btn-add-target" id="btn-add-target" onclick="onAddTargetWordSubmit()">
+                                ➕ Thêm
+                            </button>
+                        </div>
+
+                        <!-- Floating Autocomplete Dropdown -->
+                        <div id="target-vocab-dropdown" class="target-vocab-dropdown" style="display:none"></div>
                     </div>
                 </div>
 
@@ -222,16 +239,18 @@
                 </div>
 
                 <!-- AI Options (Visible only when AI tab active) -->
-                <div id="ai-engine-panel" style="display:none; background:#f0f4ff; border:1px solid #c7d2fe; border-radius:12px; padding:16px; margin-top:16px;">
-                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
-                        <label style="font-weight:600; font-size:0.9rem">🔑 Gemini API Key:</label>
-                        <input type="password" id="story-gemini-key" class="input-field" style="margin-bottom:0; flex:1; min-width:240px"
-                            placeholder="Dán Gemini API Key (nhận miễn phí tại aistudio.google.com)...">
-                        <button type="button" class="btn" style="padding:10px 18px" onclick="saveGeminiKeyFromStory()">💾 Lưu Key</button>
+                <div id="ai-engine-panel" class="ai-engine-panel" style="display:none;">
+                    <div class="ai-key-row">
+                        <label class="ai-key-label">🔑 Gemini API Key:</label>
+                        <div class="ai-key-input-group">
+                            <input type="password" id="story-gemini-key" class="input-field"
+                                placeholder="Dán Gemini API Key (aistudio.google.com)...">
+                            <button type="button" class="btn btn-save-key" onclick="saveGeminiKeyFromStory()">💾 Lưu Key</button>
+                        </div>
                     </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap">
-                        <button type="button" class="btn btn-sm" onclick="copyAIPrompt()" style="background:#4f46e5">📋 1-Click Sao Chép Prompt Cho AI</button>
-                        <button type="button" class="btn btn-sm" onclick="toggleImportAIModal()" style="background:#0284c7">📥 Dán Kết Quả Từ ChatGPT / Claude / Gemini</button>
+                    <div class="ai-actions-row">
+                        <button type="button" class="btn btn-sm ai-btn-copy" onclick="copyAIPrompt()">📋 Sao Chép Prompt Cho AI</button>
+                        <button type="button" class="btn btn-sm ai-btn-paste" onclick="toggleImportAIModal()">📥 Dán Kết Quả Từ ChatGPT / Gemini</button>
                     </div>
                 </div>
 
@@ -253,6 +272,74 @@
                     <span id="saved-count-badge" class="sentence-badge" style="background:var(--p)">0 bài</span>
                 </div>
                 <div id="saved-stories-list" class="saved-stories-grid"></div>
+            </div>
+        </div>
+
+        <!-- HSK Materials Hub Page (HSK 1-4 & Jogging Audio Optimizer) -->
+        <div id="hsk-hub" class="page">
+            <div class="hsk-hub-header">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h2 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+                            <span>🎧</span> Kho Tư Liệu HSK 1 - 4 & Luyện Nghe Chạy Bộ
+                        </h2>
+                        <p style="color:var(--g6); font-size:0.92rem; line-height:1.5;">
+                            Tuyển tập truyện & hội thoại phân cấp HSK, chuyển đổi văn bản sang song ngữ Trung - Việt, xử lý giọng đọc từng câu và tối ưu xuất MP3 chạy bộ đồng bộ Google Drive.
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-sm" onclick="openHskImportModal('text')" style="background:#4f46e5;">
+                            ✍️ Dán Văn Bản Mới
+                        </button>
+                        <button type="button" class="btn btn-sm" onclick="openHskImportModal('ai')" style="background:linear-gradient(135deg, #06b6d4, #0284c7);">
+                            🤖 Tạo Bằng AI
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="openConfiguredGDriveFolder()" title="Mở thư mục Google Drive để quản lý file MP3">
+                            ☁️ Google Drive
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Filter & Search Controls -->
+            <div class="hsk-filter-panel">
+                <div class="hsk-level-pills">
+                    <button type="button" class="hsk-pill active" data-level="all" onclick="filterHskMaterials('all')">🌐 Tất cả (1-4)</button>
+                    <button type="button" class="hsk-pill hsk-1" data-level="HSK 1" onclick="filterHskMaterials('HSK 1')">🟢 HSK 1 (Sơ cấp)</button>
+                    <button type="button" class="hsk-pill hsk-2" data-level="HSK 2" onclick="filterHskMaterials('HSK 2')">🔵 HSK 2 (Cơ bản)</button>
+                    <button type="button" class="hsk-pill hsk-3" data-level="HSK 3" onclick="filterHskMaterials('HSK 3')">🟣 HSK 3 (Trung cấp)</button>
+                    <button type="button" class="hsk-pill hsk-4" data-level="HSK 4" onclick="filterHskMaterials('HSK 4')">🟠 HSK 4 (Nâng cao)</button>
+                </div>
+
+                <div class="hsk-search-row">
+                    <div style="position:relative; flex:1;">
+                        <input type="text" id="hsk-search-input" class="input-field" placeholder="🔍 Tìm kiếm tư liệu theo tiêu đề, chữ Hán, Pinyin, dịch Việt..."
+                            style="margin-bottom:0; padding-left:36px;" oninput="onHskSearchInput(this.value)">
+                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--g6); pointer-events:none;">🔍</span>
+                    </div>
+                    <select id="hsk-category-filter" class="select-field" style="max-width:200px; margin-bottom:0;" onchange="onHskCategoryChange(this.value)">
+                        <option value="">📂 Tất cả thể loại</option>
+                        <option value="Hội thoại">💬 Hội thoại giao tiếp</option>
+                        <option value="Truyện ngắn">📖 Mẩu chuyện ngắn</option>
+                        <option value="Đời sống">🍜 Ẩm thực & Đời sống</option>
+                        <option value="Du lịch">✈️ Du lịch & Giao thông</option>
+                        <option value="Công việc">💼 Phỏng vấn & Công việc</option>
+                        <option value="Văn hóa">🏮 Văn hóa & Đời sống</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Active Material Studio (Visible when a material is open) -->
+            <div id="hsk-active-studio" class="hsk-active-studio" style="display:none;"></div>
+
+            <!-- Material Catalog Grid -->
+            <div class="hsk-catalog-section">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <h3 style="font-size:1.1rem; color:var(--g8); display:flex; align-items:center; gap:8px;">
+                        📚 Thư Viện Bài Đọc & Hội Thoại Chuẩn HSK (<span id="hsk-material-count">0</span> bài)
+                    </h3>
+                </div>
+                <div id="hsk-catalog-grid" class="hsk-catalog-grid"></div>
             </div>
         </div>
 
@@ -389,6 +476,19 @@
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:0.85rem; color:#475569;">
                     <div><strong>🍎 Dành cho iPhone / iPad (Safari):</strong> Bấm nút <em>Chia sẻ</em> (icon ô vuông có mũi tên lên) ➔ Chọn <strong>"Thêm vào MH chính" (Add to Home Screen)</strong>.</div>
                     <div style="margin-top:6px"><strong>🤖 Dành cho Android (Chrome):</strong> Bấm menu <strong>⋮</strong> ở góc trên bên phải ➔ Chọn <strong>"Cài đặt ứng dụng"</strong> hoặc <strong>"Thêm vào màn hình chính"</strong>.</div>
+                </div>
+            </div>
+
+            <!-- Google Drive Configuration -->
+            <div class="config-section">
+                <h3>📁 Cấu Hình Google Drive (Lưu Trữ File MP3)</h3>
+                <p style="margin:10px 0; font-size:0.9rem; color:#666;">
+                    Lưu trữ link thư mục Google Drive để 1-click mở thư mục tải lên các file audio MP3 đã ghép của bài học.
+                </p>
+                <input type="text" id="gdrive-folder-url" class="input-field" placeholder="https://drive.google.com/drive/folders/YOUR_FOLDER_ID">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                    <button class="btn" onclick="saveGDriveConfig()">💾 Lưu link Google Drive</button>
+                    <button class="btn btn-outline" onclick="openConfiguredGDriveFolder()">📂 Mở thư mục Drive</button>
                 </div>
             </div>
 
@@ -625,13 +725,30 @@
                 </div>
             </div>
 
-            <!-- Nút tải trọn bộ playlist -->
-            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:16px; margin-bottom:20px;">
+            <!-- Khối Tải File Nối Trọn Bộ Toàn Bài -->
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:16px; margin-bottom:20px; display:flex; flex-direction:column; gap:14px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div>
-                        <div style="font-weight:700; color:var(--g8); font-size:1rem;">📦 Tải File Playlist (.m3u) Toàn Bài</div>
+                        <div style="font-weight:700; color:var(--g8); font-size:1rem;">⚡ Tự Động Nối Thành 1 File MP3 Duy Nhất:</div>
                         <div style="font-size:0.82rem; color:var(--g6); margin-top:2px;">
-                            Phát liên tục câu tiếng Trung + dịch nghĩa tiếng Việt theo đúng bài học.
+                            Tải script 1-Click: tự động tải & ghép tất cả các câu thành đúng 1 file MP3 trọn vẹn (không cần cài app).
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn" onclick="downloadAutoMergeScript('bat')" style="background:linear-gradient(135deg, #4f46e5, #4338ca); font-weight:700; padding:10px 16px; box-shadow:0 3px 10px rgba(79,70,229,0.3)" title="Dành cho máy tính Windows">
+                            💻 Nối MP3 Windows (.bat)
+                        </button>
+                        <button class="btn btn-outline" onclick="downloadAutoMergeScript('sh')" style="padding:10px 14px; font-weight:600;" title="Dành cho Mac OS / Linux">
+                            🍎 Mac / Linux (.sh)
+                        </button>
+                    </div>
+                </div>
+
+                <div style="border-top:1px dashed #cbd5e1; padding-top:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <div style="font-weight:700; color:var(--g8); font-size:0.95rem;">📦 Tải File Playlist (.m3u) Nghe Ngầm:</div>
+                        <div style="font-size:0.82rem; color:var(--g6); margin-top:2px;">
+                            Mở bằng app VLC / Musicolet trên điện thoại để nghe liên tục toàn bài trong nền khi tắt màn hình.
                         </div>
                     </div>
                     <button class="btn" onclick="downloadStoryPlaylistM3U()" style="background:linear-gradient(135deg, #10b981, #059669); font-weight:700; padding:10px 18px; box-shadow:0 3px 10px rgba(16,185,129,0.3)">
@@ -650,6 +767,90 @@
 
             <div style="margin-top:20px; text-align:right;">
                 <button class="btn btn-outline" onclick="closeAudioDownloadModal()" style="padding:8px 20px;">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HSK Text Import & AI Generator Modal -->
+    <div id="hsk-import-modal" class="modal">
+        <div class="modal-content" style="max-width: 680px; max-height: 90vh; overflow-y: auto; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 2px solid var(--g2); padding-bottom: 12px;">
+                <h3 id="hsk-modal-title" style="margin:0; color:var(--g8); font-size:1.25rem;">✍️ Dán Văn Bản Tiếng Trung Để Tự Động Chuyển Thể</h3>
+                <button class="action-btn" onclick="closeHskImportModal()" style="font-size:1.2rem; width:36px; height:36px;">✕</button>
+            </div>
+
+            <div class="hsk-modal-tabs">
+                <button type="button" class="hsk-m-tab active" id="btn-mtab-text" onclick="switchHskModalTab('text')">📄 Dán Đoạn Văn / Hội Thoại</button>
+                <button type="button" class="hsk-m-tab" id="btn-mtab-ai" onclick="switchHskModalTab('ai')">🤖 AI Tự Soạn Theo Yêu Cầu</button>
+            </div>
+
+            <!-- Tab 1: Text to Bilingual -->
+            <div id="hsk-mtab-panel-text">
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g8);">Tiêu đề bài học (tùy chọn):</label>
+                <input type="text" id="hsk-import-title" class="input-field" placeholder="Ví dụ: 在咖啡馆喝咖啡 (Tại quán cà phê)...">
+
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g8);">Trình độ & Thể loại mục tiêu:</label>
+                <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+                    <select id="hsk-import-level" class="select-field" style="flex:1; min-width:140px;">
+                        <option value="HSK 1">HSK 1 (Sơ cấp 150 từ)</option>
+                        <option value="HSK 2" selected>HSK 2 (Cơ bản 300 từ)</option>
+                        <option value="HSK 3">HSK 3 (Trung cấp 600 từ)</option>
+                        <option value="HSK 4">HSK 4 (Nâng cao 1200 từ)</option>
+                    </select>
+                    <select id="hsk-import-type" class="select-field" style="flex:1; min-width:140px;">
+                        <option value="conversation">💬 Đoạn Hội thoại</option>
+                        <option value="story">📖 Mẩu Truyện ngắn</option>
+                    </select>
+                </div>
+
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g8);">Nội dung tiếng Trung (Chữ Hán):</label>
+                <textarea id="hsk-import-text" class="input-field" rows="6" style="resize:vertical; font-size:1rem; line-height:1.5;"
+                    placeholder="Dán bài văn hoặc đoạn hội thoại chữ Hán vào đây. App sẽ tự động tách câu, tạo Pinyin có dấu và dịch nghĩa tiếng Việt từng câu..."></textarea>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+                    <button type="button" class="btn btn-outline" onclick="closeHskImportModal()">Hủy</button>
+                    <button type="button" class="btn" onclick="processCustomHskText()" style="background:linear-gradient(135deg, #4f46e5, #4338ca);">
+                        ⚡ Chuyển Thể Thành Song Ngữ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 2: AI Prompt Generator -->
+            <div id="hsk-mtab-panel-ai" style="display:none;">
+                <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; padding:12px; margin-bottom:14px; font-size:0.88rem; color:#3730a3;">
+                    💡 Gemini AI sẽ tự động sáng tác bài hội thoại hoặc câu chuyện chuẩn theo đúng cấp độ HSK bạn chọn, kèm dịch nghĩa và giọng đọc tối ưu cho chạy bộ.
+                </div>
+
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g8);">Cấp độ HSK:</label>
+                <select id="hsk-ai-level" class="select-field" style="margin-bottom:12px;">
+                    <option value="HSK 1">HSK 1 (Từ vựng cơ bản, câu đơn giản)</option>
+                    <option value="HSK 2" selected>HSK 2 (Giao tiếp thường ngày, du lịch)</option>
+                    <option value="HSK 3">HSK 3 (Trung cấp, phỏng vấn, công việc)</option>
+                    <option value="HSK 4">HSK 4 (Thảo luận kinh doanh, đời sống, xã hội)</option>
+                </select>
+
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g8);">Thể loại & Độ dài:</label>
+                <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+                    <select id="hsk-ai-type" class="select-field" style="flex:1; min-width:140px;">
+                        <option value="conversation">💬 Hội thoại 2 nhân vật (A/B)</option>
+                        <option value="story">📖 Mẩu truyện ngắn</option>
+                    </select>
+                    <select id="hsk-ai-length" class="select-field" style="flex:1; min-width:140px;">
+                        <option value="short">Ngắn (5 - 6 câu)</option>
+                        <option value="medium" selected>Vừa (7 - 9 câu)</option>
+                        <option value="long">Dài (10 - 14 câu)</option>
+                    </select>
+                </div>
+
+                <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g8);">Chủ đề / Tình huống mong muốn:</label>
+                <input type="text" id="hsk-ai-topic" class="input-field" placeholder="Ví dụ: Gọi trà sữa trân châu, Hỏi đường đến ga tàu, Mua vé xem phim...">
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+                    <button type="button" class="btn btn-outline" onclick="closeHskImportModal()">Hủy</button>
+                    <button type="button" class="btn" onclick="generateHskMaterialWithAI()" style="background:linear-gradient(135deg, #0284c7, #0369a1);">
+                        ✨ Sinh Bài HSK Bằng AI
+                    </button>
+                </div>
             </div>
         </div>
     </div>
