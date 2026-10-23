@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chinese-app-pwa-v4';
+const CACHE_NAME = 'chinese-app-pwa-v5';
 
 const STATIC_ASSETS = [
     './',
@@ -18,7 +18,7 @@ const STATIC_ASSETS = [
 
 // 1. Install Event: Cache Core Assets
 self.addEventListener('install', (event) => {
-    console.log('[SW] Cài đặt Service Worker, bắt đầu cache tài nguyên cốt lõi...');
+    console.log('[SW] Cài đặt Service Worker v5, bắt đầu cache tài nguyên cốt lõi...');
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
@@ -31,9 +31,9 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// 2. Activate Event: Clean up outdated caches
+// 2. Activate Event: Clean up outdated caches immediately
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Service Worker kích hoạt, dọn dẹp cache cũ...');
+    console.log('[SW] Service Worker v5 kích hoạt, dọn dẹp cache cũ...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -48,7 +48,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// 3. Fetch Event: Offline-first with network fallback and dynamic caching
+// 3. Fetch Event: Network-First for app code, offline fallback
 self.addEventListener('fetch', (event) => {
     const request = event.request;
     const url = new URL(request.url);
@@ -88,25 +88,42 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Đối với tài nguyên cùng nguồn (local static assets)
+    // Network-First cho core code (app.js, index.html, styles.css, config.json) để đảm bảo cập nhật tức thì
+    const isCoreAppAsset = (
+        url.pathname.endsWith('app.js') ||
+        url.pathname.endsWith('index.html') ||
+        url.pathname.endsWith('styles.css') ||
+        url.pathname.endsWith('config.json') ||
+        url.pathname.endsWith('stories.json') ||
+        url.pathname === '/' ||
+        url.pathname.endsWith('/')
+    );
+
+    if (isCoreAppAsset) {
+        event.respondWith(
+            fetch(request).then((networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const copy = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+                }
+                return networkResponse;
+            }).catch(() => {
+                return caches.match(request).then((cached) => {
+                    if (cached) return cached;
+                    if (request.mode === 'navigate') return caches.match('./index.html');
+                    return new Response('Offline', { status: 503 });
+                });
+            })
+        );
+        return;
+    }
+
+    // Đối với các static asset khác (hình ảnh, thư viện tĩnh pinyin-pro, hanzi-writer)
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {
-                // Trả về cache ngay lập tức cho tốc độ tối đa offline
-                // Đồng thời fetch ngầm để cập nhật phiên bản mới (Stale-While-Revalidate)
-                fetch(request).then((networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200) {
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(request, networkResponse);
-                        });
-                    }
-                }).catch(() => {
-                    // Offline - bỏ qua fetch ngầm
-                });
                 return cachedResponse;
             }
-
-            // Nếu chưa có trong cache, tải từ network và lưu vào cache
             return fetch(request).then((networkResponse) => {
                 if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
                     return networkResponse;
@@ -117,7 +134,6 @@ self.addEventListener('fetch', (event) => {
                 });
                 return networkResponse;
             }).catch(() => {
-                // Nếu offline và là điều hướng trang, fallback về index.html
                 if (request.mode === 'navigate') {
                     return caches.match('./index.html');
                 }

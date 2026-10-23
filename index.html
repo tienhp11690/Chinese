@@ -934,13 +934,16 @@
     <!-- Status Toast -->
     <div class="status" id="status"></div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=20261023b"></script>
     <script>
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then((reg) => console.log('✅ PWA Service Worker registered:', reg.scope))
+                navigator.serviceWorker.register('./sw.js?v=20261023b')
+                    .then((reg) => {
+                        console.log('✅ PWA Service Worker registered:', reg.scope);
+                        reg.update();
+                    })
                     .catch((err) => console.warn('⚠️ PWA Service Worker registration failed:', err));
             });
         }
