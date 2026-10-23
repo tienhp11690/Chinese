@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chinese-app-pwa-v5';
+const CACHE_NAME = 'chinese-app-pwa-v6';
 
 const STATIC_ASSETS = [
     './',

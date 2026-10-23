@@ -1487,8 +1487,17 @@ window.saveGeminiKeyFromStory = function () {
 // ==================== GEMINI API ENGINE (MULTI-MODEL AUTO-FALLBACK) ====================
 
 async function requestGeminiContent(apiKey, bodyObj, timeoutMs = 16000) {
-    // Google Generative Language models in priority order (gemini-3.8-flash is latest, with fallbacks)
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    // Google Generative Language models in priority order:
+    // 1. gemini-3.5-flash: high availability, fast, fully operational
+    // 2. gemini-3-flash-preview: excellent preview alternative
+    // 3. gemini-3.8-flash: latest generation
+    // 4. gemini-flash-latest: dynamic pointer to latest flash
+    const modelsToTry = [
+        'gemini-3.5-flash',
+        'gemini-3-flash-preview',
+        'gemini-3.8-flash',
+        'gemini-flash-latest'
+    ];
     let lastError = null;
 
     for (const model of modelsToTry) {
@@ -1513,8 +1522,9 @@ async function requestGeminiContent(apiKey, bodyObj, timeoutMs = 16000) {
                 return { ok: true, text: text.trim(), data, model };
             }
 
-            if (res.status === 404) {
-                console.warn(`Gemini model "${model}" returned 404 (retired/not available), trying next model...`);
+            // Fallback immediately on 404 (model retired), 503 (model overloaded/spikes), or 429 (rate limit)
+            if (res.status === 404 || res.status === 503 || res.status === 429 || res.status === 500) {
+                console.warn(`Gemini model "${model}" trả về HTTP ${res.status} (tạm thời bận/không khả dụng), đang tự động chuyển sang model tiếp theo...`);
                 continue;
             }
 
@@ -1522,11 +1532,12 @@ async function requestGeminiContent(apiKey, bodyObj, timeoutMs = 16000) {
             lastError = new Error(errData.error?.message || `Mã lỗi HTTP ${res.status}`);
             break;
         } catch (e) {
+            console.warn(`Lỗi khi gọi model "${model}":`, e.message);
             lastError = e;
         }
     }
 
-    throw lastError || new Error('Không thể kết nối đến Gemini API (Mô hình không tồn tại hoặc lỗi 404)');
+    throw lastError || new Error('Không thể kết nối đến Gemini API (Tất cả mô hình đều bận hoặc lỗi mạng)');
 }
 
 window.testGeminiApiKey = async function () {
