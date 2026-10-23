@@ -29,6 +29,8 @@ const DEFAULT_CONFIG = {
     "githubRepo": "tienhp11690/Chinese",
     "githubFile": "vocab.json",
     "vocabJsonUrl": "https://raw.githubusercontent.com/tienhp11690/Chinese/main/vocab.json",
+    "githubStoriesFile": "stories.json",
+    "storiesJsonUrl": "https://raw.githubusercontent.com/tienhp11690/Chinese/main/stories.json",
     "syncStrategy": "sheets-first"
 };
 
@@ -50,7 +52,7 @@ function removeAccents(str) {
 
 function applyConfigFromData(configData, force = false) {
     if (!configData) return;
-    const keys = ['sheets-url', 'sheets-sentences-gid', 'github-token', 'github-repo', 'github-file', 'vocab-json-url', 'sync-strategy', 'gdrive-folder-url'];
+    const keys = ['sheets-url', 'sheets-sentences-gid', 'github-token', 'github-repo', 'github-file', 'vocab-json-url', 'github-stories-file', 'stories-json-url', 'sync-strategy', 'gdrive-folder-url'];
     let applied = false;
 
     keys.forEach(key => {
@@ -1427,6 +1429,7 @@ function updateConfig() {
         'github-repo': 'github-repo',
         'github-file': 'github-file',
         'vocab-json-url': 'vocab-json-url',
+        'github-stories-file': 'github-stories-file',
         'sync-strategy': 'sync-strategy',
         'gemini-api-key': 'gemini-api-key',
         'gdrive-folder-url': 'gdrive-folder-url'
@@ -1434,7 +1437,7 @@ function updateConfig() {
 
     Object.entries(fields).forEach(([id, key]) => {
         const el = document.getElementById(id);
-        if (el) el.value = localStorage.getItem(key) || (id === 'github-file' ? 'data/vocab.json' : '');
+        if (el) el.value = localStorage.getItem(key) || (id === 'github-file' ? 'data/vocab.json' : (id === 'github-stories-file' ? 'stories.json' : ''));
     });
 
     const lastSyncEl = document.getElementById('last-sync-time');
@@ -1527,8 +1530,11 @@ window.saveSyncStrategy = function () {
 };
 
 window.saveGitHubConfig = function () {
-    const keys = ['github-token', 'github-repo', 'github-file', 'vocab-json-url'];
-    keys.forEach(key => localStorage.setItem(key, document.getElementById(key).value.trim()));
+    const keys = ['github-token', 'github-repo', 'github-file', 'vocab-json-url', 'github-stories-file'];
+    keys.forEach(key => {
+        const el = document.getElementById(key);
+        if (el) localStorage.setItem(key, el.value.trim());
+    });
     status('💾 Đã lưu GitHub config!', 'success');
 };
 
@@ -2070,12 +2076,9 @@ async function fetchWordDefinition(chinese) {
 function segmentChineseSentence(sentence, targetWordsSet = new Set()) {
     if (!sentence) return [];
 
-    // All known terms from vocab + targetWords + dict
-    const dictTerms = new Set([
-        ...vocab.map(v => v.chinese),
-        ...targetWordsSet,
-        ...Object.keys(BUILTIN_CHINESE_DICT)
-    ]);
+    // Lookup sets and maps for vocabulary and dictionary
+    const vocabTermsSet = new Set(vocab.map(v => v.chinese).filter(Boolean));
+    const targetSet = targetWordsSet instanceof Set ? targetWordsSet : new Set(targetWordsSet);
 
     // Use Intl.Segmenter if supported
     let intlTokens = null;
@@ -2104,24 +2107,60 @@ function segmentChineseSentence(sentence, targetWordsSet = new Set()) {
             continue;
         }
 
-        // 2. Try Longest Matching from length 6 down to 2 in dictTerms
-        let matched = '';
-        const maxLen = Math.min(6, len - i);
-        for (let l = maxLen; l >= 2; l--) {
+        // 2. Target Words Priority Match (longest match down to 1)
+        let matchedTarget = '';
+        const maxLen = Math.min(8, len - i);
+        for (let l = maxLen; l >= 1; l--) {
             const sub = sentence.slice(i, i + l);
-            if (dictTerms.has(sub)) {
-                matched = sub;
+            if (targetSet.has(sub)) {
+                matchedTarget = sub;
                 break;
             }
         }
-
-        if (matched) {
-            tokens.push({ text: matched, isPunct: false });
-            i += matched.length;
+        if (matchedTarget) {
+            tokens.push({ text: matchedTarget, isPunct: false });
+            i += matchedTarget.length;
             continue;
         }
 
-        // 3. Check Intl.Segmenter candidate word
+        // 3. User Vocab List Match (multi-character words: length 6 down to 2)
+        let matchedVocab = '';
+        for (let l = Math.min(6, len - i); l >= 2; l--) {
+            const sub = sentence.slice(i, i + l);
+            if (vocabTermsSet.has(sub)) {
+                matchedVocab = sub;
+                break;
+            }
+        }
+        if (matchedVocab) {
+            tokens.push({ text: matchedVocab, isPunct: false });
+            i += matchedVocab.length;
+            continue;
+        }
+
+        // 4. Built-in Dictionary Terms Match (length 6 down to 2)
+        let matchedDict = '';
+        for (let l = Math.min(6, len - i); l >= 2; l--) {
+            const sub = sentence.slice(i, i + l);
+            if (BUILTIN_CHINESE_DICT && BUILTIN_CHINESE_DICT[sub]) {
+                matchedDict = sub;
+                break;
+            }
+        }
+        if (matchedDict) {
+            tokens.push({ text: matchedDict, isPunct: false });
+            i += matchedDict.length;
+            continue;
+        }
+
+        // 5. Single Character in User Vocab List
+        if (vocabTermsSet.has(char)) {
+            tokens.push({ text: char, isPunct: false });
+            i++;
+            continue;
+        }
+
+        // 6. Intl.Segmenter candidate word (length >= 2)
         if (intlTokens) {
             const rem = sentence.slice(i);
             const intlMatch = intlTokens.find(t => rem.startsWith(t) && /[\u4e00-\u9fa5]/.test(t) && t.length >= 2);
@@ -2132,7 +2171,7 @@ function segmentChineseSentence(sentence, targetWordsSet = new Set()) {
             }
         }
 
-        // 4. Default: single character
+        // 7. Default: single character
         tokens.push({ text: char, isPunct: false });
         i++;
     }
@@ -2144,6 +2183,12 @@ function renderInteractiveSentence(sentence, targetWordsSet = new Set(), isQuiz 
     if (!sentence) return '';
 
     const tokens = segmentChineseSentence(sentence, targetWordsSet);
+
+    // Build vocab lookup map for instant O(1) matching
+    const vocabMap = new Map();
+    vocab.forEach(v => {
+        if (v && v.chinese) vocabMap.set(v.chinese, v);
+    });
 
     return tokens.map(token => {
         if (token.isPunct) {
@@ -2163,22 +2208,36 @@ function renderInteractiveSentence(sentence, targetWordsSet = new Set(), isQuiz 
 
         if (targetWordsSet.has(w)) {
             classType = 'target-word';
-            titleHint = '🎯 Từ mục tiêu ôn tập (chạm để xem chi tiết)';
-        } else {
-            const vWord = vocab.find(v => v.chinese === w);
-            if (vWord) {
-                classType = 'known-word' + (vWord.learned ? ' learned-word' : '');
-                titleHint = vWord.learned ? '✅ Đã thuộc trong thư viện' : '📚 Đã có trong thư viện';
+            titleHint = `🎯 Từ mục tiêu ôn tập: ${escapeHtml(w)}`;
+        } else if (vocabMap.has(w)) {
+            const vWord = vocabMap.get(w);
+            if (vWord.learned) {
+                classType = 'known-word learned-word';
+                titleHint = `✅ Có trong danh sách (Đã thuộc): ${escapeHtml(w)} (${vWord.pinyin || ''}) - ${escapeHtml(vWord.vietnamese || vWord.meaning || '')}`;
             } else {
-                // NEW WORD OUTSIDE VOCAB!
-                classType = 'new-word';
-                titleHint = '✨ Từ mới ngoài thư viện (chạm để xem nghĩa & thêm)';
+                classType = 'known-word unlearned-word';
+                titleHint = `📚 Có trong danh sách (Chưa thuộc): ${escapeHtml(w)} (${vWord.pinyin || ''}) - ${escapeHtml(vWord.vietnamese || vWord.meaning || '')}`;
             }
+        } else {
+            // NEW WORD OUTSIDE VOCAB!
+            classType = 'new-word';
+            titleHint = `✨ Từ mới ngoài danh sách: ${escapeHtml(w)} (chạm để tra nghĩa & lưu)`;
         }
 
         return `<span class="story-word ${classType}" onclick="showWordDetail('${escapeQuotes(w)}')" title="${titleHint}">${escapeHtml(w)}</span>`;
     }).join('');
 }
+
+window.setInspirationPrompt = function (text) {
+    const el = document.getElementById('story-custom-prompt');
+    if (el) {
+        el.value = text;
+        el.focus();
+    }
+    // Switch to AI tab if not active
+    switchEngine('ai');
+    status(`💡 Đã chọn chủ đề cảm hứng: "${text}"`, 'success');
+};
 
 let currentStoryType = 'conversation'; // 'conversation' | 'story'
 let currentEngine = 'builtin'; // 'builtin' | 'ai'
@@ -2780,22 +2839,30 @@ window.updateStoryVocabDatalist = function () {
 };
 
 window.triggerStoryGeneration = function () {
+    const promptInput = document.getElementById('story-custom-prompt');
+    const customPrompt = promptInput ? promptInput.value.trim() : '';
+
     if (targetStoryWords.length === 0) {
-        status('⚠️ Vui lòng chọn ít nhất 1-2 từ vựng mục tiêu!', 'error');
-        return;
+        if (vocab.length > 0) {
+            randomizeTargetWords();
+            status('🎲 Đã tự động chọn từ vựng trong danh sách để kết hợp với chủ đề!', 'info');
+        } else {
+            status('⚠️ Chưa có từ vựng trong thư viện! Vui lòng thêm từ vựng trước.', 'error');
+            return;
+        }
     }
 
     const lengthSelect = document.getElementById('story-length');
     const lengthVal = lengthSelect ? lengthSelect.value : 'medium';
 
     if (currentEngine === 'ai') {
-        generateGeminiStory(currentStoryType, targetStoryWords, lengthVal);
+        generateGeminiStory(currentStoryType, targetStoryWords, lengthVal, customPrompt);
     } else {
-        generateSmartStory(currentStoryType, targetStoryWords, lengthVal);
+        generateSmartStory(currentStoryType, targetStoryWords, lengthVal, customPrompt);
     }
 };
 
-function generateSmartStory(type, words, lengthVal) {
+function generateSmartStory(type, words, lengthVal, customPrompt = '') {
     showLoading('Đang sáng tác bài học...', 'Đang kết hợp ngữ cảnh và từ vựng...');
 
     setTimeout(() => {
@@ -2804,10 +2871,10 @@ function generateSmartStory(type, words, lengthVal) {
             const targetChineseList = words.map(w => w.chinese);
             const targetMeanings = words.map(w => (w.vietnamese || w.meaning || '')).join(' ');
 
-            let theme = 'Giao tiếp sinh hoạt hàng ngày';
+            let theme = customPrompt || 'Giao tiếp sinh hoạt hàng ngày';
             let titleChinese = '日常生活';
             let titlePinyin = 'rì cháng shēng huó';
-            let titleViet = 'Cuộc Sống Hàng Ngày';
+            let titleViet = customPrompt ? customPrompt.slice(0, 35) : 'Cuộc Sống Hàng Ngày';
 
             if (/cà phê|trà|uống|ăn|ngon|quán/i.test(targetMeanings) || targetChineseList.some(c => /咖啡|茶|喝|吃|水|饭/.test(c))) {
                 theme = 'Gặp gỡ ở quán nước & ẩm thực';
@@ -3011,14 +3078,22 @@ function generateSmartStory(type, words, lengthVal) {
                 titleViet: titleViet,
                 type: type,
                 theme: theme,
+                prompt: customPrompt || '',
                 createdAt: new Date().toLocaleString('vi-VN'),
                 targetWords: words,
-                lines: lines
+                lines: lines,
+                source: 'smart',
+                syncedGithub: false
             };
 
             hideLoading();
             renderCurrentStory();
             status(`✨ Đã tạo thành công ${isConv ? 'đoạn hội thoại' : 'mẩu chuyện'} ôn tập!`, 'success');
+
+            const autoSyncEl = document.getElementById('story-auto-github-sync');
+            if (autoSyncEl && autoSyncEl.checked) {
+                pushStoryToGitHubDb(currentStory, true);
+            }
         } catch (err) {
             hideLoading();
             console.error('Error generating smart story:', err);
@@ -3027,30 +3102,51 @@ function generateSmartStory(type, words, lengthVal) {
     }, 350);
 }
 
-window.generateGeminiStory = async function (type, words, lengthVal) {
+window.generateGeminiStory = async function (type, words, lengthVal, customPrompt = '') {
+    const promptInput = document.getElementById('story-custom-prompt');
+    if (!customPrompt && promptInput) customPrompt = promptInput.value.trim();
+
     const apiKey = localStorage.getItem('gemini-api-key');
     if (!apiKey) {
         status('⚠️ Chưa nhập Gemini API Key. Đang tạo bằng Trình tạo thông minh...', 'warning');
-        generateSmartStory(type, words, lengthVal);
+        generateSmartStory(type, words, lengthVal, customPrompt);
         return;
     }
 
     const lengthCount = lengthVal === 'short' ? '4-5' : (lengthVal === 'long' ? '9-12' : '6-8');
     const wordListStr = words.map(w => `${w.chinese} (${w.pinyin || ''} - ${w.vietnamese || w.meaning || ''})`).join(', ');
 
-    showLoading('🤖 AI đang sáng tác bài học...', 'Đang kết hợp ngữ cảnh và từ vựng...');
+    // Check if user wants to weave in existing vocabulary from library
+    const weaveVocabChecked = document.getElementById('story-weave-vocab')?.checked !== false;
+    let extraVocabPrompt = '';
+    if (weaveVocabChecked && vocab.length > 0) {
+        const targetSet = new Set(words.map(w => w.chinese));
+        const additionalVocab = vocab.filter(v => !targetSet.has(v.chinese))
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 8);
+        if (additionalVocab.length > 0) {
+            extraVocabPrompt = `\nNgoài ra, người học đã có các từ vựng sau trong thư viện: ${additionalVocab.map(w => `${w.chinese} (${w.vietnamese || w.meaning || ''})`).join(', ')}. Hãy ưu tiên lồng ghép tự nhiên các từ này vào câu nếu phù hợp ngữ cảnh để người học ôn lại.`;
+        }
+    }
 
-    const promptText = `Bạn là giáo viên tiếng Trung. Tạo một ${type === 'conversation' ? 'đoạn hội thoại tự nhiên giữa 2 nhân vật (A: 小明, B: 小华)' : 'mẩu chuyện ngắn sinh động'} tiếng Trung trình độ HSK 1-3.
-Từ vựng mục tiêu cần đưa vào bài: ${wordListStr}.
+    const topicDirective = customPrompt 
+        ? `CHỦ ĐỀ & CẢM HỨNG CỤ THỂ TỪ NGƯỜI DÙNG: "${customPrompt}". Hãy phát triển tình huống, nội dung và lời thoại sát theo chủ đề cảm hứng này.`
+        : `Chủ đề bài học: Tình huống giao tiếp thực tế đời sống hàng ngày sinh động.`;
+
+    showLoading('🤖 AI đang sáng tác bài học...', 'Đang kết hợp cảm hứng, ngữ cảnh và từ vựng...');
+
+    const promptText = `Bạn là giáo viên tiếng Trung dạy học sinh người Việt. Tạo một ${type === 'conversation' ? 'đoạn hội thoại tự nhiên, giàu tính ứng dụng giữa 2 nhân vật (A: 小明, B: 小华)' : 'mẩu chuyện ngắn sinh động, lôi cuốn'} tiếng Trung trình độ HSK 1-3.
+${topicDirective}
+Từ vựng mục tiêu bắt buộc xuất hiện trong bài: ${wordListStr}.${extraVocabPrompt}
 Độ dài: khoảng ${lengthCount} câu.
 
-YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdown code fence):
+YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdown code fence hay giải thích):
 {
-  "title": "Tiêu đề tiếng Trung",
+  "title": "Tiêu đề tiếng Trung hấp dẫn",
   "titlePinyin": "Pinyin tiêu đề có dấu",
   "titleViet": "Dịch tiếng Việt tiêu đề",
   "type": "${type}",
-  "theme": "Chủ đề bài học ngắn gọn",
+  "theme": "${customPrompt ? customPrompt.slice(0, 40) : 'Chủ đề bài học ngắn gọn'}",
   "lines": [
     {
       "speaker": "A",
@@ -3091,9 +3187,17 @@ YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdow
                 parsed.id = Date.now();
                 parsed.createdAt = new Date().toLocaleString('vi-VN');
                 parsed.targetWords = words;
+                parsed.prompt = customPrompt || '';
+                parsed.source = 'gemini';
+                parsed.syncedGithub = false;
                 currentStory = parsed;
                 renderCurrentStory();
-                status('✅ AI đã tạo thành công bài ôn tập!', 'success');
+                status('✅ AI đã tạo thành công bài học theo cảm hứng của bạn!', 'success');
+
+                const autoSyncEl = document.getElementById('story-auto-github-sync');
+                if (autoSyncEl && autoSyncEl.checked) {
+                    pushStoryToGitHubDb(currentStory, true);
+                }
                 return;
             }
         }
@@ -3102,7 +3206,7 @@ YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdow
         hideLoading();
         console.warn('Gemini AI generation failed, falling back to smart built-in:', err);
         status(`⚠️ Lỗi AI (${err.message}). Chuyển sang Trình tạo thông minh!`, 'warning');
-        generateSmartStory(type, words, lengthVal);
+        generateSmartStory(type, words, lengthVal, customPrompt);
     }
 };
 
@@ -3115,8 +3219,28 @@ window.copyAIPrompt = function () {
     const lengthCount = lengthVal === 'short' ? '4-5' : (lengthVal === 'long' ? '9-12' : '6-8');
     const wordListStr = targetStoryWords.map(w => `${w.chinese} (${w.pinyin || ''} - ${w.vietnamese || w.meaning || ''})`).join(', ');
 
+    const promptInput = document.getElementById('story-custom-prompt');
+    const customPrompt = promptInput ? promptInput.value.trim() : '';
+
+    const weaveVocabChecked = document.getElementById('story-weave-vocab')?.checked !== false;
+    let extraVocabPrompt = '';
+    if (weaveVocabChecked && vocab.length > 0) {
+        const targetSet = new Set(targetStoryWords.map(w => w.chinese));
+        const additionalVocab = vocab.filter(v => !targetSet.has(v.chinese))
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 8);
+        if (additionalVocab.length > 0) {
+            extraVocabPrompt = `\nNgoài ra lồng ghép tự nhiên các từ người học đã biết trong thư viện nếu tiện: ${additionalVocab.map(w => `${w.chinese} (${w.vietnamese || w.meaning || ''})`).join(', ')}.`;
+        }
+    }
+
+    const topicDirective = customPrompt 
+        ? `Chủ đề & cảm hứng từ người học: "${customPrompt}". Hãy phát triển câu chuyện theo sát chủ đề này.`
+        : `Chủ đề: Tình huống đời sống hàng ngày sinh động.`;
+
     const promptText = `Bạn là một giáo viên dạy tiếng Trung. Hãy tạo một ${currentStoryType === 'conversation' ? 'đoạn hội thoại tự nhiên giữa 2 nhân vật (A: 小明, B: 小华)' : 'mẩu chuyện ngắn sinh động'} tiếng Trung trình độ HSK 1-3 để ôn tập các từ vựng sau:
-Từ vựng mục tiêu: ${wordListStr}
+${topicDirective}
+Từ vựng mục tiêu: ${wordListStr}${extraVocabPrompt}
 Độ dài: khoảng ${lengthCount} câu.
 
 Vui lòng trả về DUY NHẤT một chuỗi JSON theo cấu trúc sau (không kèm giải thích bên ngoài):
@@ -3125,7 +3249,7 @@ Vui lòng trả về DUY NHẤT một chuỗi JSON theo cấu trúc sau (không 
   "titlePinyin": "Pinyin tiêu đề có dấu",
   "titleViet": "Nghĩa tiếng Việt tiêu đề",
   "type": "${currentStoryType}",
-  "theme": "Chủ đề ngắn gọn",
+  "theme": "${customPrompt ? customPrompt.slice(0, 40) : 'Chủ đề ngắn gọn'}",
   "lines": [
     {
       "speaker": "A",
@@ -3139,7 +3263,7 @@ Vui lòng trả về DUY NHẤT một chuỗi JSON theo cấu trúc sau (không 
 }`;
 
     navigator.clipboard.writeText(promptText).then(() => {
-        status('📋 Đã sao chép Prompt! Dán vào ChatGPT/Gemini rồi bấm "Dán Kết Quả" nhé!', 'success');
+        status('📋 Đã sao chép Prompt kèm chủ đề cảm hứng! Dán vào ChatGPT/Gemini rồi bấm "Dán Kết Quả" nhé!', 'success');
     }).catch(() => {
         status('⚠️ Không thể tự động sao chép, hãy cấp quyền clipboard cho trình duyệt', 'error');
     });
@@ -3178,10 +3302,16 @@ window.applyImportedAIContent = function () {
             throw new Error('Dữ liệu JSON không chứa danh sách các câu (lines)!');
         }
 
+        const promptInput = document.getElementById('story-custom-prompt');
+        const customPrompt = promptInput ? promptInput.value.trim() : '';
+
         data.id = Date.now();
         data.createdAt = new Date().toLocaleString('vi-VN');
         data.type = data.type || currentStoryType;
         data.targetWords = targetStoryWords.length > 0 ? targetStoryWords : [];
+        if (customPrompt && !data.prompt) data.prompt = customPrompt;
+        data.source = 'imported-ai';
+        data.syncedGithub = false;
 
         data.lines.forEach((l, idx) => {
             if (!l.pinyin && l.chinese) l.pinyin = generatePinyin(l.chinese);
@@ -3193,6 +3323,11 @@ window.applyImportedAIContent = function () {
         toggleImportAIModal();
         renderCurrentStory();
         status('✨ Đã tải và hiển thị bài học thành công!', 'success');
+
+        const autoSyncEl = document.getElementById('story-auto-github-sync');
+        if (autoSyncEl && autoSyncEl.checked) {
+            pushStoryToGitHubDb(currentStory, true);
+        }
     } catch (e) {
         status(`❌ Lỗi định dạng JSON: ${e.message}`, 'error');
     }
@@ -3257,18 +3392,18 @@ window.renderCurrentStory = function () {
         }
     }).join('');
 
-    // Vocab breakdown cards
+    // Target Vocab breakdown cards
     const vocabBreakdownHtml = targetWordsList.map(w => {
         return `
             <div class="vocab-breakdown-item">
                 <div>
-                    <div style="font-size:1.2rem; font-weight:700; color:var(--g8)">${w.chinese}</div>
-                    <div style="font-size:0.85rem; color:var(--p); font-style:italic">${w.pinyin || ''}</div>
-                    <div style="font-size:0.9rem; color:var(--g6)">${w.vietnamese || w.meaning || ''}</div>
+                    <div style="font-size:1.2rem; font-weight:700; color:var(--g8)">${escapeHtml(w.chinese)}</div>
+                    <div style="font-size:0.85rem; color:var(--p); font-style:italic">${escapeHtml(w.pinyin || '')}</div>
+                    <div style="font-size:0.9rem; color:var(--g6)">${escapeHtml(w.vietnamese || w.meaning || '')}</div>
                 </div>
                 <div style="display:flex; gap:6px">
-                    <button class="action-btn" style="width:34px; height:34px; font-size:1rem" onclick="speak('${w.chinese.replace(/'/g, "\\'")}')" title="Phát âm">🔊</button>
-                    <button class="action-btn" style="width:34px; height:34px; font-size:1rem" onclick="showStrokeOrder('${w.chinese.replace(/'/g, "\\'")}')" title="Tập viết nét">✍️</button>
+                    <button class="action-btn" style="width:34px; height:34px; font-size:1rem" onclick="speak('${escapeQuotes(w.chinese)}')" title="Phát âm">🔊</button>
+                    <button class="action-btn" style="width:34px; height:34px; font-size:1rem" onclick="showStrokeOrder('${escapeQuotes(w.chinese)}')" title="Tập viết nét">✍️</button>
                     <button class="action-btn ${w.learned ? 'learned' : ''}" style="width:34px; height:34px; font-size:1rem" onclick="toggleStoryWordLearned(${w.id})" title="Đã thuộc">
                         ${w.learned ? '✅' : '⭕'}
                     </button>
@@ -3277,31 +3412,100 @@ window.renderCurrentStory = function () {
         `;
     }).join('');
 
+    // Extract all words from vocab library present in this story
+    const fullStoryText = currentStory.lines.map(l => l.chinese || '').join(' ');
+    const foundVocabWords = vocab.filter(v => v.chinese && fullStoryText.includes(v.chinese));
+
+    let inStoryVocabHtml = '';
+    if (foundVocabWords.length > 0) {
+        const chipsHtml = foundVocabWords.map(w => {
+            const isTarget = targetWordsSet.has(w.chinese);
+            const learnedCls = w.learned ? 'learned' : 'unlearned';
+            const roleBadge = isTarget 
+                ? '<span class="in-story-badge target">Mục tiêu</span>'
+                : (w.learned ? '<span class="in-story-badge learned">Đã thuộc</span>' : '<span class="in-story-badge unlearned">Trong list</span>');
+
+            return `
+                <div class="in-story-vocab-chip ${isTarget ? 'is-target' : ''} ${learnedCls}">
+                    <div class="in-story-chip-main" onclick="showWordDetail('${escapeQuotes(w.chinese)}')" title="Chạm để xem chi tiết & tập viết nét">
+                        <span class="in-story-chip-hanzi">${escapeHtml(w.chinese)}</span>
+                        <span class="in-story-chip-pinyin">${escapeHtml(w.pinyin || '')}</span>
+                        <span class="in-story-chip-viet">${escapeHtml(w.vietnamese || w.meaning || '')}</span>
+                        ${roleBadge}
+                    </div>
+                    <div class="in-story-chip-actions">
+                        <button class="action-btn" style="width:26px; height:26px; font-size:0.8rem; padding:0" onclick="speak('${escapeQuotes(w.chinese)}')" title="Phát âm">🔊</button>
+                        <button class="action-btn" style="width:26px; height:26px; font-size:0.8rem; padding:0" onclick="showStrokeOrder('${escapeQuotes(w.chinese)}')" title="Tập viết nét">✍️</button>
+                        <button class="action-btn" style="width:26px; height:26px; font-size:0.8rem; padding:0" onclick="toggleStoryWordLearned(${w.id})" title="${w.learned ? 'Đã thuộc (Bấm để hủy)' : 'Chưa thuộc (Bấm để đánh dấu đã thuộc)'}">${w.learned ? '✅' : '⭕'}</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        inStoryVocabHtml = `
+            <div class="in-story-vocab-summary">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px">
+                    <div style="display:flex; align-items:center; gap:8px">
+                        <span style="font-size:1.2rem">🏷️</span>
+                        <h4 style="margin:0; font-size:1rem; color:var(--g8); font-weight:700">
+                            Từ Vựng Trong Danh Sách Đã Xuất Hiện (${foundVocabWords.length} từ)
+                        </h4>
+                    </div>
+                    <span style="font-size:0.82rem; color:var(--g6)">Từ trong list được tô màu nổi bật trong bài. Bấm vào từ để học chi tiết!</span>
+                </div>
+                <div class="in-story-vocab-grid">
+                    ${chipsHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    const promptBanner = currentStory.prompt ? `
+        <div class="story-inspiration-banner">
+            <span style="font-size:1.15rem; line-height:1">💡</span>
+            <div style="flex:1">
+                <span style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.5px; opacity:0.85; font-weight:700">Cảm hứng sáng tác:</span>
+                <div style="font-weight:600; font-size:0.95rem; margin-top:2px">"${escapeHtml(currentStory.prompt)}"</div>
+            </div>
+        </div>
+    ` : '';
+
+    const dbBadge = currentStory.syncedGithub
+        ? `<span class="story-db-badge github" title="Bài học này đã được lưu an toàn trên database GitHub (stories.json)">☁️ GitHub DB</span>`
+        : `<span class="story-db-badge local" title="Bài học đang được lưu trên trình duyệt">💾 Local</span>`;
+
     container.innerHTML = `
         <div class="current-story-card">
             <!-- Header -->
             <div class="story-card-header">
                 <div>
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap">
                         <span class="sentence-badge" style="background:${isConv ? 'var(--p)' : 'var(--s)'}">
                             ${isConv ? '💬 Đoạn Hội Thoại' : '📖 Mẩu Truyện Ngắn'}
                         </span>
-                        <span style="font-size:0.85rem; color:var(--g6)">📂 ${currentStory.theme || 'Chủ đề ôn tập'}</span>
+                        <span style="font-size:0.85rem; color:var(--g6)">📂 ${escapeHtml(currentStory.theme || 'Chủ đề ôn tập')}</span>
+                        ${dbBadge}
                     </div>
-                    <h2 class="story-title-chinese">${currentStory.title || '日常生活'}</h2>
-                    ${storyShowPinyin ? `<div class="story-title-pinyin">${currentStory.titlePinyin || ''}</div>` : ''}
-                    ${storyShowViet ? `<div class="story-title-viet">${currentStory.titleViet || ''}</div>` : ''}
+                    <h2 class="story-title-chinese">${escapeHtml(currentStory.title || '日常生活')}</h2>
+                    ${storyShowPinyin ? `<div class="story-title-pinyin">${escapeHtml(currentStory.titlePinyin || '')}</div>` : ''}
+                    ${storyShowViet ? `<div class="story-title-viet">${escapeHtml(currentStory.titleViet || '')}</div>` : ''}
                 </div>
 
-                <div style="display:flex; gap:8px; flex-wrap:wrap">
-                    <button class="btn btn-sm" onclick="saveCurrentStory()" style="background:#f59e0b" title="Lưu bài này để ôn lại sau">
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start">
+                    <button class="btn btn-sm" onclick="saveCurrentStory()" style="background:#f59e0b" title="Lưu bài này vào danh sách để ôn lại sau">
                         ⭐ Lưu bài
+                    </button>
+                    <button class="btn btn-sm" onclick="pushCurrentStoryToGitHub()" style="background:#2563eb; color:#fff; font-weight:600" title="Lưu trực tiếp bài này vào database GitHub (stories.json)">
+                        ☁️ Lưu GitHub DB
                     </button>
                     <button class="btn btn-sm" onclick="triggerStoryGeneration()" style="background:var(--p)">
                         🔄 Đổi bài mới
                     </button>
                 </div>
             </div>
+
+            <!-- Prompt Banner (if any) -->
+            ${promptBanner}
 
             <!-- Jogging Mode CTA Banner -->
             <div class="jogging-cta-banner">
@@ -3348,14 +3552,18 @@ window.renderCurrentStory = function () {
             <div class="story-legend-bar">
                 <span style="font-weight:700; color:var(--g8); margin-right:4px">💡 Chú thích:</span>
                 <span class="legend-item"><span class="legend-dot target"></span> Từ mục tiêu ôn tập</span>
-                <span class="legend-item"><span class="legend-dot known"></span> Đã có trong thư viện</span>
-                <span class="legend-item"><span class="legend-dot new"></span> Từ mới ngoài thư viện (chạm để xem &amp; lưu)</span>
+                <span class="legend-item"><span class="legend-dot known-unlearned"></span> Trong list (chưa thuộc)</span>
+                <span class="legend-item"><span class="legend-dot known-learned"></span> Trong list (đã thuộc)</span>
+                <span class="legend-item"><span class="legend-dot new"></span> Từ mới ngoài list (chạm để xem &amp; lưu)</span>
             </div>
 
             <!-- Content -->
             <div class="${isConv ? 'dialogue-flow' : 'narrative-flow'}">
                 ${linesHtml}
             </div>
+
+            <!-- In-Story Vocab Summary (All words from user's list highlighted in story) -->
+            ${inStoryVocabHtml}
 
             <!-- Target Vocab Breakdown -->
             <div class="vocab-breakdown-card">
@@ -4348,11 +4556,14 @@ window.closeWordDetailModal = function () {
 
 window.saveCurrentStory = function () {
     if (!currentStory) return;
-    if (savedStories.some(s => s.id === currentStory.id)) {
-        status('ℹ️ Bài này đã được lưu trước đó!', 'warning');
-        return;
+    const existingIdx = savedStories.findIndex(s => s.id === currentStory.id);
+    if (existingIdx >= 0) {
+        savedStories[existingIdx] = currentStory;
+        status('ℹ️ Đã cập nhật bài học trong danh sách lưu!', 'info');
+    } else {
+        savedStories.unshift(currentStory);
+        status('⭐ Đã lưu bài ôn tập vào danh sách!', 'success');
     }
-    savedStories.unshift(currentStory);
     saveSavedStories();
     renderSavedStoriesList();
 
@@ -4361,7 +4572,10 @@ window.saveCurrentStory = function () {
     if (savedEl) savedEl.textContent = savedStories.length;
     if (savedBadgeEl) savedBadgeEl.textContent = `${savedStories.length} bài`;
 
-    status('⭐ Đã lưu bài ôn tập vào danh sách!', 'success');
+    const autoSyncEl = document.getElementById('story-auto-github-sync');
+    if (autoSyncEl && autoSyncEl.checked) {
+        pushStoryToGitHubDb(currentStory, true);
+    }
 };
 
 window.viewSavedStory = function (id) {
@@ -4390,13 +4604,320 @@ window.deleteSavedStory = function (id) {
     }
 };
 
+// ==================== GITHUB DB STORY SYNCHRONIZATION ====================
+
+window.pushStoryToGitHubDb = async function (story, silent = false) {
+    if (!story) {
+        if (!silent) status('⚠️ Không có bài học nào để lưu!', 'warning');
+        return false;
+    }
+
+    const token = localStorage.getItem('github-token');
+    const repo = localStorage.getItem('github-repo');
+    const file = localStorage.getItem('github-stories-file') || 'stories.json';
+
+    if (!token || !repo) {
+        if (!silent) {
+            status('⚠️ Chưa cấu hình GitHub Token và Repo! Vào Cài đặt để điền thông tin.', 'error');
+        }
+        return false;
+    }
+
+    if (!silent) showLoading('☁️ Đang lưu bài vào GitHub DB...', `File: ${file} trên repo ${repo}...`);
+
+    try {
+        let remoteStories = [];
+        let sha = null;
+
+        try {
+            const getRes = await fetchWithTimeout(`https://api.github.com/repos/${repo}/contents/${file}`, {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }, 8000);
+
+            if (getRes.ok) {
+                const fileData = await getRes.json();
+                sha = fileData.sha;
+                if (fileData.content) {
+                    const decoded = decodeURIComponent(escape(atob(fileData.content.replace(/\s/g, ''))));
+                    const parsed = JSON.parse(decoded);
+                    if (Array.isArray(parsed)) {
+                        remoteStories = parsed;
+                    }
+                }
+            }
+        } catch (fetchErr) {
+            console.warn('Could not fetch existing remote stories:', fetchErr);
+        }
+
+        // Merge or upsert current story
+        const existingIdx = remoteStories.findIndex(s => s.id === story.id);
+        const storyToSave = { ...story, syncedGithub: true };
+
+        if (existingIdx >= 0) {
+            remoteStories[existingIdx] = storyToSave;
+        } else {
+            remoteStories.unshift(storyToSave);
+        }
+
+        // Update local savedStories & currentStory if matching
+        story.syncedGithub = true;
+        const localIdx = savedStories.findIndex(s => s.id === story.id);
+        if (localIdx >= 0) {
+            savedStories[localIdx] = { ...savedStories[localIdx], syncedGithub: true };
+        } else {
+            savedStories.unshift(storyToSave);
+        }
+        saveSavedStories();
+        renderSavedStoriesList();
+
+        if (currentStory && currentStory.id === story.id) {
+            currentStory.syncedGithub = true;
+            renderCurrentStory();
+        }
+
+        const jsonStr = JSON.stringify(remoteStories, null, 2);
+        const encodedContent = btoa(unescape(encodeURIComponent(jsonStr)));
+
+        const putRes = await fetchWithTimeout(`https://api.github.com/repos/${repo}/contents/${file}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({
+                message: `Update story: ${story.title || 'Bài học tiếng Trung'} [skip ci] - ${new Date().toISOString()}`,
+                content: encodedContent,
+                ...(sha ? { sha } : {})
+            })
+        }, 12000);
+
+        if (!silent) hideLoading();
+
+        if (putRes.ok) {
+            if (!silent) status(`☁️ Đã lưu bài "${story.title || ''}" vào GitHub DB (${file}) thành công!`, 'success');
+            return true;
+        } else {
+            const errData = await putRes.json().catch(() => ({}));
+            throw new Error(errData.message || `Lỗi GitHub HTTP ${putRes.status}`);
+        }
+    } catch (err) {
+        if (!silent) {
+            hideLoading();
+            console.error('Error saving story to GitHub:', err);
+            status(`❌ Lỗi lưu GitHub DB: ${err.message}`, 'error');
+        }
+        return false;
+    }
+};
+
+window.pushCurrentStoryToGitHub = async function () {
+    if (!currentStory) {
+        status('⚠️ Chưa có bài học nào đang mở!', 'warning');
+        return;
+    }
+    // Also ensure it is in local saved list
+    if (!savedStories.some(s => s.id === currentStory.id)) {
+        savedStories.unshift(currentStory);
+        saveSavedStories();
+        renderSavedStoriesList();
+    }
+    await pushStoryToGitHubDb(currentStory, false);
+};
+
+window.pushSingleStoryToGitHub = async function (id) {
+    const story = savedStories.find(s => s.id === id);
+    if (!story) return;
+    await pushStoryToGitHubDb(story, false);
+};
+
+window.syncAllSavedStoriesToGitHub = async function () {
+    const token = localStorage.getItem('github-token');
+    const repo = localStorage.getItem('github-repo');
+    const file = localStorage.getItem('github-stories-file') || 'stories.json';
+
+    if (!token || !repo) {
+        status('⚠️ Chưa cấu hình GitHub Token và Repo! Vào Cài đặt để cấu hình.', 'error');
+        return;
+    }
+
+    if (savedStories.length === 0) {
+        status('⚠️ Chưa có bài đã lưu nào để đẩy lên GitHub!', 'warning');
+        return;
+    }
+
+    showLoading('⬆️ Đang đẩy toàn bộ bài học lên GitHub DB...', `File: ${file} trên repo ${repo}...`);
+
+    try {
+        let remoteStories = [];
+        let sha = null;
+
+        try {
+            const getRes = await fetchWithTimeout(`https://api.github.com/repos/${repo}/contents/${file}`, {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }, 8000);
+
+            if (getRes.ok) {
+                const fileData = await getRes.json();
+                sha = fileData.sha;
+                if (fileData.content) {
+                    const decoded = decodeURIComponent(escape(atob(fileData.content.replace(/\s/g, ''))));
+                    const parsed = JSON.parse(decoded);
+                    if (Array.isArray(parsed)) {
+                        remoteStories = parsed;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Could not read existing remote stories:', e);
+        }
+
+        // Merge remote and local by id
+        const map = new Map();
+        remoteStories.forEach(s => { if (s && s.id) map.set(s.id, { ...s, syncedGithub: true }); });
+        savedStories.forEach(s => { if (s && s.id) map.set(s.id, { ...s, syncedGithub: true }); });
+
+        const merged = Array.from(map.values()).sort((a, b) => (b.id || 0) - (a.id || 0));
+
+        const jsonStr = JSON.stringify(merged, null, 2);
+        const encodedContent = btoa(unescape(encodeURIComponent(jsonStr)));
+
+        const putRes = await fetchWithTimeout(`https://api.github.com/repos/${repo}/contents/${file}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({
+                message: `Sync all ${merged.length} stories [skip ci] - ${new Date().toISOString()}`,
+                content: encodedContent,
+                ...(sha ? { sha } : {})
+            })
+        }, 15000);
+
+        hideLoading();
+
+        if (putRes.ok) {
+            savedStories = merged;
+            saveSavedStories();
+            renderSavedStoriesList();
+            if (currentStory) {
+                const updated = savedStories.find(s => s.id === currentStory.id);
+                if (updated) currentStory = updated;
+                renderCurrentStory();
+            }
+            status(`✅ Đã đẩy thành công tất cả ${merged.length} bài lên GitHub DB (${file})!`, 'success');
+        } else {
+            const errData = await putRes.json().catch(() => ({}));
+            throw new Error(errData.message || `Lỗi HTTP ${putRes.status}`);
+        }
+    } catch (err) {
+        hideLoading();
+        console.error('Error syncing all stories to GitHub:', err);
+        status(`❌ Lỗi đồng bộ GitHub DB: ${err.message}`, 'error');
+    }
+};
+
+window.syncStoriesFromGitHub = async function (silent = false) {
+    const token = localStorage.getItem('github-token');
+    const repo = localStorage.getItem('github-repo');
+    const file = localStorage.getItem('github-stories-file') || 'stories.json';
+    const storiesJsonUrl = localStorage.getItem('stories-json-url');
+
+    const urlsToTry = [];
+    if (storiesJsonUrl) urlsToTry.push({ type: 'direct', url: storiesJsonUrl });
+    if (repo && file) {
+        urlsToTry.push({ type: 'api', url: `https://api.github.com/repos/${repo}/contents/${file}` });
+        urlsToTry.push({ type: 'raw', url: `https://raw.githubusercontent.com/${repo}/main/${file}` });
+    }
+    urlsToTry.push({ type: 'local', url: './stories.json' });
+
+    if (!silent) showLoading('☁️ Đang đồng bộ danh sách bài từ GitHub DB...', 'Vui lòng chờ...');
+
+    let loadedStories = null;
+
+    for (const source of urlsToTry) {
+        try {
+            if (source.type === 'api' && token) {
+                const res = await fetchWithTimeout(source.url, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                }, 6000);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.content) {
+                        const decoded = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ''))));
+                        const parsed = JSON.parse(decoded);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            loadedStories = parsed;
+                            break;
+                        }
+                    }
+                }
+            } else if (source.type === 'raw' || source.type === 'direct' || source.type === 'local') {
+                const res = await fetchWithTimeout(source.url, { cache: 'no-cache' }, 5000);
+                if (res.ok) {
+                    const parsed = await res.json();
+                    const list = Array.isArray(parsed) ? parsed : (parsed.stories || []);
+                    if (Array.isArray(list) && list.length > 0) {
+                        loadedStories = list;
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn(`Could not sync stories from ${source.url}:`, e.message);
+        }
+    }
+
+    if (!silent) hideLoading();
+
+    if (loadedStories && loadedStories.length > 0) {
+        // Merge into savedStories
+        const map = new Map();
+        // Existing local stories
+        savedStories.forEach(s => { if (s && s.id) map.set(s.id, s); });
+        // Remote stories overwrite or add
+        loadedStories.forEach(s => {
+            if (s && s.id) {
+                map.set(s.id, { ...s, syncedGithub: true });
+            }
+        });
+
+        savedStories = Array.from(map.values()).sort((a, b) => (b.id || 0) - (a.id || 0));
+        saveSavedStories();
+        renderSavedStoriesList();
+
+        const savedEl = document.getElementById('stories-saved-count');
+        const savedBadgeEl = document.getElementById('saved-count-badge');
+        if (savedEl) savedEl.textContent = savedStories.length;
+        if (savedBadgeEl) savedBadgeEl.textContent = `${savedStories.length} bài`;
+
+        if (!silent) {
+            status(`☁️ Đã đồng bộ thành công ${loadedStories.length} bài từ GitHub DB! (Tổng hiện có: ${savedStories.length} bài)`, 'success');
+        }
+        return true;
+    } else {
+        if (!silent) {
+            status('ℹ️ Không tìm thấy bài học nào mới trên GitHub DB.', 'info');
+        }
+        return false;
+    }
+};
+
 function renderSavedStoriesList() {
     const container = document.getElementById('saved-stories-list');
     if (!container) return;
 
     if (savedStories.length === 0) {
         container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:32px; color:var(--g6); background:var(--g1); border-radius:12px; border:2px dashed var(--g2)">
-            Chưa có bài nào được lưu. Sau khi tạo bài, hãy bấm "⭐ Lưu bài" để lưu lại ôn tập bất cứ lúc nào!
+            Chưa có bài nào được lưu. Sau khi tạo bài với AI hoặc Trình tạo thông minh, hãy bấm "⭐ Lưu bài" hoặc "☁️ Lưu GitHub DB" để lưu lại ôn tập bất cứ lúc nào!
         </div>`;
         return;
     }
@@ -4405,26 +4926,41 @@ function renderSavedStoriesList() {
         const isConv = (s.type === 'conversation');
         const typeLabel = isConv ? '💬 Hội Thoại' : '📖 Truyện Ngắn';
         const targetWordsPreview = s.targetWords && s.targetWords.length > 0
-            ? s.targetWords.map(w => `<span class="target-word-chip" style="font-size:0.8rem; padding:2px 8px">${w.chinese}</span>`).join(' ')
+            ? s.targetWords.map(w => `<span class="target-word-chip" style="font-size:0.8rem; padding:2px 8px">${escapeHtml(w.chinese)}</span>`).join(' ')
             : '';
+
+        const dbBadge = s.syncedGithub
+            ? `<span class="story-db-badge github" style="font-size:0.7rem; padding:2px 7px" title="Đã đồng bộ trên GitHub DB (stories.json)">☁️ GitHub DB</span>`
+            : `<span class="story-db-badge local" style="font-size:0.7rem; padding:2px 7px" title="Chỉ lưu trên trình duyệt">💾 Local</span>`;
+
+        const promptSnippet = s.prompt ? `
+            <div style="font-size:0.82rem; color:var(--p); margin-bottom:8px; display:flex; align-items:center; gap:4px">
+                <span>💡</span> <span style="font-style:italic">"${escapeHtml(s.prompt.length > 60 ? s.prompt.slice(0, 58) + '...' : s.prompt)}"</span>
+            </div>
+        ` : '';
 
         return `
             <div class="saved-story-card">
                 <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
-                        <span class="sentence-badge" style="background:${isConv ? 'var(--p)' : 'var(--s)'}">${typeLabel}</span>
-                        <span style="font-size:0.8rem; color:var(--g6)">${s.createdAt || ''}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; flex-wrap:wrap">
+                        <div style="display:flex; align-items:center; gap:6px">
+                            <span class="sentence-badge" style="background:${isConv ? 'var(--p)' : 'var(--s)'}">${typeLabel}</span>
+                            ${dbBadge}
+                        </div>
+                        <span style="font-size:0.8rem; color:var(--g6)">${escapeHtml(s.createdAt || '')}</span>
                     </div>
-                    <div style="font-size:1.25rem; font-weight:700; color:var(--g8); margin-bottom:4px">${s.title || 'Bài ôn tập'}</div>
-                    <div style="font-size:0.9rem; color:var(--g6); margin-bottom:12px">${s.titleViet || ''}</div>
+                    <div style="font-size:1.25rem; font-weight:700; color:var(--g8); margin-bottom:4px">${escapeHtml(s.title || 'Bài ôn tập')}</div>
+                    <div style="font-size:0.9rem; color:var(--g6); margin-bottom:8px">${escapeHtml(s.titleViet || '')}</div>
+                    ${promptSnippet}
                     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px">
                         ${targetWordsPreview}
                     </div>
                 </div>
-                <div style="display:flex; gap:8px; justify-content:flex-end">
-                    <button class="btn btn-sm" onclick="startJoggingForSavedStory(${s.id})" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:600">🏃‍♂️ Nghe</button>
-                    <button class="btn btn-sm" onclick="viewSavedStory(${s.id})">📖 Xem lại</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteSavedStory(${s.id})">🗑️ Xóa</button>
+                <div style="display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap">
+                    <button class="btn btn-sm" onclick="startJoggingForSavedStory(${s.id})" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:600" title="Nghe chạy bộ câu chuyện này">🏃‍♂️ Nghe</button>
+                    <button class="btn btn-sm" onclick="viewSavedStory(${s.id})" title="Xem chi tiết bài học">📖 Xem lại</button>
+                    ${!s.syncedGithub ? `<button class="btn btn-sm" onclick="pushSingleStoryToGitHub(${s.id})" style="background:#2563eb; color:#fff" title="Đẩy bài này lên GitHub stories.json">☁️ Lưu GitHub</button>` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="deleteSavedStory(${s.id})" title="Xóa bài này">🗑️</button>
                 </div>
             </div>
         `;
@@ -5713,9 +6249,10 @@ async function init() {
     // Synchronize access: Load Config FIRST, then other tasks
     await loadConfig();
 
-    // Now safe to load sentences with correct GID
+    // Now safe to load sentences with correct GID and sync stories from GitHub DB
     const setupTasks = [
-        loadSentenceTemplates().then(() => renderSentences())
+        loadSentenceTemplates().then(() => renderSentences()),
+        syncStoriesFromGitHub(true)
     ];
 
     // Synchronization logic

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chinese-app-pwa-v3';
+const CACHE_NAME = 'chinese-app-pwa-v4';
 
 const STATIC_ASSETS = [
     './',
@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
     './pinyin-pro.min.js',
     './hanzi-writer.min.js',
     './vocab.json',
+    './stories.json',
     './config.json',
     './manifest.json',
     './favicon.png',
@@ -52,11 +53,12 @@ self.addEventListener('fetch', (event) => {
     const request = event.request;
     const url = new URL(request.url);
 
-    // Không can thiệp vào các API động (Google Sheets, Gemini AI, GitHub API, Google Translate TTS)
+    // Không can thiệp vào các API động (Google Sheets, Gemini AI, GitHub API, GitHub Raw, Google Translate TTS)
     if (
         url.hostname.includes('googleapis.com') ||
         url.hostname.includes('docs.google.com') ||
         url.hostname.includes('api.github.com') ||
+        url.hostname.includes('raw.githubusercontent.com') ||
         url.hostname.includes('translate.google.com') ||
         url.hostname.includes('mymemory.translated.net')
     ) {

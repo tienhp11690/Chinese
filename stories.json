@@ -1,0 +1,64 @@
+[
+  {
+    "id": 1729654000000,
+    "title": "在咖啡馆相遇",
+    "titlePinyin": "zài kā fēi guǎn xiāng yù",
+    "titleViet": "Gặp nhau ở quán cà phê",
+    "type": "conversation",
+    "theme": "Quán cà phê & Bạn bè",
+    "prompt": "Gặp bạn cũ ở quán cà phê và trò chuyện về việc học tiếng Trung",
+    "createdAt": "23/10/2026, 10:00:00",
+    "syncedGithub": true,
+    "targetWords": [
+      {
+        "chinese": "咖啡",
+        "pinyin": "kāfēi",
+        "vietnamese": "cà phê"
+      },
+      {
+        "chinese": "朋友",
+        "pinyin": "péngyou",
+        "vietnamese": "bạn bè"
+      },
+      {
+        "chinese": "喜欢",
+        "pinyin": "xǐhuan",
+        "vietnamese": "thích"
+      }
+    ],
+    "lines": [
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "你好！好久不见，你也喜欢来这家咖啡馆吗？",
+        "pinyin": "Nǐ hǎo! Hǎojiǔ bújiàn, nǐ yě xǐhuan lái zhè jiā kāfēiguǎn ma?",
+        "vietnamese": "Chào bạn! Lâu ngày không gặp, bạn cũng thích đến quán cà phê này à?",
+        "usedWords": ["你好", "喜欢", "咖啡"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "你好，小明！是的，我和朋友经常在这里喝咖啡、学中文。",
+        "pinyin": "Nǐ hǎo, Xiǎomíng! Shì de, wǒ hé péngyou jīngcháng zài zhèlǐ hē kāfēi, xué zhōngwén.",
+        "vietnamese": "Chào Tiểu Minh! Đúng vậy, mình và bạn bè thường uống cà phê và học tiếng Trung ở đây.",
+        "usedWords": ["你好", "朋友", "咖啡"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "太好了！我们一起喝咖啡、一起聊天吧。",
+        "pinyin": "Tài hǎo le! Wǒmen yìqǐ hē kāfēi, yìqǐ liáotiān ba.",
+        "vietnamese": "Tuyệt quá! Chúng ta cùng uống cà phê và trò chuyện nhé.",
+        "usedWords": ["咖啡"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "好啊，认识你这样的好朋友我真高兴！",
+        "pinyin": "Hǎo a, rènshí nǐ zhèyàng de hǎo péngyou wǒ zhēn gāoxìng!",
+        "vietnamese": "Được chứ, quen được người bạn tốt như bạn mình thật sự rất vui!",
+        "usedWords": ["朋友"]
+      }
+    ]
+  }
+]

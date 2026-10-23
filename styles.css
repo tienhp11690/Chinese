@@ -959,6 +959,147 @@ body {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* ==================== AI PROMPT & TOPIC INSPIRATION PANEL ==================== */
+.story-prompt-wrapper {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.08) 100%);
+    border: 1.5px solid rgba(102, 126, 234, 0.35);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 18px rgba(102, 126, 234, 0.07);
+}
+
+.story-prompt-input {
+    width: 100%;
+    min-height: 72px;
+    resize: vertical;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    border-radius: 10px;
+    border: 1.5px solid #cbd5e1;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.story-prompt-input:focus {
+    outline: none;
+    border-color: var(--p);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.inspiration-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.inspiration-pill {
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 6px 13px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--g8);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+}
+
+.inspiration-pill:hover {
+    background: var(--p);
+    color: white;
+    border-color: var(--p);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(102, 126, 234, 0.25);
+}
+
+.inspiration-pill.active {
+    background: var(--p);
+    color: white;
+    border-color: var(--p);
+}
+
+/* GitHub DB Badges */
+.story-db-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.story-db-badge.github {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+}
+
+.story-db-badge.local {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+/* In-Story Vocab Breakdown List */
+.in-story-vocab-summary {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-top: 20px;
+}
+
+.in-story-vocab-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.in-story-vocab-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    border: 1.5px solid #818cf8;
+    color: #3730a3;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.in-story-vocab-chip:hover {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(99, 102, 241, 0.25);
+}
+
+.in-story-vocab-chip.learned {
+    border-color: #34d399;
+    color: #065f46;
+}
+
+.in-story-vocab-chip.learned:hover {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+}
+
 .target-words-wrapper {
     background: var(--g1);
     border: 1px solid var(--g2);
@@ -1382,50 +1523,63 @@ body {
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
-/* 1. Target word: Purple/Indigo highlight */
+/* 1. Target word: Vibrant Purple/Violet highlight with bold border */
 .story-word.target-word {
-    color: var(--p);
-    font-weight: 700;
-    background: rgba(102, 126, 234, 0.15);
-    border-bottom: 2.5px solid var(--p);
+    color: #5b21b6;
+    font-weight: 800;
+    background: rgba(139, 92, 246, 0.18);
+    border-bottom: 2.5px solid #8b5cf6;
+    border-radius: 4px;
+    padding: 1px 4px;
 }
 
 .story-word.target-word:hover {
-    background: var(--p);
+    background: #8b5cf6;
     color: white;
+    border-bottom-color: #7c3aed;
 }
 
-/* 2. Known words in library: Subtle text with hover indicator */
+/* 2. Known words in library (Unlearned): Vibrant Indigo/Blue pill highlight */
 .story-word.known-word {
-    color: var(--g8);
-    font-weight: 600;
-    border-bottom: 1.5px solid #cbd5e1;
+    color: #3730a3;
+    font-weight: 700;
+    background: rgba(99, 102, 241, 0.14);
+    border-bottom: 2.5px solid #6366f1;
+    border-radius: 4px;
+    padding: 1px 4px;
 }
 
 .story-word.known-word:hover {
-    background: #e2e8f0;
-    color: var(--p);
-    border-bottom-color: var(--p);
+    background: #4f46e5;
+    color: white;
+    border-bottom-color: #4338ca;
 }
 
+/* 3. Learned words in library: Emerald Green pill highlight */
 .story-word.learned-word {
-    color: #2b6cb0;
-    border-bottom: 1.5px solid #90cdf4;
+    color: #065f46;
+    font-weight: 600;
+    background: rgba(16, 185, 129, 0.15);
+    border-bottom: 2.5px solid #10b981;
+    border-radius: 4px;
+    padding: 1px 4px;
 }
 
 .story-word.learned-word:hover {
-    background: #ebf8ff;
-    color: #2b6cb0;
-    border-bottom-color: #3182ce;
+    background: #10b981;
+    color: white;
+    border-bottom-color: #059669;
 }
 
-/* 3. NEW WORD: Outside existing library! Highlighted in vibrant warm amber/golden */
+/* 4. NEW WORD: Outside existing library! Highlighted in warm amber/rose */
 .story-word.new-word {
     color: #b45309;
-    font-weight: 700;
-    background: rgba(245, 158, 11, 0.16);
-    border-bottom: 2.5px dashed #f59e0b;
-    padding-right: 8px;
+    font-weight: 600;
+    background: rgba(245, 158, 11, 0.13);
+    border-bottom: 2px dashed #f59e0b;
+    border-radius: 4px;
+    padding: 1px 4px;
+    padding-right: 9px;
 }
 
 .story-word.new-word::after {
@@ -1462,11 +1616,11 @@ body {
     gap: 16px;
     align-items: center;
     flex-wrap: wrap;
-    font-size: 0.82rem;
-    color: var(--g6);
-    padding: 6px 12px;
-    background: white;
-    border-radius: 8px;
+    font-size: 0.84rem;
+    color: var(--g8);
+    padding: 8px 14px;
+    background: #f8fafc;
+    border-radius: 10px;
     border: 1px solid var(--g2);
     margin-bottom: 16px;
 }
@@ -1475,6 +1629,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    font-weight: 500;
 }
 
 .legend-dot {
@@ -1485,11 +1640,15 @@ body {
 }
 
 .legend-dot.target {
-    background: var(--p);
+    background: #8b5cf6;
 }
 
-.legend-dot.known {
-    background: #94a3b8;
+.legend-dot.known-unlearned {
+    background: #6366f1;
+}
+
+.legend-dot.known-learned {
+    background: #10b981;
 }
 
 .legend-dot.new {

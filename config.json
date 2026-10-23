@@ -13,6 +13,8 @@
     "githubRepo": "tienhp11690/Chinese",
     "githubFile": "vocab.json",
     "vocabJsonUrl": "https://raw.githubusercontent.com/tienhp11690/Chinese/main/vocab.json",
+    "githubStoriesFile": "stories.json",
+    "storiesJsonUrl": "https://raw.githubusercontent.com/tienhp11690/Chinese/main/stories.json",
     "sheetsSentencesGid": "681747827",
     "syncStrategy": "sheets-first"
   },
@@ -23,6 +25,8 @@
     "githubRepo": "Format: username/repository-name (tienhp11690/Chinese)",
     "githubFile": "Đường dẫn file trong repo để lưu vocab",
     "vocabJsonUrl": "URL raw của file vocab.json trên GitHub để load trực tiếp",
+    "githubStoriesFile": "Đường dẫn file trong repo để lưu database stories ôn tập (stories.json)",
+    "storiesJsonUrl": "URL raw của file stories.json trên GitHub để load database stories",
     "syncStrategy": "sheets-first = auto load từ Sheets | local-first = dùng localStorage"
   },
   "instructions": {

@@ -186,6 +186,46 @@
                     </div>
                 </div>
 
+                <!-- AI Creative Inspiration & Prompt Box -->
+                <div class="story-prompt-wrapper">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px">
+                        <label style="font-size:0.95rem; font-weight:700; color:var(--g8); display:flex; align-items:center; gap:6px">
+                            <span>✨</span> Chủ Đề &amp; Prompt Cảm Hứng Học Tập Với AI:
+                        </label>
+                        <span style="font-size:0.8rem; color:var(--p); font-weight:600">💡 Gõ tự do bất kỳ tình huống nào hoặc bấm gợi ý</span>
+                    </div>
+                    <textarea id="story-custom-prompt" class="story-prompt-input" rows="2"
+                        placeholder="Nhập tình huống hoặc chủ đề cảm hứng của bạn... (Ví dụ: 'Cuộc gặp gỡ tình cờ ở quán trà sữa và hẹn nhau đi xem phim', 'Phỏng vấn xin việc tại công ty ở Bắc Kinh', 'Đi taxi bị kẹt xe và trò chuyện với tài xế'...)"></textarea>
+
+                    <div style="margin-top:10px">
+                        <div style="font-size:0.8rem; color:var(--g6); margin-bottom:6px; font-weight:600">
+                            🌟 Chọn nhanh chủ đề cảm hứng:
+                        </div>
+                        <div class="inspiration-tags-container">
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Hẹn gặp bạn bè ở quán cà phê và trò chuyện về kế hoạch du lịch')">☕ Cà phê &amp; Bạn bè</button>
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Gọi món tại nhà hàng Trung Hoa, hỏi nhân viên về các món đặc sản cay và tính tiền')">🍜 Ẩm thực &amp; Gọi món</button>
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Đi du lịch Thượng Hải, bị lạc đường và hỏi người dân đường tới ga tàu điện ngầm')">✈️ Du lịch &amp; Lạc đường</button>
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Phỏng vấn xin việc bằng tiếng Trung tại một công ty công nghệ')">💼 Phỏng vấn xin việc</button>
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Đi chợ mua sắm quần áo, hoa quả tươi và mặc cả giá với chủ tiệm')">🛒 Mua sắm &amp; Trả giá</button>
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Đến phòng khám bác sĩ, miêu tả triệu chứng bị cảm sốt và mua thuốc')">🏥 Khám bệnh &amp; Mua thuốc</button>
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Rủ bạn đi xem phim rạp cuối tuần, thảo luận về bộ phim và mua bắp rang bơ')">🎬 Xem phim rạp</button>
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Tìm thuê phòng trọ, hỏi về giá thuê, tiền điện nước và tiện ích xung quanh')">🏠 Thuê phòng trọ</button>
+                            <button type="button" class="inspiration-pill" onclick="setInspirationPrompt('Làm quen một người bạn Trung Quốc mới ở trường đại học và cùng học bài')">🤝 Kết bạn làm quen</button>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:14px; padding-top:10px; border-top:1px dashed #cbd5e1">
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--g8); cursor:pointer">
+                            <input type="checkbox" id="story-weave-vocab" checked style="width:16px; height:16px; accent-color:var(--p)">
+                            <span>🎯 <strong>Ưu tiên lồng ghép từ vựng trong danh sách</strong> của bạn vào bài</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--g8); cursor:pointer">
+                            <input type="checkbox" id="story-auto-github-sync" checked style="width:16px; height:16px; accent-color:var(--p)">
+                            <span>☁️ <strong>Tự động lưu vào GitHub DB</strong> (stories.json) khi lưu bài</span>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Target Words Selection Container -->
                 <div class="target-words-wrapper">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px">
@@ -267,9 +307,24 @@
 
             <!-- Saved Stories Section -->
             <div class="saved-stories-section" style="margin-top:40px; padding-top:24px; border-top:2px solid var(--g2)">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
-                    <h3 style="color:var(--g8)">📚 Các Bài Đã Lưu Để Ôn Lại</h3>
-                    <span id="saved-count-badge" class="sentence-badge" style="background:var(--p)">0 bài</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px">
+                    <div>
+                        <h3 style="color:var(--g8); display:flex; align-items:center; gap:8px; margin-bottom:4px">
+                            <span>📚</span> Các Bài Đã Lưu Để Ôn Lại
+                            <span id="saved-count-badge" class="sentence-badge" style="background:var(--p)">0 bài</span>
+                        </h3>
+                        <div style="font-size:0.85rem; color:var(--g6)">
+                            Lưu trữ tại máy (Local) &amp; Đồng bộ GitHub DB (<code style="background:var(--g1); padding:2px 6px; border-radius:4px; font-size:0.8rem">stories.json</code>) để ôn tập bất cứ lúc nào trên mọi thiết bị.
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap">
+                        <button type="button" class="btn btn-sm" onclick="syncStoriesFromGitHub()" style="background:#0284c7; color:#fff; font-weight:600" title="Tải các story đã lưu từ GitHub Database">
+                            ☁️ Tải từ GitHub DB
+                        </button>
+                        <button type="button" class="btn btn-sm" onclick="syncAllSavedStoriesToGitHub()" style="background:#059669; color:#fff; font-weight:600" title="Đẩy tất cả story đang có lên GitHub Database">
+                            ⬆️ Đẩy tất cả lên GitHub DB
+                        </button>
+                    </div>
                 </div>
                 <div id="saved-stories-list" class="saved-stories-grid"></div>
             </div>
@@ -447,9 +502,21 @@
                     khả dụng.
                 </p>
 
+                <!-- Stories Database in GitHub -->
+                <label style="display:block; margin-top:14px; margin-bottom:6px; font-weight:600;">
+                    📚 File Database Stories trên GitHub:
+                </label>
+                <input type="text" id="github-stories-file" class="input-field" placeholder="stories.json"
+                    value="stories.json">
+                <p style="font-size:0.85rem; color:#666; margin-top:6px;">
+                    File lưu trữ database các mẩu truyện/hội thoại đã tạo trên GitHub repository để xem lại trên mọi thiết bị.
+                </p>
+
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
                     <button class="btn" onclick="saveGitHubConfig()">💾 Lưu GitHub Config</button>
-                    <button class="btn" onclick="syncToGitHub()">☁️ Push to GitHub</button>
+                    <button class="btn" onclick="syncToGitHub()">☁️ Push Vocab lên GitHub</button>
+                    <button class="btn" onclick="syncAllSavedStoriesToGitHub()" style="background:#059669">☁️ Push Stories DB</button>
+                    <button class="btn" onclick="syncStoriesFromGitHub()" style="background:#0284c7">📥 Pull Stories DB</button>
                 </div>
             </div>
 
