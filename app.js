@@ -1484,6 +1484,51 @@ window.saveGeminiKeyFromStory = function () {
     status('💾 Đã lưu Gemini API Key!', 'success');
 };
 
+// ==================== GEMINI API ENGINE (MULTI-MODEL AUTO-FALLBACK) ====================
+
+async function requestGeminiContent(apiKey, bodyObj, timeoutMs = 16000) {
+    // Google Generative Language models in priority order (gemini-3.8-flash is latest, with fallbacks)
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+            const res = await fetchWithTimeout(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyObj)
+            }, timeoutMs);
+
+            if (res.ok) {
+                const data = await res.json();
+                const parts = data.candidates?.[0]?.content?.parts || [];
+                let text = '';
+                for (const p of parts) {
+                    if (p.text && !p.thought) text += p.text;
+                }
+                if (!text && parts.length > 0 && parts[0].text) {
+                    text = parts[0].text;
+                }
+                return { ok: true, text: text.trim(), data, model };
+            }
+
+            if (res.status === 404) {
+                console.warn(`Gemini model "${model}" returned 404 (retired/not available), trying next model...`);
+                continue;
+            }
+
+            const errData = await res.json().catch(() => ({}));
+            lastError = new Error(errData.error?.message || `Mã lỗi HTTP ${res.status}`);
+            break;
+        } catch (e) {
+            lastError = e;
+        }
+    }
+
+    throw lastError || new Error('Không thể kết nối đến Gemini API (Mô hình không tồn tại hoặc lỗi 404)');
+}
+
 window.testGeminiApiKey = async function () {
     const key = localStorage.getItem('gemini-api-key');
     if (!key) {
@@ -1492,20 +1537,11 @@ window.testGeminiApiKey = async function () {
     }
     showLoading('Đang kiểm tra kết nối Gemini API...', 'Vui lòng chờ...');
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: 'Trả lời: "OK"' }] }]
-            })
-        });
+        const result = await requestGeminiContent(key, {
+            contents: [{ parts: [{ text: 'Trả lời: "OK"' }] }]
+        }, 12000);
         hideLoading();
-        if (res.ok) {
-            status('✅ Kết nối Gemini API thành công!', 'success');
-        } else {
-            const errData = await res.json().catch(() => ({}));
-            status(`❌ Lỗi kết nối (${res.status}): ${errData.error?.message || 'Key không hợp lệ'}`, 'error');
-        }
+        status(`✅ Kết nối Gemini API thành công! (Model: ${result.model})`, 'success');
     } catch (e) {
         hideLoading();
         status(`❌ Lỗi kết nối: ${e.message}`, 'error');
@@ -3160,48 +3196,36 @@ YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdow
 }`;
 
     try {
-        const response = await fetchWithTimeout(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }],
-                    generationConfig: {
-                        responseMimeType: 'application/json',
-                        temperature: 0.7
-                    }
-                })
-            },
-            15000
-        );
+        const result = await requestGeminiContent(apiKey, {
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.7
+            }
+        }, 18000);
 
         hideLoading();
 
-        if (response.ok) {
-            const data = await response.json();
-            const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (textOutput) {
-                const cleaned = textOutput.replace(/```json/gi, '').replace(/```/g, '').trim();
-                const parsed = JSON.parse(cleaned);
-                parsed.id = Date.now();
-                parsed.createdAt = new Date().toLocaleString('vi-VN');
-                parsed.targetWords = words;
-                parsed.prompt = customPrompt || '';
-                parsed.source = 'gemini';
-                parsed.syncedGithub = false;
-                currentStory = parsed;
-                renderCurrentStory();
-                status('✅ AI đã tạo thành công bài học theo cảm hứng của bạn!', 'success');
+        if (result.ok && result.text) {
+            const cleaned = result.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const parsed = JSON.parse(cleaned);
+            parsed.id = Date.now();
+            parsed.createdAt = new Date().toLocaleString('vi-VN');
+            parsed.targetWords = words;
+            parsed.prompt = customPrompt || '';
+            parsed.source = `gemini (${result.model})`;
+            parsed.syncedGithub = false;
+            currentStory = parsed;
+            renderCurrentStory();
+            status(`✅ AI (${result.model}) đã tạo thành công bài học theo cảm hứng!`, 'success');
 
-                const autoSyncEl = document.getElementById('story-auto-github-sync');
-                if (autoSyncEl && autoSyncEl.checked) {
-                    pushStoryToGitHubDb(currentStory, true);
-                }
-                return;
+            const autoSyncEl = document.getElementById('story-auto-github-sync');
+            if (autoSyncEl && autoSyncEl.checked) {
+                pushStoryToGitHubDb(currentStory, true);
             }
+            return;
         }
-        throw new Error(`API trả về mã lỗi: ${response.status}`);
+        throw new Error('Dữ liệu trả về từ Gemini không chứa nội dung hợp lệ');
     } catch (err) {
         hideLoading();
         console.warn('Gemini AI generation failed, falling back to smart built-in:', err);
@@ -6023,29 +6047,18 @@ window.processCustomHskText = async function () {
 ${JSON.stringify(rawSentences)}
 Trả về DUY NHẤT một mảng JSON các chuỗi dịch tiếng Việt tương ứng: ["bản dịch 1", "bản dịch 2", ...]`;
 
-            const res = await fetchWithTimeout(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { responseMimeType: 'application/json' }
-                    })
-                },
-                12000
-            );
+            const result = await requestGeminiContent(apiKey, {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: 'application/json' }
+            }, 14000);
 
-            if (res.ok) {
-                const data = await res.json();
-                const outText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (outText) {
-                    const parsed = JSON.parse(outText);
-                    if (Array.isArray(parsed)) {
-                        rawSentences.forEach((s, idx) => {
-                            translationsMap[idx] = parsed[idx] || '';
-                        });
-                    }
+            if (result.ok && result.text) {
+                const cleaned = result.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+                const parsed = JSON.parse(cleaned);
+                if (Array.isArray(parsed)) {
+                    rawSentences.forEach((s, idx) => {
+                        translationsMap[idx] = parsed[idx] || '';
+                    });
                 }
             }
         } catch (e) {
@@ -6152,30 +6165,19 @@ YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdow
 }`;
 
     try {
-        const response = await fetchWithTimeout(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }],
-                    generationConfig: {
-                        responseMimeType: 'application/json',
-                        temperature: 0.7
-                    }
-                })
-            },
-            16000
-        );
+        const result = await requestGeminiContent(apiKey, {
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.7
+            }
+        }, 18000);
 
         hideLoading();
 
-        if (response.ok) {
-            const data = await response.json();
-            const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (textOutput) {
-                const cleaned = textOutput.replace(/```json/gi, '').replace(/```/g, '').trim();
-                const parsed = JSON.parse(cleaned);
+        if (result.ok && result.text) {
+            const cleaned = result.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+            const parsed = JSON.parse(cleaned);
 
                 const newMaterial = {
                     id: 'ai-' + Date.now(),
@@ -6208,9 +6210,8 @@ YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdow
                 status(`✨ AI đã tạo xong bài học chuẩn ${level}!`, 'success');
                 return;
             }
-        }
-        throw new Error(`Mã lỗi API: ${response.status}`);
-    } catch (err) {
+            throw new Error('Dữ liệu trả về từ Gemini không chứa nội dung hợp lệ');
+        } catch (err) {
         hideLoading();
         status(`⚠️ Lỗi khi tạo bài bằng AI: ${err.message}`, 'error');
     }
