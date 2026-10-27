@@ -131,6 +131,26 @@
                 <div class="stat">📚 Bài đã lưu: <span class="n" id="stories-saved-count">0</span></div>
             </div>
 
+            <!-- Banner Chạy Bộ Marathon 20-30 phút -->
+            <div style="background:linear-gradient(135deg, #ecfdf5, #eff6ff); border:2px solid #10b981; border-radius:16px; padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:0 4px 15px rgba(16,185,129,0.12);">
+                <div>
+                    <div style="font-weight:800; font-size:1.05rem; color:#065f46; display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.3rem;">🏃‍♂️</span> Chế Độ Luyện Nghe Marathon (20 - 30 Phút Chạy Bộ):
+                    </div>
+                    <div style="font-size:0.86rem; color:#047857; margin-top:4px; line-height:1.4;">
+                        Tạo chuỗi hội thoại dài 24-30 câu song ngữ giữa Tiểu Minh &amp; Tiểu Hoa, chạy nền liên tục khi khóa màn hình điện thoại.
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" class="btn" onclick="quickCreateMarathonDialogue()" style="background:linear-gradient(135deg, #10b981, #059669); font-weight:700; padding:9px 18px; box-shadow:0 3px 12px rgba(16,185,129,0.35);">
+                        ⚡ Tạo Nhanh Hội Thoại Marathon
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="openMarathonSampleStory()" style="border-color:#10b981; color:#065f46; font-weight:700; padding:9px 16px; background:#fff;">
+                        🎧 Nghe Bài Mẫu 26 Câu Có Sẵn
+                    </button>
+                </div>
+            </div>
+
             <!-- Generator Control Panel -->
             <div class="story-generator-panel">
                 <h3 style="margin-bottom:16px; color:var(--g8); font-size:1.15rem">⚙️ Tùy Chỉnh Bài Ôn Tập</h3>
@@ -178,10 +198,25 @@
                         <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
                             📏 Độ dài:
                         </label>
-                        <select id="story-length" class="select-field">
+                        <div class="type-toggle-group" style="display:flex; gap:4px; flex-wrap:wrap;">
+                            <button type="button" class="type-toggle-btn length-pill-btn" id="pill-len-short" onclick="setStoryLengthPill('short')" style="flex:1; min-width:65px; padding:6px 8px; font-size:0.8rem;">
+                                Ngắn (4-5)
+                            </button>
+                            <button type="button" class="type-toggle-btn length-pill-btn" id="pill-len-medium" onclick="setStoryLengthPill('medium')" style="flex:1; min-width:65px; padding:6px 8px; font-size:0.8rem;">
+                                Vừa (6-8)
+                            </button>
+                            <button type="button" class="type-toggle-btn length-pill-btn" id="pill-len-long" onclick="setStoryLengthPill('long')" style="flex:1; min-width:65px; padding:6px 8px; font-size:0.8rem;">
+                                Dài (9-12)
+                            </button>
+                            <button type="button" class="type-toggle-btn length-pill-btn active" id="pill-len-marathon" onclick="setStoryLengthPill('marathon')" style="flex:2; min-width:130px; padding:6px 10px; font-size:0.82rem; background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:700; border-color:#059669;">
+                                🏃 Marathon (20-30 câu)
+                            </button>
+                        </div>
+                        <select id="story-length" class="select-field" style="display:none;" onchange="syncStoryLengthPills(this.value)">
                             <option value="short">Ngắn (4 - 5 câu)</option>
-                            <option value="medium" selected>Vừa (6 - 8 câu)</option>
+                            <option value="medium">Vừa (6 - 8 câu)</option>
                             <option value="long">Dài (9 - 12 câu)</option>
+                            <option value="marathon" selected>🏃 Marathon Chạy Bộ (20 - 30 câu ~ 20-30 phút)</option>
                         </select>
                     </div>
                 </div>
@@ -694,6 +729,20 @@
                 <input type="checkbox" id="jog-opt-loop" checked onchange="updateJogSetting('loopArticle', this.checked)">
             </div>
             <div class="jog-setting-row">
+                <label>⏱️ Hẹn giờ chạy bộ (Tự ngắt khi xong):</label>
+                <select id="jog-opt-timer" class="select-field jog-select" onchange="updateJogSetting('durationMinutes', parseInt(this.value))">
+                    <option value="0">Không hẹn giờ (Lặp vô tận)</option>
+                    <option value="20">20 phút (Chạy ngắn)</option>
+                    <option value="30" selected>30 phút (Chạy tiêu chuẩn)</option>
+                    <option value="45">45 phút (Chạy dài)</option>
+                    <option value="60">60 phút (Chạy marathon)</option>
+                </select>
+            </div>
+            <div class="jog-setting-row">
+                <label>🔁 Tự chuyển bài tiếp theo (Playlist liên tục):</label>
+                <input type="checkbox" id="jog-opt-playlist" checked onchange="updateJogSetting('autoPlayPlaylist', this.checked)">
+            </div>
+            <div class="jog-setting-row">
                 <label>🔂 Đọc tiếng Trung 2 lần trước khi dịch:</label>
                 <input type="checkbox" id="jog-opt-repeat-zh" onchange="updateJogSetting('repeatChinese', this.checked)">
             </div>
@@ -763,6 +812,7 @@
                 <span class="jog-indicator" id="jog-ind-loop">🔄 Lặp cả bài</span>
                 <span class="jog-indicator" id="jog-ind-delay">⏱️ Nghỉ 2s</span>
                 <span class="jog-indicator" id="jog-ind-rate">⚡ Tốc độ 0.85x</span>
+                <span class="jog-indicator" id="jog-ind-timer" style="color:#6ee7b7; font-weight:700;">⏱️ 00:00 / 30:00</span>
             </div>
         </div>
     </div>
@@ -789,6 +839,49 @@
                 <div style="font-size:0.85rem; color:#166534; line-height:1.6;">
                     • <strong>Cách 1 (Nghe trực tiếp trên web):</strong> Trong app, chọn chế độ <em>🎵 HTML5 Stream</em> (đã bật sẵn). Khi bấm nghe, bạn có thể khóa màn hình bỏ túi chạy bộ, audio vẫn tiếp tục phát và hiển thị điều khiển trên màn hình khóa!<br>
                     • <strong>Cách 2 (Mở bằng app nghe nhạc chuyên dụng):</strong> Tải file <strong>Playlist (.m3u)</strong> bên dưới về máy, mở bằng <strong>VLC</strong> hoặc <strong>Musicolet</strong> trên điện thoại để nghe không giới hạn trong nền.
+                </div>
+            </div>
+
+            <!-- Khối Tải Trực Tiếp 1 File MP3 Chạy Bộ Ghép Sẵn (Trình Duyệt Tự Xử Lý) -->
+            <div style="background: linear-gradient(135deg, #eff6ff, #f0fdf4); border: 2px solid #3b82f6; border-radius: 14px; padding: 18px; margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                    <div>
+                        <div style="font-weight:800; color:#1e40af; font-size:1.05rem; display:flex; align-items:center; gap:6px;">
+                            <span>⚡</span> Tải Trực Tiếp 1 File MP3 Chạy Bộ (Ngay Trên Điện Thoại):
+                        </div>
+                        <div style="font-size:0.83rem; color:#1e3a8a; margin-top:3px;">
+                            Trình duyệt tự động tải &amp; ghép các câu thành 1 file MP3 duy nhất. Bạn có thể mở bằng bất kỳ app nghe nhạc nào trên máy để chạy bộ khi khóa màn hình.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:12px;">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; color:#334155; margin-bottom:4px;">⏱️ Thời lượng bản MP3 ghép:</label>
+                        <select id="browser-merge-duration" class="select-field" style="margin-bottom:0; font-size:0.85rem; padding:8px;">
+                            <option value="once">Chạy 1 lần bài này (~3 - 5 phút)</option>
+                            <option value="20" selected>Lặp 20 phút chạy bộ (~20 phút MP3)</option>
+                            <option value="30">Lặp 30 phút chạy bộ (~30 phút MP3 - Khuyên dùng)</option>
+                            <option value="all-stories">Ghép toàn bộ bài đã lưu (Marathon Playlist)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; color:#334155; margin-bottom:4px;">🗣️ Chế độ phát âm:</label>
+                        <select id="browser-merge-mode" class="select-field" style="margin-bottom:0; font-size:0.85rem; padding:8px;">
+                            <option value="bilingual" selected>Song ngữ: Trung ➔ Dịch Việt</option>
+                            <option value="repeat-zh">Lặp: Trung (2 lần) ➔ Dịch Việt</option>
+                            <option value="zh-only">Chỉ tiếng Trung</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <button id="btn-browser-merge-mp3" class="btn" onclick="startInBrowserMp3Merge()" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); font-weight:800; padding:10px 20px; box-shadow:0 4px 12px rgba(37,99,235,0.35);">
+                        📥 Bắt Đầu Tạo & Tải MP3
+                    </button>
+                    <div id="browser-merge-progress" style="font-size:0.85rem; font-weight:700; color:#2563eb; display:none;">
+                        ⏳ Đang xử lý...
+                    </div>
                 </div>
             </div>
 

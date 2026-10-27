@@ -2307,6 +2307,25 @@ function loadSavedStories() {
     } catch (e) {
         savedStories = [];
     }
+
+    // Tự động nạp các bài mẫu mặc định từ stories.json (bao gồm bài Marathon Chạy Bộ 26 câu) nếu chưa có
+    if (savedStories.length === 0 || !savedStories.some(s => s.id === 1729655000000)) {
+        fetch('./stories.json').then(r => r.json()).then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+                const existingIds = new Set(savedStories.map(s => s.id));
+                const toAdd = data.filter(d => !existingIds.has(d.id));
+                if (toAdd.length > 0) {
+                    savedStories = [...savedStories, ...toAdd];
+                    saveSavedStories();
+                    renderSavedStoriesList();
+                    if (!currentStory && savedStories.length > 0) {
+                        currentStory = savedStories[savedStories.length - 1];
+                        renderCurrentStory();
+                    }
+                }
+            }
+        }).catch(() => {});
+    }
 }
 
 function saveSavedStories() {
@@ -2373,6 +2392,56 @@ window.setStoryType = function (type) {
             btnStory.classList.add('active');
             btnConv.classList.remove('active');
         }
+    }
+};
+
+window.setStoryLengthPill = function (val) {
+    const sel = document.getElementById('story-length');
+    if (sel) {
+        sel.value = val;
+    }
+    syncStoryLengthPills(val);
+};
+
+window.syncStoryLengthPills = function (val) {
+    document.querySelectorAll('.length-pill-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+    });
+    const target = document.getElementById(`pill-len-${val}`);
+    if (target) {
+        target.classList.add('active');
+        if (val === 'marathon') {
+            target.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            target.style.color = '#fff';
+            target.style.borderColor = '#059669';
+        } else {
+            target.style.background = 'var(--p)';
+            target.style.color = '#fff';
+            target.style.borderColor = 'var(--p)';
+        }
+    }
+};
+
+window.quickCreateMarathonDialogue = function () {
+    setStoryType('conversation');
+    setStoryLengthPill('marathon');
+    const promptInput = document.getElementById('story-custom-prompt');
+    if (promptInput) {
+        promptInput.value = 'Chạy bộ buổi sáng tại công viên, rèn luyện thể dục và thói quen sức khỏe lành mạnh';
+    }
+    triggerStoryGeneration();
+};
+
+window.openMarathonSampleStory = function () {
+    const marathonStory = savedStories.find(s => s.id === 1729655000000) || savedStories[0];
+    if (marathonStory) {
+        currentStory = marathonStory;
+        renderCurrentStory();
+        startJoggingMode(0);
+        status('🏃‍♂️ Đã mở bài hội thoại mẫu Marathon 26 câu!', 'success');
     }
 };
 
@@ -2952,7 +3021,176 @@ function generateSmartStory(type, words, lengthVal, customPrompt = '') {
 
             const lines = [];
 
-            if (isConv) {
+            if (isConv && lengthVal === 'marathon') {
+                // MARATHON DIALOGUE GENERATOR (24 - 30 câu cho chạy bộ 20-30 phút)
+                theme = customPrompt || 'Chạy bộ buổi sáng & Rèn luyện sức khỏe (Marathon 20-30 phút)';
+                titleChinese = '晨跑与健康生活';
+                titlePinyin = 'chén pǎo yǔ jiàn kāng shēng huó';
+                titleViet = customPrompt ? customPrompt.slice(0, 35) : 'Chạy Bộ Buổi Sáng & Sức Khỏe';
+
+                // Phân cảnh 1: Chào hỏi sáng sớm & hẹn chạy bộ ở công viên
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '早上好，小华！今天早上的空气真清新，你也来公园跑步吗？',
+                    pinyin: generatePinyin('早上好，小华！今天早上的空气真清新，你也来公园跑步吗？'),
+                    vietnamese: 'Chào buổi sáng Tiểu Hoa! Không khí sáng nay thật trong lành, bạn cũng đến công viên chạy bộ à?',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '早上好小明！是的，我每天早上都坚持来这里锻炼身体。',
+                    pinyin: generatePinyin('早上好小明！是的，我每天早上都坚持来这里锻炼身体。'),
+                    vietnamese: 'Chào buổi sáng Tiểu Minh! Đúng vậy, mỗi buổi sáng tôi đều kiên trì đến đây rèn luyện thân thể.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '你一般每次跑多长时间？跑得快不快？',
+                    pinyin: generatePinyin('你一般每次跑多长时间？跑得快不快？'),
+                    vietnamese: 'Thông thường mỗi lần bạn chạy bao lâu? Có chạy nhanh không?',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '我一般跑半个小时，大概五公里，速度不快，主要是慢跑。',
+                    pinyin: generatePinyin('我一般跑半个小时，大概五公里，速度不快，主要是慢跑。'),
+                    vietnamese: 'Tôi thường chạy nửa tiếng, khoảng năm cây số, tốc độ không nhanh, chủ yếu là chạy chậm.',
+                    usedWords: []
+                });
+
+                // Phân cảnh 2: Thói quen nghe khi chạy bộ & rèn luyện
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '慢跑对心脏非常好，而且不容易觉得累。跑步时你喜欢听什么？',
+                    pinyin: generatePinyin('慢跑对心脏非常好，而且不容易觉得累。跑步时你喜欢听什么？'),
+                    vietnamese: 'Chạy chậm rất tốt cho tim mạch, hơn nữa lại không dễ cảm thấy mệt. Khi chạy bộ bạn thích nghe gì?',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '我喜欢一边慢跑，一边戴耳机听中文听力和轻音乐，既锻炼身体又学习知识。',
+                    pinyin: generatePinyin('我喜欢一边慢跑，一边戴耳机听中文听力和轻音乐，既锻炼身体又学习知识。'),
+                    vietnamese: 'Tôi thích vừa chạy chậm vừa đeo tai nghe nghe tiếng Trung và nhạc nhẹ, vừa rèn luyện vừa tiếp thu kiến thức.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '这个习惯太棒了！边跑步边听中文，不知不觉半小时就过去了。',
+                    pinyin: generatePinyin('这个习惯太棒了！边跑步边听中文，不知不觉半小时就过去了。'),
+                    vietnamese: 'Thói quen này tuyệt quá! Vừa chạy bộ vừa nghe tiếng Trung, thoắt cái đã hết nửa tiếng rồi.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '跑步前你做热身运动了吗？拉伸肌肉能防止受伤。',
+                    pinyin: generatePinyin('跑步前你做热身运动了吗？拉伸肌肉能防止受伤。'),
+                    vietnamese: 'Trước khi chạy bộ bạn đã khởi động chưa? Giãn cơ có thể phòng ngừa chấn thương.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '我刚刚做了五分钟拉伸，现在觉得全身都充满活力。我们一起跑两圈吧！',
+                    pinyin: generatePinyin('我刚刚做了五分钟拉伸，现在觉得全身都充满活力。我们一起跑两圈吧！'),
+                    vietnamese: 'Tôi vừa mới giãn cơ năm phút, bây giờ cảm thấy toàn thân tràn đầy năng lượng. Chúng ta cùng chạy hai vòng nhé!',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '好啊！你看，今天湖边的风景真美，微风吹着很舒服。',
+                    pinyin: generatePinyin('好啊！你看，今天湖边的风景真美，微风吹着很舒服。'),
+                    vietnamese: 'Được thôi! Bạn nhìn xem, phong cảnh bên hồ hôm nay thật đẹp, gió nhẹ thổi rất dễ chịu.',
+                    usedWords: []
+                });
+
+                // Phân cảnh 3: Lồng ghép từ vựng mục tiêu của người dùng
+                words.forEach((w, idx) => {
+                    const speaker = (idx % 2 === 0) ? 'A' : 'B';
+                    const speakerName = (speaker === 'A') ? '小明' : '小华';
+                    
+                    let cText = '';
+                    let vText = '';
+                    if (/uống|cà phê|trà|nước|ăn/i.test(w.vietnamese || '')) {
+                        cText = `说到${w.chinese}，运动出汗之后一定要补充水分和营养。`;
+                        vText = `Nói đến ${w.vietnamese}, sau khi vận động ra mồ hôi nhất định phải bổ sung nước và dinh dưỡng.`;
+                    } else if (/đi|đến|du lịch|chơi/i.test(w.vietnamese || '')) {
+                        cText = `周末天气好的时候，我也很喜欢去${w.chinese}，感觉特别放松。`;
+                        vText = `Cuối tuần khi thời tiết đẹp, tôi cũng rất thích đi ${w.vietnamese}, cảm thấy vô cùng thư giãn.`;
+                    } else if (/thích|yêu|muốn/i.test(w.vietnamese || '')) {
+                        cText = `只要保持积极的心态，我们都会越来越${w.chinese}这样的生活方式。`;
+                        vText = `Chỉ cần giữ tâm thế tích cực, chúng ta đều sẽ ngày càng ${w.vietnamese} lối sống như thế này.`;
+                    } else {
+                        cText = `在日常生活中经常用到${w.chinese}，对中文口语表达很有帮助。`;
+                        vText = `Trong đời sống hàng ngày thường xuyên dùng đến ${w.vietnamese}, rất có ích cho diễn đạt khẩu ngữ tiếng Trung.`;
+                    }
+                    lines.push({
+                        speaker, speakerName,
+                        chinese: cText,
+                        pinyin: generatePinyin(cText),
+                        vietnamese: vText,
+                        usedWords: [w.chinese]
+                    });
+                });
+
+                // Phân cảnh 4: Thảo luận về ăn uống dinh dưỡng sau khi chạy & công việc
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '跑完步以后，你一般喜欢吃什么营养早餐？',
+                    pinyin: generatePinyin('跑完步以后，你一般喜欢吃什么营养早餐？'),
+                    vietnamese: 'Sau khi chạy bộ xong, bạn thường thích ăn món gì cho bữa sáng dinh dưỡng?',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '我习惯先喝一杯温水，然后吃两个鸡蛋、一片面包，再喝一杯牛奶。',
+                    pinyin: generatePinyin('我习惯先喝一杯温水，然后吃两个鸡蛋、一片面包，再喝一杯牛奶。'),
+                    vietnamese: 'Tôi có thói quen uống một cốc nước ấm trước, sau đó ăn hai quả trứng gà, một lát bánh mì, rồi uống một cốc sữa.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '这样的早餐既营养又健康！跑完步之后你喝咖啡吗？',
+                    pinyin: generatePinyin('这样的早餐既营养又健康！跑完步之后你喝咖啡吗？'),
+                    vietnamese: 'Bữa sáng như vậy vừa bổ dưỡng vừa khỏe mạnh! Chạy bộ xong bạn có uống cà phê không?',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '会的！我习惯去公园门口那家小店点一杯黑咖啡，能加快新陈代谢，整个人特别精神。',
+                    pinyin: generatePinyin('会的！我习惯去公园门口那家小店点一杯黑咖啡，能加快新陈代谢，整个人特别精神。'),
+                    vietnamese: 'Có chứ! Tôi thường ghé quán nhỏ ở cổng công viên gọi một ly cà phê đen, giúp tăng trao đổi chất, con người rất tỉnh táo.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '一会儿跑完步，我们一起去那家店坐坐吧，我请客！',
+                    pinyin: generatePinyin('一会儿跑完步，我们一起去那家店坐坐吧，我请客！'),
+                    vietnamese: 'Lát nữa chạy bộ xong, chúng mình cùng ghé quán đó ngồi nhé, tôi mời!',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '太好了，谢谢你！今天和你一起晨跑聊天，真的很有动力。',
+                    pinyin: generatePinyin('太好了，谢谢你！今天和你一起晨跑聊天，真的很有动力。'),
+                    vietnamese: 'Tuyệt quá, cảm ơn bạn nhé! Hôm nay cùng bạn chạy bộ buổi sáng và trò chuyện thật sự rất có động lực.',
+                    usedWords: []
+                });
+
+                // Phân cảnh 5: Động viên kiên trì & hẹn gặp ngày mai
+                lines.push({
+                    speaker: 'A', speakerName: '小明',
+                    chinese: '明天早上六点半，我们还在这里见面，继续坚持跑步！',
+                    pinyin: generatePinyin('明天早上六点半，我们还在这里见面，继续坚持跑步！'),
+                    vietnamese: 'Sáng mai sáu giờ rưỡi, chúng mình lại gặp nhau ở đây, tiếp tục kiên trì chạy bộ nhé!',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华',
+                    chinese: '一言为定！让我们一起加油，拥有健康的身体和快乐的心情！',
+                    pinyin: generatePinyin('一言为定！让我们一起加油，拥有健康的身体和快乐的心情！'),
+                    vietnamese: 'Nhất trí như vậy nhé! Chúng ta cùng cố lên, để có một thân thể khỏe mạnh và tâm trạng vui vẻ!',
+                    usedWords: []
+                });
+            } else if (isConv) {
                 // DIALOGUE GENERATOR
                 // Opening greeting
                 lines.push({
@@ -3160,7 +3398,10 @@ window.generateGeminiStory = async function (type, words, lengthVal, customPromp
         return;
     }
 
-    const lengthCount = lengthVal === 'short' ? '4-5' : (lengthVal === 'long' ? '9-12' : '6-8');
+    const lengthCount = (lengthVal === 'marathon') ? '24-30' : (lengthVal === 'short' ? '4-5' : (lengthVal === 'long' ? '9-12' : '6-8'));
+    const marathonDirective = (lengthVal === 'marathon')
+        ? `\nĐÂY LÀ BẢN MARATHON DÀI 20-30 PHÚT DÙNG ĐỂ NGHE KHI CHẠY BỘ: Hãy sáng tác một chuỗi hội thoại dài chi tiết khoảng 24-30 câu giữa A (小明) và B (小华), diễn ra liên tục qua các phân cảnh tự nhiên (gặp gỡ chạy bộ, thể dục, sức khỏe, thói quen sinh hoạt, bữa sáng dinh dưỡng, cà phê, công việc, động viên kiên trì) để người học nghe liên tục không bị chán.`
+        : '';
     const wordListStr = words.map(w => `${w.chinese} (${w.pinyin || ''} - ${w.vietnamese || w.meaning || ''})`).join(', ');
 
     // Check if user wants to weave in existing vocabulary from library
@@ -3183,7 +3424,7 @@ window.generateGeminiStory = async function (type, words, lengthVal, customPromp
     showLoading('🤖 AI đang sáng tác bài học...', 'Đang kết hợp cảm hứng, ngữ cảnh và từ vựng...');
 
     const promptText = `Bạn là giáo viên tiếng Trung dạy học sinh người Việt. Tạo một ${type === 'conversation' ? 'đoạn hội thoại tự nhiên, giàu tính ứng dụng giữa 2 nhân vật (A: 小明, B: 小华)' : 'mẩu chuyện ngắn sinh động, lôi cuốn'} tiếng Trung trình độ HSK 1-3.
-${topicDirective}
+${topicDirective}${marathonDirective}
 Từ vựng mục tiêu bắt buộc xuất hiện trong bài: ${wordListStr}.${extraVocabPrompt}
 Độ dài: khoảng ${lengthCount} câu.
 
@@ -3213,7 +3454,7 @@ YÊU CẦU: Trả về DUY NHẤT một mã JSON hợp lệ (không kèm Markdow
                 responseMimeType: 'application/json',
                 temperature: 0.7
             }
-        }, 18000);
+        }, (lengthVal === 'marathon' ? 32000 : 18000));
 
         hideLoading();
 
@@ -3251,7 +3492,7 @@ window.copyAIPrompt = function () {
         return;
     }
     const lengthVal = document.getElementById('story-length')?.value || 'medium';
-    const lengthCount = lengthVal === 'short' ? '4-5' : (lengthVal === 'long' ? '9-12' : '6-8');
+    const lengthCount = (lengthVal === 'marathon') ? '24-30' : (lengthVal === 'short' ? '4-5' : (lengthVal === 'long' ? '9-12' : '6-8'));
     const wordListStr = targetStoryWords.map(w => `${w.chinese} (${w.pinyin || ''} - ${w.vietnamese || w.meaning || ''})`).join(', ');
 
     const promptInput = document.getElementById('story-custom-prompt');
@@ -3660,7 +3901,9 @@ let jogSettings = {
     pauseBetweenSentences: 2000, // Khoảng nghỉ giữa các câu (ms)
     rateChinese: 0.85,           // Tốc độ tiếng Trung
     rateVietnamese: 1.0,         // Tốc độ tiếng Việt
-    audioEngine: 'stream'        // 'stream' (HTML5 Audio Stream - khóa màn hình) hoặc 'speech' (Web Speech API)
+    audioEngine: 'stream',       // 'stream' (HTML5 Audio Stream - khóa màn hình) hoặc 'speech' (Web Speech API)
+    durationMinutes: 30,         // Mục tiêu thời lượng chạy bộ (phút, 0 = lặp vô tận)
+    autoPlayPlaylist: true       // Tự động chuyển bài tiếp theo khi hết bài
 };
 
 // Tự động nạp cấu hình đã lưu
@@ -3670,6 +3913,13 @@ try {
         jogSettings = Object.assign(jogSettings, JSON.parse(savedJog));
     }
 } catch (e) {}
+
+// Biến theo dõi bài tập chạy bộ
+let jogElapsedSeconds = 0;
+let jogWorkoutTimerId = null;
+let jogWakeLock = null;
+let jogAudioCtx = null;
+let jogOscNode = null;
 
 // HTML5 Stream Audio Engine (chạy ngầm khi khóa màn hình điện thoại)
 let jogHtmlAudio = null;
@@ -3698,6 +3948,89 @@ function stopStreamAudio() {
 function getGoogleTTSUrl(text, lang) {
     const targetLang = (lang === 'zh-CN' || lang === 'zh') ? 'zh-CN' : 'vi';
     return `https://translate.google.com/translate_tts?ie=UTF-8&tl=${targetLang}&client=tw-ob&q=${encodeURIComponent((text || '').trim())}`;
+}
+
+// Tạo data URI chứa file WAV khoảng lặng chính xác từng mili-giây
+// Bí quyết khóa màn hình mobile: luôn giữ thẻ <audio> ở trạng thái active playing qua sự kiện onended,
+// không để audio dừng hẳn rồi gọi setTimeout (vốn bị iOS Safari & Android Chrome đóng băng khi tắt màn hình)
+function createSilentWavDataUri(durationMs) {
+    const sampleRate = 8000;
+    const numSamples = Math.max(1, Math.floor((sampleRate * Math.max(150, durationMs)) / 1000));
+    const subChunk2Size = numSamples;
+    const chunkSize = 36 + subChunk2Size;
+    const buffer = new Uint8Array(44 + subChunk2Size);
+
+    // RIFF Header
+    buffer[0] = 0x52; buffer[1] = 0x49; buffer[2] = 0x46; buffer[3] = 0x46; // "RIFF"
+    buffer[4] = chunkSize & 0xff;
+    buffer[5] = (chunkSize >> 8) & 0xff;
+    buffer[6] = (chunkSize >> 16) & 0xff;
+    buffer[7] = (chunkSize >> 24) & 0xff;
+    // WAVE Header
+    buffer[8] = 0x57; buffer[9] = 0x41; buffer[10] = 0x56; buffer[11] = 0x45; // "WAVE"
+    // fmt subchunk
+    buffer[12] = 0x66; buffer[13] = 0x6d; buffer[14] = 0x74; buffer[15] = 0x20; // "fmt "
+    buffer[16] = 16; buffer[17] = 0; buffer[18] = 0; buffer[19] = 0; // Subchunk1Size (16 for PCM)
+    buffer[20] = 1; buffer[21] = 0; // AudioFormat (1 for PCM)
+    buffer[22] = 1; buffer[23] = 0; // NumChannels (1 mono)
+    buffer[24] = sampleRate & 0xff;
+    buffer[25] = (sampleRate >> 8) & 0xff;
+    buffer[26] = (sampleRate >> 16) & 0xff;
+    buffer[27] = (sampleRate >> 24) & 0xff;
+    buffer[28] = sampleRate & 0xff; // ByteRate
+    buffer[29] = (sampleRate >> 8) & 0xff;
+    buffer[30] = (sampleRate >> 16) & 0xff;
+    buffer[31] = (sampleRate >> 24) & 0xff;
+    buffer[32] = 1; buffer[33] = 0; // BlockAlign
+    buffer[34] = 8; buffer[35] = 0; // BitsPerSample (8)
+    // data subchunk
+    buffer[36] = 0x64; buffer[37] = 0x61; buffer[38] = 0x74; buffer[39] = 0x61; // "data"
+    buffer[40] = subChunk2Size & 0xff;
+    buffer[41] = (subChunk2Size >> 8) & 0xff;
+    buffer[42] = (subChunk2Size >> 16) & 0xff;
+    buffer[43] = (subChunk2Size >> 24) & 0xff;
+
+    // 8-bit unsigned PCM silence is 128 (0x80)
+    for (let i = 0; i < subChunk2Size; i++) {
+        buffer[44 + i] = 128;
+    }
+
+    let binary = '';
+    const len = buffer.byteLength;
+    const step = 8192;
+    for (let i = 0; i < len; i += step) {
+        binary += String.fromCharCode.apply(null, buffer.subarray(i, Math.min(i + step, len)));
+    }
+    return 'data:audio/wav;base64,' + btoa(binary);
+}
+
+// Phát khoảng lặng bằng chính thẻ jogHtmlAudio để trình duyệt không đóng luồng audio background
+function playSilentPause(durationMs, onFinish) {
+    if (!isJoggingActive || isJoggingPaused) return;
+
+    const audio = getJogHtmlAudio();
+    const silentUri = createSilentWavDataUri(durationMs);
+    audio.src = silentUri;
+    audio.playbackRate = 1.0;
+
+    let finished = false;
+    const done = () => {
+        if (finished) return;
+        finished = true;
+        audio.onended = null;
+        audio.onerror = null;
+        if (typeof onFinish === 'function') onFinish();
+    };
+
+    audio.onended = done;
+    audio.onerror = done;
+
+    const p = audio.play();
+    if (p !== undefined) {
+        p.catch(() => {
+            setTimeout(done, durationMs);
+        });
+    }
 }
 
 function playStreamAudio(text, lang, rate, onEndCallback, onErrorCallback) {
@@ -3731,27 +4064,95 @@ function playStreamAudio(text, lang, rate, onEndCallback, onErrorCallback) {
     }
 }
 
-// Background keepalive audio for mobile lock screen / jogging
-const SILENT_AUDIO_URI = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-let silentAudioEl = null;
-
-function startAudioKeepalive() {
+// Web Audio API hardware keepalive: giữ luồng audio daemon của hệ điều hành không bị giải phóng
+function startAudioHardwareKeepalive() {
     try {
-        if (!silentAudioEl) {
-            silentAudioEl = new Audio(SILENT_AUDIO_URI);
-            silentAudioEl.loop = true;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!jogAudioCtx) {
+            jogAudioCtx = new AudioCtx();
         }
-        silentAudioEl.play().catch(() => {});
+        if (jogAudioCtx.state === 'suspended') {
+            jogAudioCtx.resume();
+        }
+        if (!jogOscNode) {
+            const osc = jogAudioCtx.createOscillator();
+            const gain = jogAudioCtx.createGain();
+            gain.gain.value = 0.00001; // cực kỳ nhỏ, tai người không nghe thấy nhưng đủ giữ luồng âm thanh
+            osc.frequency.value = 440;
+            osc.connect(gain);
+            gain.connect(jogAudioCtx.destination);
+            osc.start();
+            jogOscNode = osc;
+        }
     } catch (e) {}
 }
 
-function stopAudioKeepalive() {
+function stopAudioHardwareKeepalive() {
     try {
-        if (silentAudioEl) silentAudioEl.pause();
+        if (jogOscNode) {
+            jogOscNode.stop();
+            jogOscNode.disconnect();
+            jogOscNode = null;
+        }
     } catch (e) {}
 }
 
-// MediaSession setup for Bluetooth headphones & lock screen
+// Screen Wake Lock API: giữ màn hình sáng nếu người dùng gắn điện thoại vào bắp tay/máy chạy bộ
+async function requestJogWakeLock() {
+    if ('wakeLock' in navigator && !jogWakeLock) {
+        try {
+            jogWakeLock = await navigator.wakeLock.request('screen');
+            jogWakeLock.addEventListener('release', () => {
+                jogWakeLock = null;
+            });
+        } catch (e) {}
+    }
+}
+
+function releaseJogWakeLock() {
+    if (jogWakeLock) {
+        try { jogWakeLock.release(); } catch (e) {}
+        jogWakeLock = null;
+    }
+}
+
+// Quản lý đếm giờ chạy bộ
+function startWorkoutTimer() {
+    stopWorkoutTimer();
+    jogWorkoutTimerId = setInterval(() => {
+        if (!isJoggingActive || isJoggingPaused) return;
+        jogElapsedSeconds++;
+        updateJogTimerDisplay();
+
+        // Kiểm tra đạt mục tiêu thời gian tập
+        if (jogSettings.durationMinutes > 0 && jogElapsedSeconds >= jogSettings.durationMinutes * 60) {
+            status(`🎉 Chúc mừng bạn đã hoàn thành mục tiêu chạy bộ ${jogSettings.durationMinutes} phút!`, 'success');
+            stopJoggingMode();
+        }
+    }, 1000);
+}
+
+function stopWorkoutTimer() {
+    if (jogWorkoutTimerId) {
+        clearInterval(jogWorkoutTimerId);
+        jogWorkoutTimerId = null;
+    }
+}
+
+function updateJogTimerDisplay() {
+    const mins = Math.floor(jogElapsedSeconds / 60);
+    const secs = jogElapsedSeconds % 60;
+    const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    const targetStr = jogSettings.durationMinutes > 0 ? `${jogSettings.durationMinutes}:00` : '∞';
+
+    const timerEl = document.getElementById('jog-ind-timer');
+    if (timerEl) {
+        timerEl.textContent = `⏱️ ${timeStr} / ${targetStr}`;
+    }
+}
+
+// MediaSession setup cho tai nghe Bluetooth & màn hình khóa
 function setupMediaSessionHandlers() {
     if ('mediaSession' in navigator) {
         try {
@@ -3760,6 +4161,8 @@ function setupMediaSessionHandlers() {
             navigator.mediaSession.setActionHandler('nexttrack', () => jogNextSentence());
             navigator.mediaSession.setActionHandler('previoustrack', () => jogPrevSentence());
             navigator.mediaSession.setActionHandler('stop', () => stopJoggingMode());
+            navigator.mediaSession.setActionHandler('seekbackward', () => jogPrevSentence());
+            navigator.mediaSession.setActionHandler('seekforward', () => jogNextSentence());
         } catch (e) {}
     }
 }
@@ -3767,10 +4170,15 @@ function setupMediaSessionHandlers() {
 function updateMediaSession(chinese, vietnamese, index, total) {
     if ('mediaSession' in navigator) {
         try {
+            const mins = Math.floor(jogElapsedSeconds / 60);
+            const secs = jogElapsedSeconds % 60;
+            const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            const targetStr = jogSettings.durationMinutes > 0 ? `${jogSettings.durationMinutes}m` : '∞';
+
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: `${chinese}`,
                 artist: `${vietnamese || 'Đang phát...' }`,
-                album: `🏃‍♂️ ${currentStory?.title || 'Luyện Nghe Thụ Động'} (${index + 1}/${total})`,
+                album: `🏃 [${timeStr}/${targetStr}] ${currentStory?.title || 'Chạy Bộ'} (${index + 1}/${total})`,
                 artwork: [
                     { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
                     { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
@@ -3787,8 +4195,8 @@ window.startJoggingMode = function (startIndex = 0) {
         return;
     }
 
-    if (!('speechSynthesis' in window)) {
-        status('⚠️ Trình duyệt của bạn không hỗ trợ Web Speech API phát âm', 'error');
+    if (!('speechSynthesis' in window) && !('Audio' in window)) {
+        status('⚠️ Trình duyệt của bạn không hỗ trợ phát âm thanh', 'error');
         return;
     }
 
@@ -3797,7 +4205,9 @@ window.startJoggingMode = function (startIndex = 0) {
     jogCurrentIndex = Math.max(0, Math.min(startIndex, currentStory.lines.length - 1));
     jogChineseSpokenCount = 0;
 
-    startAudioKeepalive();
+    startAudioHardwareKeepalive();
+    requestJogWakeLock();
+    startWorkoutTimer();
     setupMediaSessionHandlers();
 
     const container = document.getElementById('jogging-player-container');
@@ -3809,8 +4219,9 @@ window.startJoggingMode = function (startIndex = 0) {
     if (btnPlayPause) btnPlayPause.innerHTML = '⏸️';
 
     updateJogPlayerUI();
+    updateJogTimerDisplay();
     playJoggingSentence();
-    status('🏃‍♂️ Đã bật chế độ Nghe Chạy Bộ! (Tiếng Trung ➔ Dịch Việt)', 'success');
+    status('🏃‍♂️ Đã bật chế độ Nghe Chạy Bộ! (Khóa màn hình vẫn phát liên tục)', 'success');
 };
 
 window.stopJoggingMode = function () {
@@ -3821,7 +4232,9 @@ window.stopJoggingMode = function () {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
     }
-    stopAudioKeepalive();
+    stopAudioHardwareKeepalive();
+    releaseJogWakeLock();
+    stopWorkoutTimer();
 
     document.querySelectorAll('.sentence-speaking').forEach(el => el.classList.remove('sentence-speaking'));
 
@@ -3874,6 +4287,8 @@ function resumeJoggingPlayer() {
     const btn = document.getElementById('btn-jog-playpause');
     if (btn) btn.innerHTML = '⏸️';
     jogChineseSpokenCount = 0;
+    startAudioHardwareKeepalive();
+    requestJogWakeLock();
     playJoggingSentence();
 
     if ('mediaSession' in navigator) {
@@ -3922,6 +4337,36 @@ window.jogReplayCurrent = function () {
     playJoggingSentence();
 };
 
+// Tự động chuyển bài tiếp theo trong Playlist khi hoàn thành bài hiện tại
+function advanceToNextPlaylistStory() {
+    const allStories = (savedStories && savedStories.length > 0) ? savedStories : [currentStory];
+    let nextStory = null;
+
+    if (currentStory) {
+        const curIdx = allStories.findIndex(s => s.id === currentStory.id);
+        if (curIdx >= 0 && curIdx < allStories.length - 1) {
+            nextStory = allStories[curIdx + 1];
+        } else if (allStories.length > 0) {
+            nextStory = allStories[0]; // Quay vòng lại bài đầu
+        }
+    }
+
+    if (nextStory && nextStory.lines && nextStory.lines.length > 0) {
+        currentStory = nextStory;
+        jogCurrentIndex = 0;
+        jogChineseSpokenCount = 0;
+        renderCurrentStory();
+        updateJogPlayerUI();
+        status(`🔁 Tự động chuyển sang bài: "${currentStory.title}"`, 'info');
+        playSilentPause(1500, playJoggingSentence);
+    } else {
+        // Lặp lại bài hiện tại
+        jogCurrentIndex = 0;
+        jogChineseSpokenCount = 0;
+        playSilentPause(1500, playJoggingSentence);
+    }
+}
+
 function playJoggingSentence() {
     if (!isJoggingActive || isJoggingPaused) return;
     if (!currentStory || !currentStory.lines || currentStory.lines.length === 0) {
@@ -3930,12 +4375,15 @@ function playJoggingSentence() {
     }
 
     if (jogCurrentIndex >= currentStory.lines.length) {
-        if (jogSettings.loopArticle) {
+        if (jogSettings.autoPlayPlaylist && savedStories.length > 1) {
+            advanceToNextPlaylistStory();
+            return;
+        } else if (jogSettings.loopArticle) {
             jogCurrentIndex = 0;
             jogChineseSpokenCount = 0;
             const statusText = document.getElementById('jog-status-text');
             if (statusText) statusText.textContent = '🔄 Hết bài! Lặp lại từ đầu...';
-            jogTimeoutId = setTimeout(playJoggingSentence, 1500);
+            playSilentPause(1500, playJoggingSentence);
             return;
         } else {
             stopJoggingMode();
@@ -3975,18 +4423,18 @@ function speakChineseStep(currentLine) {
 
         jogChineseSpokenCount++;
         if (jogSettings.repeatChinese && jogChineseSpokenCount < 2) {
-            jogTimeoutId = setTimeout(() => {
+            playSilentPause(600, () => {
                 speakChineseStep(currentLine);
-            }, 600);
+            });
             return;
         }
 
         jogChineseSpokenCount = 0;
 
         if (jogSettings.includeViet && currentLine.vietnamese) {
-            jogTimeoutId = setTimeout(() => {
+            playSilentPause(jogSettings.pauseAfterChinese, () => {
                 speakVietnameseStep(currentLine);
-            }, jogSettings.pauseAfterChinese);
+            });
         } else {
             scheduleNextSentenceGap();
         }
@@ -4060,11 +4508,11 @@ function scheduleNextSentenceGap() {
     const delaySec = Math.round(jogSettings.pauseBetweenSentences / 100) / 10;
     if (statusText) statusText.textContent = `⏱️ Nghỉ ${delaySec}s trước câu tiếp...`;
 
-    jogTimeoutId = setTimeout(() => {
+    playSilentPause(jogSettings.pauseBetweenSentences, () => {
         if (!isJoggingActive || isJoggingPaused) return;
         jogCurrentIndex++;
         playJoggingSentence();
-    }, jogSettings.pauseBetweenSentences);
+    });
 }
 
 function updateJogPlayerUI() {
@@ -4096,9 +4544,10 @@ function updateJogPlayerUI() {
     const indRate = document.getElementById('jog-ind-rate');
 
     if (indViet) indViet.textContent = jogSettings.includeViet ? '🇻🇳 Dịch: Bật' : '🇻🇳 Dịch: Tắt';
-    if (indLoop) indLoop.textContent = jogSettings.loopArticle ? '🔄 Lặp cả bài' : '➡️ Chạy 1 lần';
+    if (indLoop) indLoop.textContent = jogSettings.autoPlayPlaylist ? '🔁 Playlist liên tục' : (jogSettings.loopArticle ? '🔄 Lặp cả bài' : '➡️ Chạy 1 lần');
     if (indDelay) indDelay.textContent = `⏱️ Nghỉ ${jogSettings.pauseBetweenSentences / 1000}s`;
     if (indRate) indRate.textContent = `⚡ Tốc độ ${jogSettings.rateChinese}x`;
+    updateJogTimerDisplay();
 }
 
 window.toggleJogSettingsModal = function () {
@@ -4286,6 +4735,155 @@ window.downloadSentenceAudio = function (text, lang, filename) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+};
+
+window.startInBrowserMp3Merge = async function () {
+    if (!currentStory || !currentStory.lines || currentStory.lines.length === 0) {
+        status('⚠️ Hãy tạo hoặc chọn một bài đọc trước khi tạo file ghép!', 'warning');
+        return;
+    }
+
+    const durVal = document.getElementById('browser-merge-duration')?.value || '20';
+    const modeVal = document.getElementById('browser-merge-mode')?.value || 'bilingual';
+    const progressEl = document.getElementById('browser-merge-progress');
+    const btn = document.getElementById('btn-browser-merge-mp3');
+
+    if (btn) btn.disabled = true;
+    if (progressEl) {
+        progressEl.style.display = 'inline-block';
+        progressEl.textContent = '⏳ Đang phân tích danh sách câu...';
+    }
+
+    try {
+        let storyList = [currentStory];
+        if (durVal === 'all-stories' && savedStories && savedStories.length > 0) {
+            storyList = savedStories;
+        }
+
+        let sentenceQueue = [];
+        storyList.forEach(st => {
+            (st.lines || []).forEach(l => sentenceQueue.push({ ...l, storyTitle: st.title }));
+        });
+
+        if (sentenceQueue.length === 0) throw new Error('Không có câu nào để ghép');
+
+        // Tính số vòng lặp để đạt thời lượng mục tiêu (20 phút / 30 phút)
+        const estSecPerSent = modeVal === 'repeat-zh' ? 16 : (modeVal === 'zh-only' ? 5 : 11);
+        let targetLoops = 1;
+        if (durVal === '20') {
+            targetLoops = Math.max(1, Math.round((20 * 60) / (sentenceQueue.length * estSecPerSent)));
+        } else if (durVal === '30') {
+            targetLoops = Math.max(1, Math.round((30 * 60) / (sentenceQueue.length * estSecPerSent)));
+        }
+
+        let expanded = [];
+        for (let r = 0; r < targetLoops; r++) {
+            expanded.push(...sentenceQueue);
+        }
+
+        // Cache âm thanh đã tải để không tải lặp lại qua network
+        const audioCache = new Map();
+
+        // Chuẩn khung khoảng lặng MPEG-2 Layer 3 24kHz 32kbps mono (96 bytes/frame)
+        const SILENT_FRAME_SIZE = 96;
+        function getMp3SilenceBuffer(numFrames) {
+            const buf = new Uint8Array(numFrames * SILENT_FRAME_SIZE);
+            for (let f = 0; f < numFrames; f++) {
+                const off = f * SILENT_FRAME_SIZE;
+                buf[off] = 0xFF;
+                buf[off + 1] = 0xF3;
+                buf[off + 2] = 0x84;
+                buf[off + 3] = 0xC4;
+            }
+            return buf;
+        }
+
+        const silence1s = getMp3SilenceBuffer(41);
+        const silence2s = getMp3SilenceBuffer(75);
+        const silence600ms = getMp3SilenceBuffer(25);
+
+        const totalUnique = new Set();
+        expanded.forEach(item => {
+            if (item.chinese) totalUnique.add(`zh:${item.chinese}`);
+            if (modeVal !== 'zh-only' && item.vietnamese) totalUnique.add(`vi:${item.vietnamese}`);
+        });
+
+        let loadedCount = 0;
+        const totalToFetch = totalUnique.size;
+
+        async function fetchAudio(text, lang) {
+            const key = `${lang}:${text}`;
+            if (audioCache.has(key)) return audioCache.get(key);
+
+            const url = getGoogleTTSUrl(text, lang);
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Lỗi tải âm thanh HTTP ${res.status}`);
+            const arrayBuf = await res.arrayBuffer();
+            audioCache.set(key, arrayBuf);
+
+            loadedCount++;
+            if (progressEl) {
+                const pct = Math.round((loadedCount / totalToFetch) * 100);
+                progressEl.textContent = `⏳ Đang tải âm thanh: ${loadedCount}/${totalToFetch} (${pct}%)...`;
+            }
+            return arrayBuf;
+        }
+
+        for (const itemKey of totalUnique) {
+            const isZh = itemKey.startsWith('zh:');
+            const lang = isZh ? 'zh-CN' : 'vi';
+            const text = itemKey.slice(3);
+            await fetchAudio(text, lang);
+            await new Promise(r => setTimeout(r, 50));
+        }
+
+        if (progressEl) progressEl.textContent = '⚡ Đang ghép nối các đoạn âm thanh thành file MP3...';
+
+        const mergedParts = [];
+        for (const sent of expanded) {
+            const zhBuf = audioCache.get(`zh:${sent.chinese}`);
+            if (zhBuf) mergedParts.push(zhBuf);
+
+            if (modeVal === 'repeat-zh') {
+                mergedParts.push(silence600ms);
+                if (zhBuf) mergedParts.push(zhBuf);
+            }
+
+            if (modeVal !== 'zh-only' && sent.vietnamese) {
+                mergedParts.push(silence1s);
+                const viBuf = audioCache.get(`vi:${sent.vietnamese}`);
+                if (viBuf) mergedParts.push(viBuf);
+            }
+
+            mergedParts.push(silence2s);
+        }
+
+        const finalBlob = new Blob(mergedParts, { type: 'audio/mpeg' });
+        const safeTitle = (currentStory.title || 'Chay_Bo').replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_');
+        const durationTag = durVal === 'once' ? '1_Lan' : (durVal === 'all-stories' ? 'Marathon_All' : `${durVal}Phut`);
+        const fileName = `${safeTitle}_ChayBo_${durationTag}.mp3`;
+
+        const downloadUrl = URL.createObjectURL(finalBlob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
+
+        const sizeMb = (finalBlob.size / (1024 * 1024)).toFixed(1);
+        if (progressEl) {
+            progressEl.textContent = `✅ Đã tạo xong file ${fileName} (${sizeMb} MB)!`;
+        }
+        status(`🎉 Đã tải file MP3 chạy bộ (${fileName} - ${sizeMb} MB) về máy thành công!`, 'success');
+    } catch (err) {
+        console.error('Error merging MP3 in browser:', err);
+        if (progressEl) progressEl.textContent = `❌ Lỗi: ${err.message}`;
+        status(`❌ Lỗi tạo file MP3: ${err.message}`, 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
 };
 
 window.openAudioDownloadModal = function () {

@@ -60,5 +60,253 @@
         "usedWords": ["朋友"]
       }
     ]
+  },
+  {
+    "id": 1729655000000,
+    "title": "晨跑与健康生活 (Marathon Chạy Bộ)",
+    "titlePinyin": "chén pǎo yǔ jiàn kāng shēng huó",
+    "titleViet": "Chạy bộ buổi sáng và lối sống khỏe mạnh",
+    "type": "conversation",
+    "theme": "🏃 Chạy bộ thể thao & Sức khỏe (Bản dài 20-30 phút)",
+    "prompt": "Hội thoại mẫu marathon dài luyện nghe thụ động khi chạy bộ, nói về thể thao, sức khỏe, thói quen và ăn uống",
+    "createdAt": "26/10/2026, 21:30:00",
+    "syncedGithub": true,
+    "targetWords": [
+      {
+        "chinese": "跑步",
+        "pinyin": "pǎobù",
+        "vietnamese": "chạy bộ"
+      },
+      {
+        "chinese": "身体",
+        "pinyin": "shēntǐ",
+        "vietnamese": "sức khỏe, thân thể"
+      },
+      {
+        "chinese": "锻炼",
+        "pinyin": "duànliàn",
+        "vietnamese": "rèn luyện, tập thể dục"
+      },
+      {
+        "chinese": "习惯",
+        "pinyin": "xíguàn",
+        "vietnamese": "thói quen"
+      },
+      {
+        "chinese": "坚持",
+        "pinyin": "jiānchí",
+        "vietnamese": "kiên trì"
+      }
+    ],
+    "lines": [
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "早上好，小华！今天早上的空气真清新，你也来公园跑步吗？",
+        "pinyin": "Zǎoshang hǎo, Xiǎohuá! Jīntiān zǎoshang de kōngqì zhēn qīngxīn, nǐ yě lái gōngyuán pǎobù ma?",
+        "vietnamese": "Chào buổi sáng Tiểu Hoa! Không khí sáng nay thật trong lành, bạn cũng đến công viên chạy bộ à?",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "早上好小明！是的，我每天早上都坚持来这里锻炼身体。",
+        "pinyin": "Zǎoshang hǎo Xiǎomíng! Shì de, wǒ měitiān zǎoshang dōu jiānchí lái zhèlǐ duànliàn shēntǐ.",
+        "vietnamese": "Chào buổi sáng Tiểu Minh! Đúng vậy, mỗi buổi sáng tôi đều kiên trì đến đây rèn luyện thân thể.",
+        "usedWords": ["坚持", "锻炼", "身体"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "你一般每次跑多长时间？跑得快不快？",
+        "pinyin": "Nǐ yìbān měicì pǎo duō cháng shíjiān? Pǎo de kuài bu kuài?",
+        "vietnamese": "Thông thường mỗi lần bạn chạy bao lâu? Có chạy nhanh không?",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "我一般跑半个小时，大概五公里，速度不快，主要是慢跑。",
+        "pinyin": "Wǒ yìbān pǎo bàn gè xiǎoshí, dàgài wǔ gōnglǐ, sùdù bú kuài, zhǔyào shì mànpǎo.",
+        "vietnamese": "Tôi thường chạy nửa tiếng, khoảng năm cây số, tốc độ không nhanh, chủ yếu là chạy chậm.",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "慢跑对心脏非常好，而且不容易觉得累。",
+        "pinyin": "Mànpǎo duì xīnzàng fēicháng hǎo, érqiě bù róngyì juéde lèi.",
+        "vietnamese": "Chạy chậm rất tốt cho tim mạch, hơn nữa lại không dễ cảm thấy mệt.",
+        "usedWords": ["跑步", "身体"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "没错！跑步的时候一边听音乐或者听中文，时间过得特别快。",
+        "pinyin": "Méi cuò! Pǎobù de shíhou yìbiān tīng yīnyuè huòzhě tīng zhōngwén, shíjiān guò de tèbié kuài.",
+        "vietnamese": "Không sai! Lúc chạy bộ vừa chạy vừa nghe nhạc hoặc nghe tiếng Trung, thời gian trôi qua rất nhanh.",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "这个习惯太棒了！我也喜欢边跑步边听中文录音，既能锻炼又能学习。",
+        "pinyin": "Zhè gè xíguàn tài bàng le! Wǒ yě xǐhuan biān pǎobù biān tīng zhōngwén lùyīn, jì néng duànliàn yòu néng xuéxí.",
+        "vietnamese": "Thói quen này tuyệt quá! Tôi cũng thích vừa chạy bộ vừa nghe ghi âm tiếng Trung, vừa rèn luyện vừa học tập.",
+        "usedWords": ["习惯", "跑步", "锻炼"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "跑步前你做热身运动了吗？热身非常重要。",
+        "pinyin": "Pǎobù qián nǐ zuò rèshēn yùndòng le ma? Rèshēn fēicháng zhòngyào.",
+        "vietnamese": "Trước khi chạy bộ bạn đã khởi động làm nóng người chưa? Khởi động vô cùng quan trọng.",
+        "usedWords": ["跑步", "锻炼"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "我刚刚做了五分钟拉伸，现在觉得全身都充满活力。",
+        "pinyin": "Wǒ gānggāng zuò le wǔ fēnzhōng lāshēn, xiànzài juéde quánshēn dōu chōngmǎn huólì.",
+        "vietnamese": "Tôi vừa mới giãn cơ năm phút, bây giờ cảm thấy toàn thân tràn đầy năng lượng.",
+        "usedWords": ["身体"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "那太好了！我们一起跑两圈吧，按照自己的节奏来。",
+        "pinyin": "Nà tài hǎo le! Wǒmen yìqǐ pǎo liǎng quān ba, ànzhào zìjǐ de jiézòu lái.",
+        "vietnamese": "Thế thì tốt quá! Chúng ta cùng chạy hai vòng nhé, cứ theo nhịp điệu của bản thân.",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "好啊！你看，今天湖边的风景真美，微风吹着很舒服。",
+        "pinyin": "Hǎo a! Nǐ kàn, jīntiān hú biān de fēngjǐng zhēn měi, wēifēng chuī zhe hěn shūfu.",
+        "vietnamese": "Được thôi! Bạn nhìn xem, phong cảnh bên hồ hôm nay thật đẹp, gió nhẹ thổi rất dễ chịu.",
+        "usedWords": []
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "秋天的早晨最适合户外运动，不冷也不热。",
+        "pinyin": "Qiūtiān de zǎochén zuì shìhé hùwài yùndòng, bù lěng yě bú rè.",
+        "vietnamese": "Buổi sáng mùa thu thích hợp nhất để vận động ngoài trời, không lạnh cũng không nóng.",
+        "usedWords": ["锻炼"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "小华，你觉得跑步最难的是什么？",
+        "pinyin": "Xiǎohuá, nǐ juéde pǎobù zuì nán de shì shénme?",
+        "vietnamese": "Tiểu Hoa, bạn thấy điều khó khăn nhất của việc chạy bộ là gì?",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "我觉得最难的是每天早起和坚持，只要穿上跑鞋出门，就成功了一半。",
+        "pinyin": "Wǒ juéde zuì nán de shì měitiān zǎoqǐ hé jiānchí, zhǐyào chuān shàng pǎoxié chūmén, jiù chénggōng le yíbàn.",
+        "vietnamese": "Tôi thấy khó nhất là dậy sớm mỗi ngày và kiên trì, chỉ cần xỏ giày ra khỏi cửa là đã thành công một nửa rồi.",
+        "usedWords": ["坚持", "跑步"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "说得太对了！很多时候我们都是输给了自己的懒惰。",
+        "pinyin": "Shuō de tài duì le! Hěn duō shíhou wǒmen dōu shì shū gěi le zìjǐ de lǎnduò.",
+        "vietnamese": "Nói đúng lắm! Rất nhiều khi chúng ta đều chịu thua trước sự lười biếng của chính mình.",
+        "usedWords": []
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "养成早睡早起的好习惯，整天的工作和学习都会特别有效率。",
+        "pinyin": "Yǎngchéng zǎoshuì zǎoqǐ de hǎo xíguàn, zhěngtiān de gōngzuò hé xuéxí dōu huì tèbié yǒu xiàolǜ.",
+        "vietnamese": "Nuôi dưỡng thói quen tốt ngủ sớm dậy sớm, cả ngày làm việc và học tập đều sẽ đặc biệt hiệu quả.",
+        "usedWords": ["习惯"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "跑完步以后，你一般喜欢吃什么早餐？",
+        "pinyin": "Pǎo wán bù yǐhòu, nǐ yìbān xǐhuan chī shénme zǎocān?",
+        "vietnamese": "Sau khi chạy bộ xong, bạn thường thích ăn món gì cho bữa sáng?",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "我喜欢喝一杯温水，然后吃两个鸡蛋和一片全麦面包，再喝一杯牛奶。",
+        "pinyin": "Wǒ xǐhuan hē yì bēi wēnshuǐ, ránhòu chī liǎng gè jīdàn hé yí piàn quánmài miànbāo, zài hē yì bēi niúnǎi.",
+        "vietnamese": "Tôi thích uống một cốc nước ấm, sau đó ăn hai quả trứng gà và một lát bánh mì nguyên cám, rồi uống thêm một cốc sữa bò.",
+        "usedWords": ["身体"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "这样的早餐既营养又健康，热量也很适中。",
+        "pinyin": "Zhèyàng de zǎocān jì yíngyǎng yòu jiànkāng, rèliàng yě hěn shìzhōng.",
+        "vietnamese": "Bữa sáng như vậy vừa bổ dưỡng vừa tốt cho sức khỏe, lượng calo cũng rất vừa phải.",
+        "usedWords": ["身体"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "你呢？跑完步会去喝咖啡吗？",
+        "pinyin": "Nǐ ne? Pǎo wán bù huì qù hē kāfēi ma?",
+        "vietnamese": "Còn bạn thì sao? Chạy bộ xong bạn có đi uống cà phê không?",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "会的！我习惯去公园门口那家小咖啡馆，点一杯美式咖啡。",
+        "pinyin": "Huì de! Wǒ xíguàn qù gōngyuán ménkǒu nà jiā xiǎo kāfēiguǎn, diǎn yì bēi měishì kāfēi.",
+        "vietnamese": "Có chứ! Tôi có thói quen ghé quán cà phê nhỏ ở cổng công viên, gọi một ly cà phê Americano.",
+        "usedWords": ["习惯"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "黑咖啡能加快新陈代谢，运动后喝适量的咖啡确实很舒服。",
+        "pinyin": "Hēi kāfēi néng jiākuài xīnchéndàixiè, yùndòng hòu hē shìliàng de kāfēi quèshí hěn shūfu.",
+        "vietnamese": "Cà phê đen có thể đẩy nhanh trao đổi chất, vận động xong uống một lượng cà phê vừa phải thật sự rất sảng khoái.",
+        "usedWords": ["身体", "锻炼"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "一会儿跑完步，我们一起去那家咖啡馆坐坐吧，我请客！",
+        "pinyin": "Yíhuìr pǎo wán bù, wǒmen yìqǐ qù nà jiā kāfēiguǎn zuò zuo ba, wǒ qǐngkè!",
+        "vietnamese": "Lát nữa chạy bộ xong, chúng mình cùng ghé quán cà phê đó ngồi nhé, tôi mời!",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "太好了，谢谢你！今天能和你一起晨跑聊天，真的很有动力。",
+        "pinyin": "Tài hǎo le, xièxie nǐ! Jīntiān néng hé nǐ yìqǐ chénpǎo liáotiān, zhēnde hěn yǒu dònglì.",
+        "vietnamese": "Tuyệt quá, cảm ơn bạn nhé! Hôm nay được chạy bộ buổi sáng và trò chuyện cùng bạn thật sự rất có động lực.",
+        "usedWords": ["跑步"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明",
+        "chinese": "明天早上六点半，我们还在这里见面，继续坚持！",
+        "pinyin": "Míngtiān zǎoshang liù diǎn bàn, wǒmen hái zài zhèlǐ jiànmiàn, jìxù jiānchí!",
+        "vietnamese": "Sáng mai sáu giờ rưỡi, chúng mình lại gặp nhau ở đây, tiếp tục kiên trì nhé!",
+        "usedWords": ["坚持"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华",
+        "chinese": "一言为定！让我们一起加油，拥有健康的身体和快乐的心情！",
+        "pinyin": "Yì yán wéi dìng! Ràng wǒmen yìqǐ jiāyóu, yōngyǒu jiànkāng de shēntǐ hé kuàilè de xīnqíng!",
+        "vietnamese": "Nhất trí như vậy nhé! Chúng ta cùng cố lên, để có một cơ thể khỏe mạnh và tinh thần vui vẻ!",
+        "usedWords": ["身体"]
+      }
+    ]
   }
 ]
