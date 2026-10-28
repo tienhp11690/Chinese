@@ -308,5 +308,161 @@
         "usedWords": ["身体"]
       }
     ]
+  },
+  {
+    "id": 1729656000000,
+    "title": "在上海问路 (Du Lịch Thượng Hải)",
+    "titlePinyin": "zài shàng hǎi wèn lù",
+    "titleViet": "Hỏi đường đi ga tàu điện ngầm ở Thượng Hải",
+    "type": "conversation",
+    "theme": "🚇 Du lịch Thượng Hải & Hỏi đường tàu điện",
+    "prompt": "Đi du lịch Thượng Hải, bị lạc đường và hỏi người dân đường tới ga tàu điện ngầm",
+    "createdAt": "28/10/2026, 09:15:00",
+    "syncedGithub": true,
+    "targetWords": [
+      { "chinese": "旅游", "pinyin": "lǚyóu", "vietnamese": "du lịch" },
+      { "chinese": "地铁", "pinyin": "dìtiě", "vietnamese": "tàu điện ngầm" },
+      { "chinese": "站", "pinyin": "zhàn", "vietnamese": "ga, trạm" },
+      { "chinese": "怎么走", "pinyin": "zěnme zǒu", "vietnamese": "đi như thế nào" },
+      { "chinese": "方便", "pinyin": "fāngbiàn", "vietnamese": "thuận tiện, tiện lợi" }
+    ],
+    "lines": [
+      {
+        "speaker": "A",
+        "speakerName": "小明 (Du khách)",
+        "chinese": "你好！请问一下，我是来上海旅游的，好像迷路了。",
+        "pinyin": "Nǐ hǎo! Qǐngwèn yíxià, wǒ shì lái Shànghǎi lǚyóu de, hǎoxiàng mílù le.",
+        "vietnamese": "Xin chào! Cho tôi hỏi một chút, tôi đến Thượng Hải du lịch, hình như bị lạc đường rồi.",
+        "usedWords": ["你好", "旅游"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "你好！别着急，你想去哪里？我是上海本地人，可以帮你。",
+        "pinyin": "Nǐ hǎo! Bié zhāojí, nǐ xiǎng qù nǎlǐ? Wǒ shì Shànghǎi běndì rén, kěyǐ bāng nǐ.",
+        "vietnamese": "Chào bạn! Đừng lo lắng, bạn muốn đi đâu? Tôi là người Thượng Hải bản địa, có thể giúp bạn.",
+        "usedWords": ["你好"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明 (Du khách)",
+        "chinese": "太好了！请问这附近有地铁站吗？我想坐地铁去人民广场。",
+        "pinyin": "Tài hǎo le! Qǐngwèn zhè fùjìn yǒu dìtiě zhàn ma? Wǒ xiǎng zuò dìtiě qù Rénmín Guǎngchǎng.",
+        "vietnamese": "Tốt quá rồi! Xin hỏi gần đây có ga tàu điện ngầm không? Tôi muốn đi tàu điện tới Quảng trường Nhân Dân.",
+        "usedWords": ["地铁", "站"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "有的！前面就有一个地铁站，走路大概只要五分钟。",
+        "pinyin": "Yǒu de! Qiánmiàn jiù yǒu yí gè dìtiě zhàn, zǒulù dàgài zhǐ yào wǔ fēnzhōng.",
+        "vietnamese": "Có đấy! Phía trước có một ga tàu điện ngầm, đi bộ chỉ khoảng năm phút thôi.",
+        "usedWords": ["地铁", "站"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明 (Du khách)",
+        "chinese": "从这里怎么走呢？是一直往前走，还是要转弯？",
+        "pinyin": "Cóng zhèlǐ zěnme zǒu ne? Shì yìzhí wǎng qián zǒu, háishì yào zhuǎnwān?",
+        "vietnamese": "Từ đây đi như thế nào ạ? Đi thẳng tiếp hay là phải rẽ?",
+        "usedWords": ["怎么走"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "你沿着这条路直走，过了前面的红绿灯十字路口，然后向右转。",
+        "pinyin": "Nǐ yánzhe zhè tiáo lù zhí zǒu, guò le qiánmiàn de hónglǜdēng shízì lùkǒu, ránhòu xiàng yòu zhuǎn.",
+        "vietnamese": "Bạn đi thẳng theo con đường này, qua ngã tư đèn giao thông phía trước, rồi rẽ phải.",
+        "usedWords": []
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "右转之后走两百米，你就会看到地铁站的入口，那里是二号线。",
+        "pinyin": "Yòu zhuǎn zhīhòu zǒu liǎng bǎi mǐ, nǐ jiù huì kàndào dìtiě zhàn de rùkǒu, nàlǐ shì èr hào xiàn.",
+        "vietnamese": "Sau khi rẽ phải đi hai trăm mét, bạn sẽ thấy lối vào ga tàu điện ngầm, đó là tuyến số 2.",
+        "usedWords": ["地铁", "站"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明 (Du khách)",
+        "chinese": "二号线可以直接到人民广场吗？需要换乘吗？",
+        "pinyin": "Èr hào xiàn kěyǐ zhíjiē dào Rénmín Guǎngchǎng ma? Xūyào huànchéng ma?",
+        "vietnamese": "Tuyến số 2 có thể đi thẳng tới Quảng trường Nhân Dân không? Có cần chuyển tuyến không?",
+        "usedWords": []
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "二号线可以直接到，不需要换乘，坐三站就到了，非常快。",
+        "pinyin": "Èr hào xiàn kěyǐ zhíjiē dào, bù xūyào huànchéng, zuò sān zhàn jiù dào le, fēicháng kuài.",
+        "vietnamese": "Tuyến số 2 đi thẳng được, không cần chuyển tuyến, ngồi ba ga là tới, rất nhanh.",
+        "usedWords": ["站"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明 (Du khách)",
+        "chinese": "买地铁票支持微信或者支付宝扫码乘车吗？",
+        "pinyin": "Mǎi dìtiě piào zhīchí Wēixìn huòzhě Zhīfùbǎo sǎomǎ chéngchē ma?",
+        "vietnamese": "Mua vé tàu điện ngầm có hỗ trợ quét mã WeChat hoặc Alipay để đi xe không?",
+        "usedWords": ["地铁"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "完全支持！在手机里开通上海乘车码，直接刷码进站，特别方便。",
+        "pinyin": "Wánquán zhīchí! Zài shǒujī lǐ kāitōng Shànghǎi chéngchē mǎ, zhíjiē shuāmǎ jìnzhàn, tèbié fāngbiàn.",
+        "vietnamese": "Hoàn toàn hỗ trợ! Mở mã đi xe Thượng Hải trong điện thoại là quét mã vào ga được luôn, cực kỳ thuận tiện.",
+        "usedWords": ["站", "方便"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明 (Du khách)",
+        "chinese": "逛完人民广场，我还想去外滩看夜景，怎么去最方便？",
+        "pinyin": "Guàng wán Rénmín Guǎngchǎng, wǒ hái xiǎng qù Wàitān kàn yèjǐng, zěnme qù zuì fāngbiàn?",
+        "vietnamese": "Dạo chơi xong Quảng trường Nhân Dân, tôi còn muốn ra Bến Thượng Hải ngắm cảnh đêm, đi thế nào tiện nhất?",
+        "usedWords": ["方便"]
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "从人民广场继续坐二号线坐一站，到南京东路站下车就是外滩。",
+        "pinyin": "Cóng Rénmín Guǎngchǎng jìxù zuò èr hào xiàn zuò yí zhàn, dào Nánjīng Dōnglù zhàn xiàchē jiù shì Wàitān.",
+        "vietnamese": "Từ Quảng trường Nhân Dân tiếp tục đi tuyến số 2 một ga nữa, xuống ở ga Nam Kinh Đông Lộ là tới Bến Thượng Hải.",
+        "usedWords": ["站"]
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明 (Du khách)",
+        "chinese": "附近有什么好吃的本帮菜推荐吗？",
+        "pinyin": "Fùjìn yǒu shénme hǎochī de běnbāng cài tuījiàn ma?",
+        "vietnamese": "Gần đó có món ăn Thượng Hải truyền thống nào ngon gợi ý không bạn?",
+        "usedWords": []
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "南京路有很多老字号小笼包和生煎包，皮薄多汁，一定要尝尝！",
+        "pinyin": "Nánjīng lù yǒu hěn duō lǎozìhào xiǎolóngbāo hé shēngjiānbāo, pí báo duō zhī, yídìng yào chángcháng!",
+        "vietnamese": "Đường Nam Kinh có rất nhiều tiệm lâu đời bán tiểu long bao và bánh bao chiên, vỏ mỏng mọng nước, nhất định phải thử!",
+        "usedWords": []
+      },
+      {
+        "speaker": "A",
+        "speakerName": "小明 (Du khách)",
+        "chinese": "太感谢你的热情帮助了！遇到你真是太幸运了。",
+        "pinyin": "Tài gǎnxiè nǐ de rèqíng bāngzhù le! Yùdào nǐ zhēn shì tài xìngyùn le.",
+        "vietnamese": "Cảm ơn sự giúp đỡ nhiệt tình của bạn rất nhiều! Gặp được bạn thật sự quá may mắn.",
+        "usedWords": []
+      },
+      {
+        "speaker": "B",
+        "speakerName": "小华 (Người dân)",
+        "chinese": "不客气！祝你在上海旅游玩得开心！",
+        "pinyin": "Bú kèqi! Zhù nǐ zài Shànghǎi lǚyóu wán de kāixīn!",
+        "vietnamese": "Không có gì! Chúc bạn du lịch Thượng Hải thật vui vẻ!",
+        "usedWords": ["旅游"]
+      }
+    ]
   }
 ]

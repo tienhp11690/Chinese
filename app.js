@@ -2983,32 +2983,45 @@ function generateSmartStory(type, words, lengthVal, customPrompt = '') {
             const targetChineseList = words.map(w => w.chinese);
             const targetMeanings = words.map(w => (w.vietnamese || w.meaning || '')).join(' ');
 
+            const isShanghaiTravel = /thượng hải|shanghai|lạc đường|hỏi đường|ga tàu|tàu điện|bến tàu|xe buýt|sân bay/i.test(customPrompt);
+            const isRunningTheme = /chạy bộ|chạy|running|jogging|thể dục|thể thao|công viên|rèn luyện sức khỏe/i.test(customPrompt);
+
             let theme = customPrompt || 'Giao tiếp sinh hoạt hàng ngày';
             let titleChinese = '日常生活';
             let titlePinyin = 'rì cháng shēng huó';
             let titleViet = customPrompt ? customPrompt.slice(0, 35) : 'Cuộc Sống Hàng Ngày';
 
-            if (/cà phê|trà|uống|ăn|ngon|quán/i.test(targetMeanings) || targetChineseList.some(c => /咖啡|茶|喝|吃|水|饭/.test(c))) {
+            if (isShanghaiTravel) {
+                theme = 'Du lịch Thượng Hải: Hỏi đường & Tàu điện ngầm';
+                titleChinese = '在上海问路';
+                titlePinyin = 'zài shàng hǎi wèn lù';
+                titleViet = 'Hỏi Đường Đi Tàu Điện Ở Thượng Hải';
+            } else if (isRunningTheme || (!customPrompt && lengthVal === 'marathon')) {
+                theme = 'Chạy bộ & Rèn luyện sức khỏe';
+                titleChinese = '晨跑与健康生活';
+                titlePinyin = 'chén pǎo yǔ jiàn kāng shēng huó';
+                titleViet = 'Chạy Bộ Buổi Sáng & Sức Khỏe';
+            } else if (/cà phê|trà|uống|ăn|ngon|quán/i.test(customPrompt || targetMeanings) || targetChineseList.some(c => /咖啡|茶|喝|吃|水|饭/.test(c))) {
                 theme = 'Gặp gỡ ở quán nước & ẩm thực';
                 titleChinese = '在咖啡馆相遇';
                 titlePinyin = 'zài kā fēi guǎn xiāng yù';
                 titleViet = 'Gặp Nhau Ở Quán Cà Phê';
-            } else if (/du lịch|đi|chơi|cuối tuần|núi|biển/i.test(targetMeanings) || targetChineseList.some(c => /去|旅游|周末|玩|北京|中国/.test(c))) {
+            } else if (/du lịch|đi|chơi|cuối tuần|núi|biển/i.test(customPrompt || targetMeanings) || targetChineseList.some(c => /去|旅游|周末|玩|北京|中国/.test(c))) {
                 theme = 'Kế hoạch cuối tuần & du lịch';
                 titleChinese = '周末的计划';
                 titlePinyin = 'zhōu mò de jì huà';
                 titleViet = 'Kế Hoạch Cuối Tuần';
-            } else if (/học|tiếng trung|chữ hán|sách|thầy|cô/i.test(targetMeanings) || targetChineseList.some(c => /学|中文|汉字|老师|学生|书/.test(c))) {
+            } else if (/học|tiếng trung|chữ hán|sách|thầy|cô/i.test(customPrompt || targetMeanings) || targetChineseList.some(c => /学|中文|汉字|老师|学生|书/.test(c))) {
                 theme = 'Cùng nhau học tiếng Trung';
                 titleChinese = '一起学中文';
                 titlePinyin = 'yì qǐ xué zhōng wén';
                 titleViet = 'Cùng Nhau Học Tiếng Trung';
-            } else if (/chào|khỏe|tên|gì|bạn|tôi/i.test(targetMeanings) || targetChineseList.some(c => /你好|叫|什么|名字|认识/.test(c))) {
+            } else if (/chào|khỏe|tên|gì|bạn|tôi/i.test(customPrompt || targetMeanings) || targetChineseList.some(c => /你好|叫|什么|名字|认识/.test(c))) {
                 theme = 'Chào hỏi & Làm quen bạn mới';
                 titleChinese = '认识新朋友';
                 titlePinyin = 'rèn shi xīn péng you';
                 titleViet = 'Làm Quen Bạn Mới';
-            } else if (/gia đình|bố|mẹ|anh|chị|em|nhà/i.test(targetMeanings) || targetChineseList.some(c => /爸爸|妈妈|哥哥|姐姐|家/.test(c))) {
+            } else if (/gia đình|bố|mẹ|anh|chị|em|nhà/i.test(customPrompt || targetMeanings) || targetChineseList.some(c => /爸爸|妈妈|哥哥|姐姐|家/.test(c))) {
                 theme = 'Chuyện gia đình & người thân';
                 titleChinese = '我的家庭';
                 titlePinyin = 'wǒ de jiā tíng';
@@ -3017,12 +3030,195 @@ function generateSmartStory(type, words, lengthVal, customPrompt = '') {
 
             const lines = [];
 
-            if (isConv && lengthVal === 'marathon') {
-                // MARATHON DIALOGUE GENERATOR (24 - 30 câu cho chạy bộ 20-30 phút)
-                theme = customPrompt || 'Chạy bộ buổi sáng & Rèn luyện sức khỏe (Marathon 20-30 phút)';
+            if (isConv && isShanghaiTravel) {
+                // SHANGHAI TRAVEL & ASKING DIRECTIONS GENERATOR
+                lines.push({
+                    speaker: 'A', speakerName: '小明 (Du khách)',
+                    chinese: '你好！请问一下，我是来上海旅游的，好像迷路了。',
+                    pinyin: generatePinyin('你好！请问一下，我是来上海旅游的，好像迷路了。'),
+                    vietnamese: 'Xin chào! Cho tôi hỏi một chút, tôi đến Thượng Hải du lịch, hình như bị lạc đường rồi.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华 (Người dân)',
+                    chinese: '你好！别着急，你想去哪里？我是上海本地人，可以帮你。',
+                    pinyin: generatePinyin('你好！别着急，你想去哪里？我是上海本地人，可以帮你。'),
+                    vietnamese: 'Chào bạn! Đừng lo lắng, bạn muốn đi đâu? Tôi là người Thượng Hải bản địa, có thể giúp bạn.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'A', speakerName: '小明 (Du khách)',
+                    chinese: '太好了！请问这附近有地铁站吗？我想坐地铁去人民广场。',
+                    pinyin: generatePinyin('太好了！请问这附近有地铁站吗？我想坐地铁去人民广场。'),
+                    vietnamese: 'Tốt quá rồi! Xin hỏi gần đây có ga tàu điện ngầm không? Tôi muốn đi tàu điện tới Quảng trường Nhân Dân.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华 (Người dân)',
+                    chinese: '有的！前面就有一个地铁站，走路大概只要五分钟。',
+                    pinyin: generatePinyin('有的！前面就有一个地铁站，走路大概只要五分钟。'),
+                    vietnamese: 'Có đấy! Phía trước có một ga tàu điện ngầm, đi bộ chỉ khoảng năm phút thôi.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'A', speakerName: '小明 (Du khách)',
+                    chinese: '从这里怎么走呢？是一直往前走，还是要转弯？',
+                    pinyin: generatePinyin('从这里怎么走呢？是一直往前走，还是要转弯？'),
+                    vietnamese: 'Từ đây đi như thế nào ạ? Đi thẳng tiếp hay là phải rẽ?',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华 (Người dân)',
+                    chinese: '你沿着这条路直走，过了前面的红绿灯十字路口，然后向右转。',
+                    pinyin: generatePinyin('你沿着这条路直走，过了前面的红绿灯十字路口，然后向右转。'),
+                    vietnamese: 'Bạn đi thẳng theo con đường này, qua ngã tư đèn giao thông phía trước, rồi rẽ phải.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华 (Người dân)',
+                    chinese: '右转之后走两百米，你就会看到地铁站的入口，那里是二号线。',
+                    pinyin: generatePinyin('右转之后走两百米，你就会看到地铁站的入口，那里是二号线。'),
+                    vietnamese: 'Sau khi rẽ phải đi hai trăm mét, bạn sẽ thấy lối vào ga tàu điện ngầm, đó là tuyến số 2.',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'A', speakerName: '小明 (Du khách)',
+                    chinese: '二号线可以直接到人民广场吗？需要换乘吗？',
+                    pinyin: generatePinyin('二号线可以直接到人民广场吗？需要换乘吗？'),
+                    vietnamese: 'Tuyến số 2 có thể đi thẳng tới Quảng trường Nhân Dân không? Có cần chuyển tuyến không?',
+                    usedWords: []
+                });
+                lines.push({
+                    speaker: 'B', speakerName: '小华 (Người dân)',
+                    chinese: '二号线可以直接到，不需要换乘，坐三站就到了，非常快。',
+                    pinyin: generatePinyin('二号线可以直接到，不需要换乘，坐三站就到了，非常快。'),
+                    vietnamese: 'Tuyến số 2 đi thẳng được, không cần chuyển tuyến, ngồi ba ga là tới, rất nhanh.',
+                    usedWords: []
+                });
+
+                // Target words integration
+                words.forEach((w, idx) => {
+                    const speaker = (idx % 2 === 0) ? 'A' : 'B';
+                    const speakerName = (speaker === 'A') ? '小明 (Du khách)' : '小华 (Người dân)';
+                    let cText = `在上海旅行或者坐地铁的时候，常常会用到${w.chinese}。`;
+                    let vText = `Khi đi du lịch hoặc đi tàu điện ngầm ở Thượng Hải, thường hay dùng đến ${w.vietnamese || w.meaning || w.chinese}.`;
+                    lines.push({
+                        speaker, speakerName,
+                        chinese: cText,
+                        pinyin: generatePinyin(cText),
+                        vietnamese: vText,
+                        usedWords: [w.chinese]
+                    });
+                });
+
+                if (lengthVal === 'marathon') {
+                    // Extended Shanghai metro & tourism scenes for marathon
+                    lines.push({
+                        speaker: 'A', speakerName: '小明 (Du khách)',
+                        chinese: '买地铁票支持微信或者支付宝扫码乘车吗？',
+                        pinyin: generatePinyin('买地铁票支持微信或者支付宝扫码乘车吗？'),
+                        vietnamese: 'Mua vé tàu điện ngầm có hỗ trợ quét mã WeChat hoặc Alipay để đi xe không?',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'B', speakerName: '小华 (Người dân)',
+                        chinese: '完全支持！在手机里开通上海乘车码，直接刷码进站，特别方便。',
+                        pinyin: generatePinyin('完全支持！在手机里开通上海乘车码，直接刷码进站，特别方便。'),
+                        vietnamese: 'Hoàn toàn hỗ trợ! Mở mã đi xe Thượng Hải trong điện thoại là quét mã vào ga được luôn, cực kỳ thuận tiện.',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'A', speakerName: '小明 (Du khách)',
+                        chinese: '这太方便了！我不用准备零钱买单程票了。',
+                        pinyin: generatePinyin('这太方便了！我不用准备零钱买单程票了。'),
+                        vietnamese: 'Tiện lợi quá! Tôi không cần phải chuẩn bị tiền lẻ mua vé một lượt nữa rồi.',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'B', speakerName: '小华 (Người dân)',
+                        chinese: '是的，上海的地铁网络四通八达，去哪里都很快。',
+                        pinyin: generatePinyin('是的，上海的地铁网络四通八达，去哪里都很快。'),
+                        vietnamese: 'Đúng vậy, mạng lưới tàu điện ngầm Thượng Hải kết nối khắp nơi, đi đâu cũng rất nhanh.',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'A', speakerName: '小明 (Du khách)',
+                        chinese: '逛完人民广场，我还想去外滩看夜景，怎么去最方便？',
+                        pinyin: generatePinyin('逛完人民广场，我还想去外滩看夜景，怎么去最方便？'),
+                        vietnamese: 'Dạo chơi xong Quảng trường Nhân Dân, tôi còn muốn ra Bến Thượng Hải ngắm cảnh đêm, đi thế nào tiện nhất?',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'B', speakerName: '小华 (Người dân)',
+                        chinese: '从人民广场继续坐二号线坐一站，到南京东路站下车就是外滩。',
+                        pinyin: generatePinyin('从人民广场继续坐二号线坐一站，到南京东路站下车就是外滩。'),
+                        vietnamese: 'Từ Quảng trường Nhân Dân tiếp tục đi tuyến số 2 một ga nữa, xuống ở ga Nam Kinh Đông Lộ là tới Bến Thượng Hải.',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'A', speakerName: '小明 (Du khách)',
+                        chinese: '晚上外滩的灯光一般几点开呢？会不会很晚关灯？',
+                        pinyin: generatePinyin('晚上外滩的灯光一般几点开呢？会不会很晚关灯？'),
+                        vietnamese: 'Buổi tối đèn ở Bến Thượng Hải thường mấy giờ bật? Có tắt đèn muộn không?',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'B', speakerName: '小华 (Người dân)',
+                        chinese: '一般晚上七点准时亮灯，十点关灯。对岸东方明珠的夜景特别壮观！',
+                        pinyin: generatePinyin('一般晚上七点准时亮灯，十点关灯。对岸东方明珠的夜景特别壮观！'),
+                        vietnamese: 'Thường đúng bảy giờ tối sẽ bật đèn, mười giờ tắt. Cảnh đêm tháp Đông Phương Minh Châu bên bờ đối diện cực kỳ hoành tráng!',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'A', speakerName: '小明 (Du khách)',
+                        chinese: '附近有什么好吃的本帮菜推荐吗？',
+                        pinyin: generatePinyin('附近有什么好吃的本帮菜推荐吗？'),
+                        vietnamese: 'Gần đó có món ăn Thượng Hải truyền thống nào ngon gợi ý không bạn?',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'B', speakerName: '小华 (Người dân)',
+                        chinese: '南京路有很多老字号小笼包和生煎包，皮薄多汁，一定要尝尝！',
+                        pinyin: generatePinyin('南京路有很多老字号小笼包和生煎包，皮薄多汁，一定要尝尝！'),
+                        vietnamese: 'Đường Nam Kinh có rất nhiều tiệm lâu đời bán tiểu long bao và bánh bao chiên, vỏ mỏng mọng nước, nhất định phải thử!',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'A', speakerName: '小明 (Du khách)',
+                        chinese: '太感谢你的热情指路了！遇到你这位热心的朋友，今天真幸运。',
+                        pinyin: generatePinyin('太感谢你的热情指路了！遇到你这位热心的朋友，今天真幸运。'),
+                        vietnamese: 'Cảm ơn sự chỉ đường nhiệt tình của bạn rất nhiều! Gặp được người bạn tốt bụng như bạn, hôm nay thật may mắn.',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'B', speakerName: '小华 (Người dân)',
+                        chinese: '不客气！祝你在上海旅行愉快，一路顺风！',
+                        pinyin: generatePinyin('不客气！祝你在上海旅行愉快，一路顺风！'),
+                        vietnamese: 'Không có gì! Chúc bạn du lịch Thượng Hải vui vẻ, thuận buồm xuôi gió!',
+                        usedWords: []
+                    });
+                } else {
+                    lines.push({
+                        speaker: 'A', speakerName: '小明 (Du khách)',
+                        chinese: '太感谢你的热情帮助了！祝你工作生活愉快！',
+                        pinyin: generatePinyin('太感谢你的热情帮助了！祝你工作生活愉快！'),
+                        vietnamese: 'Cảm ơn sự giúp đỡ nhiệt tình của bạn rất nhiều! Chúc bạn làm việc và cuộc sống vui vẻ!',
+                        usedWords: []
+                    });
+                    lines.push({
+                        speaker: 'B', speakerName: '小华 (Người dân)',
+                        chinese: '不客气！祝你在上海旅游玩得开心！',
+                        pinyin: generatePinyin('不客气！祝你在上海旅游玩得开心！'),
+                        vietnamese: 'Không có gì! Chúc bạn du lịch Thượng Hải thật vui vẻ!',
+                        usedWords: []
+                    });
+                }
+            } else if (isConv && (lengthVal === 'marathon' && (isRunningTheme || !customPrompt))) {
+                // MARATHON JOGGING DIALOGUE (Khi người dùng chọn chạy bộ)
+                theme = 'Chạy bộ buổi sáng & Rèn luyện sức khỏe (Marathon 20-30 phút)';
                 titleChinese = '晨跑与健康生活';
                 titlePinyin = 'chén pǎo yǔ jiàn kāng shēng huó';
-                titleViet = customPrompt ? customPrompt.slice(0, 35) : 'Chạy Bộ Buổi Sáng & Sức Khỏe';
+                titleViet = 'Chạy Bộ Buổi Sáng & Sức Khỏe';
 
                 // Phân cảnh 1: Chào hỏi sáng sớm & hẹn chạy bộ ở công viên
                 lines.push({
@@ -3396,7 +3592,7 @@ window.generateGeminiStory = async function (type, words, lengthVal, customPromp
 
     const lengthCount = (lengthVal === 'marathon') ? '24-30' : (lengthVal === 'short' ? '4-5' : (lengthVal === 'long' ? '9-12' : '6-8'));
     const marathonDirective = (lengthVal === 'marathon')
-        ? `\nĐÂY LÀ BẢN MARATHON DÀI 20-30 PHÚT DÙNG ĐỂ NGHE KHI CHẠY BỘ: Hãy sáng tác một chuỗi hội thoại dài chi tiết khoảng 24-30 câu giữa A (小明) và B (小华), diễn ra liên tục qua các phân cảnh tự nhiên (gặp gỡ chạy bộ, thể dục, sức khỏe, thói quen sinh hoạt, bữa sáng dinh dưỡng, cà phê, công việc, động viên kiên trì) để người học nghe liên tục không bị chán.`
+        ? `\nĐÂY LÀ BẢN DÀI (24-30 CÂU): Hãy sáng tác một chuỗi hội thoại dài chi tiết khoảng 24-30 câu giữa 2 nhân vật, phát triển tình huống sâu sắc, liên tục qua các phân cảnh tự nhiên theo đúng chủ đề "${customPrompt || 'đời sống hàng ngày'}" để người học nghe liên tục không bị chán.`
         : '';
     const wordListStr = words.map(w => `${w.chinese} (${w.pinyin || ''} - ${w.vietnamese || w.meaning || ''})`).join(', ');
 
@@ -3414,7 +3610,7 @@ window.generateGeminiStory = async function (type, words, lengthVal, customPromp
     }
 
     const topicDirective = customPrompt 
-        ? `CHỦ ĐỀ & CẢM HỨNG CỤ THỂ TỪ NGƯỜI DÙNG: "${customPrompt}". Hãy phát triển tình huống, nội dung và lời thoại sát theo chủ đề cảm hứng này.`
+        ? `CHỦ ĐỀ & CẢM HỨNG CỤ THỂ TỪ NGƯỜI DÙNG: "${customPrompt}". BẮT BUỘC phát triển tình huống, tiêu đề tiếng Trung, nội dung và lời thoại bám sát 100% theo chủ đề cảm hứng này (không được tự ý đổi sang chủ đề khác).`
         : `Chủ đề bài học: Tình huống giao tiếp thực tế đời sống hàng ngày sinh động.`;
 
     showLoading('🤖 AI đang sáng tác bài học...', 'Đang kết hợp cảm hứng, ngữ cảnh và từ vựng...');
@@ -3603,6 +3799,14 @@ window.applyImportedAIContent = function () {
     } catch (e) {
         status(`❌ Lỗi định dạng JSON: ${e.message}`, 'error');
     }
+};
+
+window.estimateStoryDuration = function (linesCount) {
+    if (!linesCount || linesCount <= 0) return 1;
+    // Each line in jogging/passive mode plays:
+    // Chinese (~4-6s) + pause (1.5s) + Vietnamese (~4-6s) + pause (2s) = ~12-15s per cycle.
+    // In practice: 26 lines = ~22-25 phút; 12 lines = ~10-12 phút; 6 lines = ~5 phút.
+    return Math.max(1, Math.round(linesCount * 0.85));
 };
 
 window.renderCurrentStory = function () {
@@ -3831,16 +4035,21 @@ window.renderCurrentStory = function () {
         ? `<span class="story-db-badge github" title="Bài học này đã được lưu an toàn trên database GitHub (stories.json)">☁️ GitHub DB</span>`
         : `<span class="story-db-badge local" title="Bài học đang được lưu trên trình duyệt">💾 Local</span>`;
 
+    const linesCount = currentStory.lines ? currentStory.lines.length : 0;
+    const durationMin = estimateStoryDuration(linesCount);
+
     container.innerHTML = `
         <div class="current-story-card">
             <!-- Header -->
             <div class="story-card-header">
                 <div>
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap">
+                    <div class="story-meta-strip">
                         <span class="sentence-badge" style="background:${isConv ? 'var(--p)' : 'var(--s)'}">
                             ${isConv ? '💬 Đoạn Hội Thoại' : '📖 Mẩu Truyện Ngắn'}
                         </span>
-                        <span style="font-size:0.85rem; color:var(--g6)">📂 ${escapeHtml(currentStory.theme || 'Chủ đề ôn tập')}</span>
+                        <span class="story-meta-badge lines" title="Tổng số câu trong bài học">📝 ${linesCount} câu</span>
+                        <span class="story-meta-badge duration" title="Thời lượng luyện nghe trọn vẹn kèm dịch nghĩa">⏱️ ~${durationMin} phút nghe</span>
+                        <span class="story-meta-badge topic">📂 ${escapeHtml(currentStory.theme || 'Chủ đề ôn tập')}</span>
                         ${dbBadge}
                     </div>
                     <h2 class="story-title-chinese">${escapeHtml(currentStory.title || '日常生活')}</h2>
@@ -3864,32 +4073,13 @@ window.renderCurrentStory = function () {
             <!-- Prompt Banner (if any) -->
             ${promptBanner}
 
-            <!-- Jogging Mode CTA Banner -->
-            <div class="jogging-cta-banner">
-                <div style="display:flex; align-items:center; gap:12px">
-                    <span class="jog-pulse-icon" style="font-size:2rem; line-height:1">🏃‍♂️</span>
-                    <div>
-                        <div style="font-weight:700; font-size:1.05rem; color:#fff">Chế Độ Nghe Thụ Động Khi Chạy Bộ</div>
-                        <div style="font-size:0.85rem; color:#cbd5e1">Tự động đọc Tiếng Trung ➔ đọc Dịch nghĩa Tiếng Việt ➔ lặp lại liên tục, hỗ trợ chạy nền khi khóa màn hình & điều khiển qua tai nghe Bluetooth.</div>
-                    </div>
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap">
-                    <button class="btn" onclick="startJoggingMode(0)" style="background:linear-gradient(135deg, #10b981, #059669); font-weight:700; white-space:nowrap; padding:10px 18px; box-shadow:0 4px 15px rgba(16, 185, 129, 0.4)">
-                        ▶️ Bắt Đầu Nghe
-                    </button>
-                    <button class="btn" onclick="openAudioDownloadModal()" style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.45); color:#fff; font-weight:600; white-space:nowrap; padding:10px 16px;">
-                        📥 Tải File Nghe MP3
-                    </button>
-                </div>
-            </div>
-
             <!-- Toolbar -->
             <div class="story-toolbar">
-                <button class="story-tool-btn active-jogging" onclick="startJoggingMode(0)" title="Nghe tiếng Trung kèm dịch tiếng Việt liên tục khi chạy bộ">
-                    🏃‍♂️ Nghe Chạy Bộ (Trung + Việt)
+                <button class="story-tool-btn active-jogging" onclick="startJoggingMode(0)" title="Nghe tiếng Trung kèm dịch tiếng Việt liên tục (hỗ trợ chạy nền khi tắt màn hình)">
+                    🏃‍♂️ Nghe Luyện Tập (Trung + Việt)
                 </button>
-                <button class="story-tool-btn" onclick="openAudioDownloadModal()" style="background:#0284c7; color:#fff; font-weight:600" title="Tải file MP3 hoặc Playlist .m3u về điện thoại">
-                    📥 Tải File Nghe MP3
+                <button class="story-tool-btn" onclick="openAudioDownloadModal()" style="background:#0284c7; color:#fff; font-weight:600" title="Tải file MP3 về máy">
+                    📥 Tải File MP3
                 </button>
                 <button class="story-tool-btn ${storyShowPinyin ? 'active' : ''}" onclick="toggleStoryPinyin()">
                     🔤 ${storyShowPinyin ? 'Ẩn Pinyin' : 'Hiện Pinyin'}
@@ -3898,7 +4088,7 @@ window.renderCurrentStory = function () {
                     🇻🇳 ${storyShowViet ? 'Ẩn Dịch Nghĩa' : 'Hiện Dịch Nghĩa'}
                 </button>
                 <button class="story-tool-btn ${storyIsQuiz ? 'active' : ''}" onclick="toggleStoryQuiz()">
-                    📝 ${storyIsQuiz ? 'Tắt Câu Đố Điền Từ' : 'Luyện Điền Từ (Quiz)'}
+                    📝 ${storyIsQuiz ? 'Tắt Điền Từ' : 'Luyện Điền Từ (Quiz)'}
                 </button>
                 <button class="story-tool-btn" id="btn-speak-all" onclick="speakStorySequence()">
                     🔊 Đọc toàn bài
@@ -3909,6 +4099,10 @@ window.renderCurrentStory = function () {
             <div class="story-legend-bar">
                 <span style="font-weight:700; color:var(--g8); margin-right:4px">💡 Chú thích:</span>
                 <span class="legend-item"><span class="legend-dot target"></span> Từ mục tiêu ôn tập</span>
+                <span class="legend-item"><span class="legend-dot known-unlearned"></span> Trong list (chưa thuộc)</span>
+                <span class="legend-item"><span class="legend-dot known-learned"></span> Trong list (đã thuộc)</span>
+                <span class="legend-item"><span class="legend-dot new"></span> Từ mới ngoài list (chạm để xem &amp; lưu)</span>
+            </div>
                 <span class="legend-item"><span class="legend-dot known-unlearned"></span> Trong list (chưa thuộc)</span>
                 <span class="legend-item"><span class="legend-dot known-learned"></span> Trong list (đã thuộc)</span>
                 <span class="legend-item"><span class="legend-dot new"></span> Từ mới ngoài list (chạm để xem &amp; lưu)</span>
@@ -5659,6 +5853,9 @@ function renderSavedStoriesList() {
     container.innerHTML = savedStories.map(s => {
         const isConv = (s.type === 'conversation');
         const typeLabel = isConv ? '💬 Hội Thoại' : '📖 Truyện Ngắn';
+        const linesCount = s.lines ? s.lines.length : 0;
+        const durationMin = estimateStoryDuration(linesCount);
+
         const targetWordsPreview = s.targetWords && s.targetWords.length > 0
             ? s.targetWords.map(w => `<span class="target-word-chip" style="font-size:0.8rem; padding:2px 8px">${escapeHtml(w.chinese)}</span>`).join(' ')
             : '';
@@ -5674,27 +5871,29 @@ function renderSavedStoriesList() {
         ` : '';
 
         return `
-            <div class="saved-story-card">
+            <div class="saved-story-card" onclick="viewSavedStory(${s.id})" style="cursor:pointer" title="Chạm để xem chi tiết bài học">
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; flex-wrap:wrap">
-                        <div style="display:flex; align-items:center; gap:6px">
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap">
                             <span class="sentence-badge" style="background:${isConv ? 'var(--p)' : 'var(--s)'}">${typeLabel}</span>
+                            <span class="story-meta-badge lines" style="font-size:0.75rem; padding:1px 7px">📝 ${linesCount} câu</span>
+                            <span class="story-meta-badge duration" style="font-size:0.75rem; padding:1px 7px">⏱️ ~${durationMin}p</span>
                             ${dbBadge}
                         </div>
                         <span style="font-size:0.8rem; color:var(--g6)">${escapeHtml(s.createdAt || '')}</span>
                     </div>
-                    <div style="font-size:1.25rem; font-weight:700; color:var(--g8); margin-bottom:4px">${escapeHtml(s.title || 'Bài ôn tập')}</div>
-                    <div style="font-size:0.9rem; color:var(--g6); margin-bottom:8px">${escapeHtml(s.titleViet || '')}</div>
+                    <div style="font-size:1.2rem; font-weight:700; color:var(--g8); margin-bottom:4px">${escapeHtml(s.title || 'Bài ôn tập')}</div>
+                    <div style="font-size:0.88rem; color:var(--g6); margin-bottom:8px">${escapeHtml(s.titleViet || '')}</div>
                     ${promptSnippet}
                     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px">
                         ${targetWordsPreview}
                     </div>
                 </div>
                 <div style="display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap">
-                    <button class="btn btn-sm" onclick="startJoggingForSavedStory(${s.id})" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:600" title="Nghe chạy bộ câu chuyện này">🏃‍♂️ Nghe</button>
-                    <button class="btn btn-sm" onclick="viewSavedStory(${s.id})" title="Xem chi tiết bài học">📖 Xem lại</button>
-                    ${!s.syncedGithub ? `<button class="btn btn-sm" onclick="pushSingleStoryToGitHub(${s.id})" style="background:#2563eb; color:#fff" title="Đẩy bài này lên GitHub stories.json">☁️ Lưu GitHub</button>` : ''}
-                    <button class="btn btn-sm btn-danger" onclick="deleteSavedStory(${s.id})" title="Xóa bài này">🗑️</button>
+                    <button class="btn btn-sm" onclick="event.stopPropagation(); startJoggingForSavedStory(${s.id})" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:600" title="Nghe chạy bộ câu chuyện này">🏃‍♂️ Nghe</button>
+                    <button class="btn btn-sm" onclick="event.stopPropagation(); viewSavedStory(${s.id})" title="Xem chi tiết bài học">📖 Xem lại</button>
+                    ${!s.syncedGithub ? `<button class="btn btn-sm" onclick="event.stopPropagation(); pushSingleStoryToGitHub(${s.id})" style="background:#2563eb; color:#fff" title="Đẩy bài này lên GitHub stories.json">☁️ Lưu GitHub</button>` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteSavedStory(${s.id})" title="Xóa bài này">🗑️</button>
                 </div>
             </div>
         `;

@@ -197,13 +197,13 @@
                     <div class="control-box">
                         <label class="control-label">
                             <span>📏 Độ dài:</span>
-                            <span id="marathon-indicator-badge" class="marathon-pill-tag">🏃 20-30 phút</span>
+                            <span id="marathon-indicator-badge" class="marathon-pill-tag" style="display:none;">🏃 20-30 phút</span>
                         </label>
-                        <select id="story-length" class="select-field marathon-selected" onchange="onStoryLengthChange(this.value)">
+                        <select id="story-length" class="select-field" onchange="onStoryLengthChange(this.value)">
                             <option value="short">⚡ Ngắn (4 - 5 câu)</option>
-                            <option value="medium">🌱 Vừa (6 - 8 câu)</option>
+                            <option value="medium" selected>🌱 Vừa (6 - 8 câu)</option>
                             <option value="long">📖 Dài (9 - 12 câu)</option>
-                            <option value="marathon" selected>🏃 Marathon (20 - 30 câu ~ 20-30p)</option>
+                            <option value="marathon">🏃 Marathon (20 - 30 câu ~ 20-30p)</option>
                         </select>
                     </div>
                 </div>
