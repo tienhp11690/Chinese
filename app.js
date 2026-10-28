@@ -2395,34 +2395,30 @@ window.setStoryType = function (type) {
     }
 };
 
-window.setStoryLengthPill = function (val) {
+window.onStoryLengthChange = function (val) {
     const sel = document.getElementById('story-length');
+    const badge = document.getElementById('marathon-indicator-badge');
+    const value = val || (sel ? sel.value : 'medium');
+
     if (sel) {
-        sel.value = val;
+        sel.value = value;
+        if (value === 'marathon') {
+            sel.classList.add('marathon-selected');
+        } else {
+            sel.classList.remove('marathon-selected');
+        }
     }
-    syncStoryLengthPills(val);
+    if (badge) {
+        badge.style.display = (value === 'marathon') ? 'inline-flex' : 'none';
+    }
+};
+
+window.setStoryLengthPill = function (val) {
+    onStoryLengthChange(val);
 };
 
 window.syncStoryLengthPills = function (val) {
-    document.querySelectorAll('.length-pill-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.background = '';
-        btn.style.color = '';
-        btn.style.borderColor = '';
-    });
-    const target = document.getElementById(`pill-len-${val}`);
-    if (target) {
-        target.classList.add('active');
-        if (val === 'marathon') {
-            target.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-            target.style.color = '#fff';
-            target.style.borderColor = '#059669';
-        } else {
-            target.style.background = 'var(--p)';
-            target.style.color = '#fff';
-            target.style.borderColor = 'var(--p)';
-        }
-    }
+    onStoryLengthChange(val);
 };
 
 window.quickCreateMarathonDialogue = function () {
@@ -3672,15 +3668,15 @@ window.renderCurrentStory = function () {
     const vocabBreakdownHtml = targetWordsList.map(w => {
         return `
             <div class="vocab-breakdown-item">
-                <div>
-                    <div style="font-size:1.2rem; font-weight:700; color:var(--g8)">${escapeHtml(w.chinese)}</div>
-                    <div style="font-size:0.85rem; color:var(--p); font-style:italic">${escapeHtml(w.pinyin || '')}</div>
-                    <div style="font-size:0.9rem; color:var(--g6)">${escapeHtml(w.vietnamese || w.meaning || '')}</div>
+                <div class="vocab-item-info">
+                    <div class="vocab-item-hanzi">${escapeHtml(w.chinese)}</div>
+                    <div class="vocab-item-pinyin">${escapeHtml(w.pinyin || '')}</div>
+                    <div class="vocab-item-viet">${escapeHtml(w.vietnamese || w.meaning || '')}</div>
                 </div>
-                <div style="display:flex; gap:6px">
+                <div class="vocab-item-actions">
                     <button class="action-btn" style="width:34px; height:34px; font-size:1rem" onclick="speak('${escapeQuotes(w.chinese)}')" title="Phát âm">🔊</button>
                     <button class="action-btn" style="width:34px; height:34px; font-size:1rem" onclick="showStrokeOrder('${escapeQuotes(w.chinese)}')" title="Tập viết nét">✍️</button>
-                    <button class="action-btn ${w.learned ? 'learned' : ''}" style="width:34px; height:34px; font-size:1rem" onclick="toggleStoryWordLearned(${w.id})" title="Đã thuộc">
+                    <button class="action-btn ${w.learned ? 'learned' : ''}" style="width:34px; height:34px; font-size:1rem" onclick="toggleStoryWordLearned(${w.id})" title="${w.learned ? 'Đã thuộc (Bấm để hủy)' : 'Chưa thuộc (Bấm để đánh dấu đã thuộc)'}">
                         ${w.learned ? '✅' : '⭕'}
                     </button>
                 </div>
@@ -3688,50 +3684,135 @@ window.renderCurrentStory = function () {
         `;
     }).join('');
 
-    // Extract all words from vocab library present in this story
-    const fullStoryText = currentStory.lines.map(l => l.chinese || '').join(' ');
-    const foundVocabWords = vocab.filter(v => v.chinese && fullStoryText.includes(v.chinese));
+    // Fast lookup of user library
+    const vocabMap = new Map();
+    vocab.forEach(v => {
+        if (v && v.chinese) vocabMap.set(v.chinese, v);
+    });
+
+    // Extract segmented tokens from all sentences in story (avoids false character-level substring matches)
+    const detectedWordsSet = new Set();
+    currentStory.lines.forEach(line => {
+        if (!line.chinese) return;
+        const tokens = segmentChineseSentence(line.chinese, targetWordsSet);
+        tokens.forEach(t => {
+            if (!t.isPunct && t.text && t.text.trim()) {
+                const wText = t.text.trim();
+                if (!targetWordsSet.has(wText) && vocabMap.has(wText)) {
+                    detectedWordsSet.add(wText);
+                }
+            }
+        });
+    });
+
+    const unlearnedInStory = [];
+    const learnedInStory = [];
+    detectedWordsSet.forEach(wordText => {
+        const wordObj = vocabMap.get(wordText);
+        if (wordObj) {
+            if (wordObj.learned) {
+                learnedInStory.push(wordObj);
+            } else {
+                unlearnedInStory.push(wordObj);
+            }
+        }
+    });
+
+    // Sort alphabetically by pinyin/chinese
+    unlearnedInStory.sort((a, b) => (a.pinyin || a.chinese).localeCompare(b.pinyin || b.chinese));
+    learnedInStory.sort((a, b) => (a.pinyin || a.chinese).localeCompare(b.pinyin || b.chinese));
+
+    const totalDetectedCount = unlearnedInStory.length + learnedInStory.length;
 
     let inStoryVocabHtml = '';
-    if (foundVocabWords.length > 0) {
-        const chipsHtml = foundVocabWords.map(w => {
-            const isTarget = targetWordsSet.has(w.chinese);
-            const learnedCls = w.learned ? 'learned' : 'unlearned';
-            const roleBadge = isTarget 
-                ? '<span class="in-story-badge target">Mục tiêu</span>'
-                : (w.learned ? '<span class="in-story-badge learned">Đã thuộc</span>' : '<span class="in-story-badge unlearned">Trong list</span>');
-
+    if (totalDetectedCount > 0) {
+        // Render unlearned words as prominent focus pills
+        const unlearnedChipsHtml = unlearnedInStory.map(w => {
             return `
-                <div class="in-story-vocab-chip ${isTarget ? 'is-target' : ''} ${learnedCls}">
-                    <div class="in-story-chip-main" onclick="showWordDetail('${escapeQuotes(w.chinese)}')" title="Chạm để xem chi tiết & tập viết nét">
-                        <span class="in-story-chip-hanzi">${escapeHtml(w.chinese)}</span>
-                        <span class="in-story-chip-pinyin">${escapeHtml(w.pinyin || '')}</span>
-                        <span class="in-story-chip-viet">${escapeHtml(w.vietnamese || w.meaning || '')}</span>
-                        ${roleBadge}
-                    </div>
-                    <div class="in-story-chip-actions">
-                        <button class="action-btn" style="width:26px; height:26px; font-size:0.8rem; padding:0" onclick="speak('${escapeQuotes(w.chinese)}')" title="Phát âm">🔊</button>
-                        <button class="action-btn" style="width:26px; height:26px; font-size:0.8rem; padding:0" onclick="showStrokeOrder('${escapeQuotes(w.chinese)}')" title="Tập viết nét">✍️</button>
-                        <button class="action-btn" style="width:26px; height:26px; font-size:0.8rem; padding:0" onclick="toggleStoryWordLearned(${w.id})" title="${w.learned ? 'Đã thuộc (Bấm để hủy)' : 'Chưa thuộc (Bấm để đánh dấu đã thuộc)'}">${w.learned ? '✅' : '⭕'}</button>
-                    </div>
+                <div class="in-story-pill unlearned" onclick="showWordDetail('${escapeQuotes(w.chinese)}')" title="Chạm để xem nét & nghĩa: ${escapeHtml(w.vietnamese || w.meaning || '')}">
+                    <span class="pill-hanzi">${escapeHtml(w.chinese)}</span>
+                    <span class="pill-pinyin">${escapeHtml(w.pinyin || '')}</span>
+                    <span class="pill-meaning">${escapeHtml(w.vietnamese || w.meaning || '')}</span>
+                    <button class="pill-quick-audio" onclick="event.stopPropagation(); speak('${escapeQuotes(w.chinese)}')" title="Nghe phát âm">🔊</button>
+                    <button class="pill-quick-check" onclick="event.stopPropagation(); toggleStoryWordLearned(${w.id})" title="Đánh dấu đã thuộc">⭕</button>
                 </div>
             `;
         }).join('');
 
+        // Mastered words: default show top 12, hide rest behind smooth collapsible toggle
+        const initialLearnedLimit = 12;
+        const learnedChipsHtml = learnedInStory.map((w, idx) => {
+            const isCollapsible = idx >= initialLearnedLimit;
+            const hiddenClass = (isCollapsible && !storyVocabLearnedExpanded) ? 'is-hidden' : '';
+            return `
+                <div class="in-story-pill learned ${isCollapsible ? 'learned-collapsible ' + hiddenClass : ''}" onclick="showWordDetail('${escapeQuotes(w.chinese)}')" title="Đã thuộc: ${escapeHtml(w.chinese)} (${escapeHtml(w.pinyin || '')}) - ${escapeHtml(w.vietnamese || w.meaning || '')}">
+                    <span class="pill-hanzi">${escapeHtml(w.chinese)}</span>
+                    <span class="pill-pinyin">${escapeHtml(w.pinyin || '')}</span>
+                    <span class="pill-meaning-mini">${escapeHtml(w.vietnamese || w.meaning || '')}</span>
+                    <button class="pill-quick-audio" onclick="event.stopPropagation(); speak('${escapeQuotes(w.chinese)}')" title="Nghe">🔊</button>
+                </div>
+            `;
+        }).join('');
+
+        const hiddenLearnedCount = Math.max(0, learnedInStory.length - initialLearnedLimit);
+        const expandToggleHtml = hiddenLearnedCount > 0 ? `
+            <div style="margin-top:12px; text-align:center;">
+                <button type="button" class="btn btn-sm btn-outline-toggle" id="btn-toggle-learned-vocab" onclick="toggleStoryVocabExpanded()">
+                    ${storyVocabLearnedExpanded 
+                        ? '▴ Thu gọn danh sách từ đã thuộc' 
+                        : `▾ Xem thêm ${hiddenLearnedCount} từ đã thuộc khác xuất hiện trong bài`}
+                </button>
+            </div>
+        ` : '';
+
         inStoryVocabHtml = `
             <div class="in-story-vocab-summary">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px">
-                    <div style="display:flex; align-items:center; gap:8px">
-                        <span style="font-size:1.2rem">🏷️</span>
-                        <h4 style="margin:0; font-size:1rem; color:var(--g8); font-weight:700">
-                            Từ Vựng Trong Danh Sách Đã Xuất Hiện (${foundVocabWords.length} từ)
-                        </h4>
+                <!-- Header with stats -->
+                <div class="in-story-header">
+                    <div class="in-story-title-group">
+                        <span style="font-size:1.25rem; line-height:1">🏷️</span>
+                        <div>
+                            <h4 style="margin:0; font-size:1.02rem; color:var(--g8); font-weight:700">
+                                Từ Vựng Bổ Trợ Xuất Hiện Trong Bài (${totalDetectedCount} từ)
+                            </h4>
+                            <div style="font-size:0.8rem; color:var(--g6); margin-top:2px">
+                                Các từ đã có trong thư viện của bạn được tự động nhận diện và tô màu trong bài đọc.
+                            </div>
+                        </div>
                     </div>
-                    <span style="font-size:0.82rem; color:var(--g6)">Từ trong list được tô màu nổi bật trong bài. Bấm vào từ để học chi tiết!</span>
+                    <!-- Badges -->
+                    <div class="in-story-stats-badges">
+                        ${unlearnedInStory.length > 0 ? `<span class="badge-unlearned-count">⭕ ${unlearnedInStory.length} từ chưa thuộc</span>` : ''}
+                        <span class="badge-learned-count">✅ ${learnedInStory.length} từ đã thuộc</span>
+                    </div>
                 </div>
-                <div class="in-story-vocab-grid">
-                    ${chipsHtml}
-                </div>
+
+                <!-- Unlearned Focus Section (if any) -->
+                ${unlearnedInStory.length > 0 ? `
+                    <div class="in-story-subgroup unlearned-subgroup">
+                        <div class="in-story-subgroup-title">
+                            <span style="color:#d97706">⚡ Từ chưa thuộc trong bài cần chú ý (${unlearnedInStory.length}):</span>
+                            <span style="font-size:0.78rem; color:var(--g6)">Chạm để xem nét hoặc bấm ⭕ để đánh dấu đã thuộc</span>
+                        </div>
+                        <div class="in-story-pills-flow">
+                            ${unlearnedChipsHtml}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Mastered Section -->
+                ${learnedInStory.length > 0 ? `
+                    <div class="in-story-subgroup learned-subgroup" style="${unlearnedInStory.length > 0 ? 'margin-top:14px; padding-top:12px; border-top:1px dashed #e2e8f0;' : ''}">
+                        <div class="in-story-subgroup-title">
+                            <span style="color:#059669">✅ Từ đã thuộc xuất hiện trong bài (${learnedInStory.length}):</span>
+                            <span style="font-size:0.78rem; color:var(--g6)">Chạm vào từ để tra nhanh nét viết & nghĩa</span>
+                        </div>
+                        <div class="in-story-pills-flow">
+                            ${learnedChipsHtml}
+                        </div>
+                        ${expandToggleHtml}
+                    </div>
+                ` : ''}
             </div>
         `;
     }
@@ -3838,10 +3919,7 @@ window.renderCurrentStory = function () {
                 ${linesHtml}
             </div>
 
-            <!-- In-Story Vocab Summary (All words from user's list highlighted in story) -->
-            ${inStoryVocabHtml}
-
-            <!-- Target Vocab Breakdown -->
+            <!-- Target Vocab Breakdown: Core Learning Goals (Shown FIRST) -->
             <div class="vocab-breakdown-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
                     <h4 style="color:var(--g8); font-size:1.05rem">🎯 Từ Vựng Trọng Tâm Trong Bài (${targetWordsList.length} từ)</h4>
@@ -3851,8 +3929,31 @@ window.renderCurrentStory = function () {
                     ${vocabBreakdownHtml}
                 </div>
             </div>
+
+            <!-- In-Story Vocab Summary: Secondary / Reinforcement (Shown SECOND) -->
+            ${inStoryVocabHtml}
         </div>
     `;
+};
+
+let storyVocabLearnedExpanded = false;
+
+window.toggleStoryVocabExpanded = function () {
+    storyVocabLearnedExpanded = !storyVocabLearnedExpanded;
+    const hiddenPills = document.querySelectorAll('.learned-collapsible');
+    const toggleBtn = document.getElementById('btn-toggle-learned-vocab');
+    hiddenPills.forEach(p => {
+        if (storyVocabLearnedExpanded) {
+            p.classList.remove('is-hidden');
+        } else {
+            p.classList.add('is-hidden');
+        }
+    });
+    if (toggleBtn) {
+        toggleBtn.innerHTML = storyVocabLearnedExpanded 
+            ? '▴ Thu gọn danh sách từ đã thuộc' 
+            : `▾ Xem thêm ${hiddenPills.length} từ đã thuộc khác xuất hiện trong bài`;
+    }
 };
 
 window.toggleStoryPinyin = function () {

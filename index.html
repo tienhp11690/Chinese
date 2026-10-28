@@ -158,7 +158,7 @@
                 <div class="story-controls-grid">
                     <!-- Format selector -->
                     <div class="control-box">
-                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
+                        <label class="control-label">
                             📝 Hình thức:
                         </label>
                         <div class="type-toggle-group">
@@ -173,19 +173,19 @@
 
                     <!-- Vocabulary Source Filter -->
                     <div class="control-box">
-                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
+                        <label class="control-label">
                             🎯 Nguồn từ vựng:
                         </label>
                         <select id="story-vocab-source" class="select-field" onchange="onStorySourceChange()">
-                            <option value="unlearned" selected>⭕ Từ chưa thuộc (Ôn từ mới)</option>
-                            <option value="learned">✅ Chỉ từ đã học (Củng cố)</option>
+                            <option value="unlearned" selected>⭕ Chưa thuộc (Ôn từ mới)</option>
+                            <option value="learned">✅ Đã thuộc (Củng cố)</option>
                             <option value="all">🌐 Tất cả từ vựng</option>
                         </select>
                     </div>
 
                     <!-- Topic filter -->
                     <div class="control-box">
-                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
+                        <label class="control-label">
                             📁 Chủ đề:
                         </label>
                         <select id="story-topic-filter" class="select-field" onchange="onStoryTopicChange()">
@@ -195,28 +195,15 @@
 
                     <!-- Length selector -->
                     <div class="control-box">
-                        <label style="display:block; font-size:0.85rem; font-weight:600; margin-bottom:6px; color:var(--g6)">
-                            📏 Độ dài:
+                        <label class="control-label">
+                            <span>📏 Độ dài:</span>
+                            <span id="marathon-indicator-badge" class="marathon-pill-tag">🏃 20-30 phút</span>
                         </label>
-                        <div class="type-toggle-group" style="display:flex; gap:4px; flex-wrap:wrap;">
-                            <button type="button" class="type-toggle-btn length-pill-btn" id="pill-len-short" onclick="setStoryLengthPill('short')" style="flex:1; min-width:65px; padding:6px 8px; font-size:0.8rem;">
-                                Ngắn (4-5)
-                            </button>
-                            <button type="button" class="type-toggle-btn length-pill-btn" id="pill-len-medium" onclick="setStoryLengthPill('medium')" style="flex:1; min-width:65px; padding:6px 8px; font-size:0.8rem;">
-                                Vừa (6-8)
-                            </button>
-                            <button type="button" class="type-toggle-btn length-pill-btn" id="pill-len-long" onclick="setStoryLengthPill('long')" style="flex:1; min-width:65px; padding:6px 8px; font-size:0.8rem;">
-                                Dài (9-12)
-                            </button>
-                            <button type="button" class="type-toggle-btn length-pill-btn active" id="pill-len-marathon" onclick="setStoryLengthPill('marathon')" style="flex:2; min-width:130px; padding:6px 10px; font-size:0.82rem; background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:700; border-color:#059669;">
-                                🏃 Marathon (20-30 câu)
-                            </button>
-                        </div>
-                        <select id="story-length" class="select-field" style="display:none;" onchange="syncStoryLengthPills(this.value)">
-                            <option value="short">Ngắn (4 - 5 câu)</option>
-                            <option value="medium">Vừa (6 - 8 câu)</option>
-                            <option value="long">Dài (9 - 12 câu)</option>
-                            <option value="marathon" selected>🏃 Marathon Chạy Bộ (20 - 30 câu ~ 20-30 phút)</option>
+                        <select id="story-length" class="select-field marathon-selected" onchange="onStoryLengthChange(this.value)">
+                            <option value="short">⚡ Ngắn (4 - 5 câu)</option>
+                            <option value="medium">🌱 Vừa (6 - 8 câu)</option>
+                            <option value="long">📖 Dài (9 - 12 câu)</option>
+                            <option value="marathon" selected>🏃 Marathon (20 - 30 câu ~ 20-30p)</option>
                         </select>
                     </div>
                 </div>
