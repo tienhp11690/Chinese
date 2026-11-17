@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2026-11-17T06:13:17.150Z",
+  "updated": "2026-11-17T06:20:28.727Z",
   "vocab": [
     {
       "id": 1762317830616,
@@ -13572,6 +13572,30 @@
       "difficulty": "Easy",
       "learned": true,
       "nextReview": 1762317830616,
+      "reviewCount": 0
+    },
+    {
+      "id": 1794896360020,
+      "vietnamese": "Trọng lượng",
+      "chinese": "重",
+      "pinyin": "zhòng",
+      "meaning": "Trọng lượng",
+      "topic": "Cơ bản",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1794896360020,
+      "reviewCount": 0
+    },
+    {
+      "id": 1794896417460,
+      "vietnamese": "Kilogram",
+      "chinese": "公斤",
+      "pinyin": "gōngjīn",
+      "meaning": "Kilogram",
+      "topic": "Cơ bản",
+      "difficulty": "easy",
+      "learned": false,
+      "nextReview": 1794896417460,
       "reviewCount": 0
     }
   ]
