@@ -16,7 +16,7 @@
     "githubStoriesFile": "stories.json",
     "storiesJsonUrl": "https://raw.githubusercontent.com/tienhp11690/Chinese/main/stories.json",
     "sheetsSentencesGid": "681747827",
-    "syncStrategy": "sheets-first"
+    "syncStrategy": "github-first"
   },
   "notes": {
     "projectGithubUrl": "URL repository GitHub chính của dự án: https://github.com/tienhp11690/Chinese",
@@ -27,7 +27,7 @@
     "vocabJsonUrl": "URL raw của file vocab.json trên GitHub để load trực tiếp",
     "githubStoriesFile": "Đường dẫn file trong repo để lưu database stories ôn tập (stories.json)",
     "storiesJsonUrl": "URL raw của file stories.json trên GitHub để load database stories",
-    "syncStrategy": "sheets-first = auto load từ Sheets | local-first = dùng localStorage"
+    "syncStrategy": "github-first = ưu tiên load từ GitHub/local vocab.json | sheets-first = auto load từ Sheets | local-first = dùng localStorage"
   },
   "instructions": {
     "step1": "Thay YOUR_SHEET_ID bằng ID thực tế của Google Sheet",

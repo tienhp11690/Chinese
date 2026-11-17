@@ -1,899 +1,1372 @@
-[
-  {
-    "title": "上海公园晨跑与寻路记",
-    "titlePinyin": "Shànghǎi gōngyuán chénpǎo yǔ xúnlù jì",
-    "titleViet": "Chạy bộ buổi sáng ở công viên Thượng Hải và chuyện tìm đường",
-    "type": "conversation",
-    "theme": "Đi du lịch Thượng Hải, bị lạc đường và hỏi người dân đường tới ga tàu điện ngầm",
-    "lines": [
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "小华，早安！你今天也来这个公园锻炼身体吗？",
-        "pinyin": "Xiǎohuá, zǎo'ān! Nǐ jīntiān yě lái zhège gōngyuán duànliàn shēntǐ ma?",
-        "vietnamese": "Tiểu Hoa, chào buổi sáng! Hôm nay bạn cũng đến công viên này tập thể dục à?",
-        "usedWords": [
-          "公园",
-          "锻炼"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "是啊，小明。这里的空气真好，你看，蓝天多漂亮！",
-        "pinyin": "Shì a, Xiǎomíng. Zhèlǐ de kōngqì zhēn hǎo, nǐ kàn, lántiān duō piàoliang!",
-        "vietnamese": "Đúng vậy, Tiểu Minh. Không khí ở đây thật tốt, bạn nhìn xem, bầu trời xanh đẹp quá!",
-        "usedWords": [
-          "空气",
-          "蓝天"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "对，在上海跑步让我觉得压力变小了，心情很愉快。",
-        "pinyin": "Duì, zài Shànghǎi pǎobù ràng wǒ juéde yālì biàn xiǎo le, xīnqíng hěn yúkuài.",
-        "vietnamese": "Đúng, chạy bộ ở Thượng Hải khiến tôi cảm thấy áp lực giảm bớt, tâm trạng rất vui vẻ.",
-        "usedWords": [
-          "压力"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "我建议你每天都来，跑步对身体非常有好处。",
-        "pinyin": "Wǒ jiànyì nǐ měitiān dōu lái, pǎobù duì shēntǐ fēicháng yǒu hǎochù.",
-        "vietnamese": "Tôi kiến nghị bạn nên đến mỗi ngày, chạy bộ rất có lợi cho cơ thể.",
-        "usedWords": [
-          "建议"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "没错。我喜欢一边跑步一边听中文歌，练习听力。",
-        "pinyin": "Méicuò. Wǒ xǐhuān yìbiān pǎobù yìbiān tīng Zhōngwéngē, liànxí tīnglì.",
-        "vietnamese": "Không sai. Tôi thích vừa chạy bộ vừa nghe nhạc Trung Quốc để luyện nghe.",
-        "usedWords": [
-          "一边"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "好办法！你还记得小美吗？她以前在东北上学。",
-        "pinyin": "Hǎo bànfǎ! Nǐ hái jìde Xiǎoměi ma? Tā yǐqián zài Dōngběi shàng xué.",
-        "vietnamese": "Cách hay đấy! Bạn còn nhớ Tiểu Mỹ không? Cô ấy trước đây đi học ở vùng Đông Bắc.",
-        "usedWords": [
-          "小美",
-          "东北",
-          "上学"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "记得，她的普通话声调特别标准，帮了我很多。",
-        "pinyin": "Jìde, tā de pǔtōnghuà shēngdiào tèbié biāozhǔn, bāng le wǒ hěn duō.",
-        "vietnamese": "Nhớ chứ, thanh điệu tiếng Phổ thông của cô ấy đặc biệt chuẩn, đã giúp tôi rất nhiều.",
-        "usedWords": [
-          "声调"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "早上的运动总能给我很多启发，让我想出工作的好办法。",
-        "pinyin": "Zǎoshang de yùndòng zǒng néng gěi wǒ hěn duō qǐfā, ràng wǒ xiǎng chū gōngzuò de hǎo bànfǎ.",
-        "vietnamese": "Vận động buổi sáng luôn mang lại cho tôi nhiều gợi ý (khơi gợi), giúp tôi nghĩ ra cách giải quyết công việc tốt.",
-        "usedWords": [
-          "启发"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "确实。对了，我们跑了多久了？我想休息一下。",
-        "pinyin": "Quèshí. Duìle, wǒmen pǎo le duōjiǔ le? Wǒ xiǎng xiūxi yíxià.",
-        "vietnamese": "Xác thực là vậy. Đúng rồi, chúng ta chạy bao lâu rồi? Tôi muốn nghỉ ngơi một chút.",
-        "usedWords": [
-          "休息"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "我们跑了四十分钟了。哎呀，我不认识这里，这是哪儿？",
-        "pinyin": "Wǒmen pǎo le sìshí fēnzhōng le. Āiyā, wǒ bù rènshi zhèlǐ, zhè shì nǎr?",
-        "vietnamese": "Chúng ta chạy được 40 phút rồi. Ái chà, tôi không biết chỗ này, đây là đâu vậy?",
-        "usedWords": []
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "糟糕，上海的公园太大了，我们好像迷路了。",
-        "pinyin": "Zāogāo, Shànghǎi de gōngyuán tài dà le, wǒmen hǎoxiàng mílù le.",
-        "vietnamese": "Hỏng rồi, công viên ở Thượng Hải lớn quá, hình như chúng ta lạc đường rồi.",
-        "usedWords": [
-          "公园"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "别担心，我们需要找地铁站回酒店吃早饭。",
-        "pinyin": "Bié dānxīn, wǒmen xūyào zhǎo dìtiězhàn huí jiǔdiàn chī zǎofàn.",
-        "vietnamese": "Đừng lo lắng, chúng ta cần tìm ga tàu điện ngầm để về khách sạn ăn sáng.",
-        "usedWords": []
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "你看，那边有一个路牌，我们过去看看。",
-        "pinyin": "Nǐ kàn, nàbiān yǒu yígè lùpái, wǒmen guòqù kànkan.",
-        "vietnamese": "Bạn nhìn kìa, đằng kia có một cái biển chỉ đường, chúng ta qua đó xem sao.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "路牌说地铁站在东边，要一直往前走。",
-        "pinyin": "Lùpái shuō dìtiězhàn zài dōngbiān, yào yìzhí wǎng qián zǒu.",
-        "vietnamese": "Biển chỉ đường nói ga tàu điện ngầm ở phía đông, phải đi thẳng về phía trước.",
-        "usedWords": []
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "好，那我们慢点走，顺便看看这里的风景。",
-        "pinyin": "Hǎo, nà wǒmen màn diǎn zǒu, shùnbiàn kànkan zhèlǐ de fēngjǐng.",
-        "vietnamese": "Được, vậy chúng ta đi chậm lại, nhân tiện ngắm phong cảnh ở đây luôn.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "虽然迷路了，但早上的阳光真的很舒服。",
-        "pinyin": "Suīrán mílù le, dàn zǎoshang de yángguāng zhēn de hěn shūfu.",
-        "vietnamese": "Tuy là lạc đường, nhưng ánh nắng buổi sáng thật sự rất dễ chịu.",
-        "usedWords": []
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "等一下去地铁站旁边喝杯咖啡吧，我有点渴了。",
-        "pinyin": "Děng yíxià qù dìtiězhàn pángbiān hē bēi kāfēi ba, wǒ yǒudiǎn kě le.",
-        "vietnamese": "Lát nữa đến cạnh ga tàu điện ngầm uống ly cà phê nhé, tôi hơi khát rồi.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "好主意，黑咖啡能让我工作时更有精神。",
-        "pinyin": "Hǎo zhǔyì, hēi kāfēi néng ràng wǒ gōngzuò shí gèng yǒu jīngshén.",
-        "vietnamese": "Ý hay đó, cà phê đen giúp tôi có tinh thần hơn khi làm việc.",
-        "usedWords": []
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "早餐也很重要，我们要补充营养。",
-        "pinyin": "Zǎofàn yě hěn zhòngyào, wǒmen yào bǔchōng yíngyǎng.",
-        "vietnamese": "Bữa sáng cũng rất quan trọng, chúng ta cần bổ sung dinh dưỡng.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "是的，健康的生活需要长期的坚持。",
-        "pinyin": "Shì de, jiànkāng de shēnghuó xūyào chángqī de jiānchí.",
-        "vietnamese": "Đúng vậy, cuộc sống khỏe mạnh cần sự kiên trì lâu dài.",
-        "usedWords": []
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "就像学习汉语一样，不能因为难就放弃。",
-        "pinyin": "Jiù xiàng xuéxí Hànyǔ yíyàng, bù néng yīnwèi nán jiù fàngqì.",
-        "vietnamese": "Giống như học tiếng Hán vậy, không thể vì khó mà bỏ cuộc.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "你说得对。看！前面就是地铁站的入口了。",
-        "pinyin": "Nǐ shuō de duì. Kàn! Qiánmiàn jiùshì dìtiězhàn de rùkǒu le.",
-        "vietnamese": "Bạn nói đúng. Nhìn kìa! Phía trước chính là lối vào ga tàu điện ngầm rồi.",
-        "usedWords": []
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "太好了，我们终于找到了，走吧。",
-        "pinyin": "Tài hǎo le, wǒmen zhōngyú zhǎodào le, zǒu ba.",
-        "vietnamese": "Tốt quá, cuối cùng chúng ta cũng tìm thấy rồi, đi thôi.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "明天早上我们还来这个公园跑步吗？",
-        "pinyin": "Míngtiān zǎoshang wǒmen hái lái zhège gōngyuán pǎobù ma?",
-        "vietnamese": "Sáng mai chúng ta vẫn đến công viên này chạy bộ chứ?",
-        "usedWords": [
-          "公园"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "当然，我们要互相鼓励，一起锻炼。",
-        "pinyin": "Dāngrán, wǒmen yào hùxiāng gǔlì, yìqǐ duànliàn.",
-        "vietnamese": "Tất nhiên rồi, chúng ta phải khích lệ lẫn nhau, cùng nhau tập luyện.",
-        "usedWords": [
-          "锻炼"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "没问题，那明天见，回去好好休息！",
-        "pinyin": "Méi wèntí, nà míngtiān jiàn, huíqù hǎohǎo xiūxi!",
-        "vietnamese": "Không vấn đề gì, vậy hẹn gặp lại ngày mai, về nhà nghỉ ngơi cho tốt nhé!",
-        "usedWords": [
-          "休息"
-        ]
-      }
-    ],
-    "id": 1793179335288,
-    "createdAt": "02:22:15 28/10/2026",
-    "targetWords": [
-      {
-        "id": 1793177624689,
-        "vietnamese": "áp lực",
-        "chinese": "压力",
-        "pinyin": "yālì",
-        "meaning": "áp lực",
-        "topic": "HSK",
-        "difficulty": "Easy",
-        "learned": true,
-        "nextReview": 1793083659958,
-        "reviewCount": 0
-      },
-      {
-        "id": 1793177624641,
-        "vietnamese": "khơi gợi, gợi ý",
-        "chinese": "启发",
-        "pinyin": "qǐfā",
-        "meaning": "khơi gợi, gợi ý",
-        "topic": "HSK",
-        "difficulty": "Easy",
-        "learned": true,
-        "nextReview": 1793083659956,
-        "reviewCount": 0
-      },
-      {
-        "id": 1793177624568,
-        "vietnamese": "công viên",
-        "chinese": "公园",
-        "pinyin": "gōngyuán",
-        "meaning": "công viên",
-        "topic": "HSK",
-        "difficulty": "Easy",
-        "learned": true,
-        "nextReview": 1793083659953,
-        "reviewCount": 0
-      },
-      {
-        "id": 1793177624618,
-        "vietnamese": "bầu trời xanh",
-        "chinese": "蓝天",
-        "pinyin": "lántiān",
-        "meaning": "bầu trời xanh",
-        "topic": "HSK",
-        "difficulty": "Easy",
-        "learned": true,
-        "nextReview": 1793083659955,
-        "reviewCount": 0
-      },
-      {
-        "id": 1793177623730,
-        "vietnamese": "đi học",
-        "chinese": "上学",
-        "pinyin": "shàng xué",
-        "meaning": "đi học",
-        "topic": "Bài 6",
-        "difficulty": "Easy",
-        "learned": true,
-        "nextReview": 1793083659875,
-        "reviewCount": 0
-      }
-    ],
-    "prompt": "Đi du lịch Thượng Hải, bị lạc đường và hỏi người dân đường tới ga tàu điện ngầm",
-    "source": "gemini (gemini-3-flash-preview)",
-    "syncedGithub": true
-  },
-  {
-    "id": 1729654000000,
-    "title": "在咖啡馆相遇",
-    "titlePinyin": "zài kā fēi guǎn xiāng yù",
-    "titleViet": "Gặp nhau ở quán cà phê",
-    "type": "conversation",
-    "theme": "Quán cà phê & Bạn bè",
-    "prompt": "Gặp bạn cũ ở quán cà phê và trò chuyện về việc học tiếng Trung",
-    "createdAt": "23/10/2026, 10:00:00",
-    "syncedGithub": true,
-    "targetWords": [
-      {
-        "chinese": "咖啡",
-        "pinyin": "kāfēi",
-        "vietnamese": "cà phê"
-      },
-      {
-        "chinese": "朋友",
-        "pinyin": "péngyou",
-        "vietnamese": "bạn bè"
-      },
-      {
-        "chinese": "喜欢",
-        "pinyin": "xǐhuan",
-        "vietnamese": "thích"
-      }
-    ],
-    "lines": [
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "你好！好久不见，你也喜欢来这家咖啡馆吗？",
-        "pinyin": "Nǐ hǎo! Hǎojiǔ bújiàn, nǐ yě xǐhuan lái zhè jiā kāfēiguǎn ma?",
-        "vietnamese": "Chào bạn! Lâu ngày không gặp, bạn cũng thích đến quán cà phê này à?",
-        "usedWords": [
-          "你好",
-          "喜欢",
-          "咖啡"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "你好，小明！是的，我和朋友经常在这里喝咖啡、学中文。",
-        "pinyin": "Nǐ hǎo, Xiǎomíng! Shì de, wǒ hé péngyou jīngcháng zài zhèlǐ hē kāfēi, xué zhōngwén.",
-        "vietnamese": "Chào Tiểu Minh! Đúng vậy, mình và bạn bè thường uống cà phê và học tiếng Trung ở đây.",
-        "usedWords": [
-          "你好",
-          "朋友",
-          "咖啡"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "太好了！我们一起喝咖啡、一起聊天吧。",
-        "pinyin": "Tài hǎo le! Wǒmen yìqǐ hē kāfēi, yìqǐ liáotiān ba.",
-        "vietnamese": "Tuyệt quá! Chúng ta cùng uống cà phê và trò chuyện nhé.",
-        "usedWords": [
-          "咖啡"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "好啊，认识你这样的好朋友我真高兴！",
-        "pinyin": "Hǎo a, rènshí nǐ zhèyàng de hǎo péngyou wǒ zhēn gāoxìng!",
-        "vietnamese": "Được chứ, quen được người bạn tốt như bạn mình thật sự rất vui!",
-        "usedWords": [
-          "朋友"
-        ]
-      }
-    ]
-  },
-  {
-    "id": 1729655000000,
-    "title": "晨跑与健康生活 (Marathon Chạy Bộ)",
-    "titlePinyin": "chén pǎo yǔ jiàn kāng shēng huó",
-    "titleViet": "Chạy bộ buổi sáng và lối sống khỏe mạnh",
-    "type": "conversation",
-    "theme": "🏃 Chạy bộ thể thao & Sức khỏe (Bản dài 20-30 phút)",
-    "prompt": "Hội thoại mẫu marathon dài luyện nghe thụ động khi chạy bộ, nói về thể thao, sức khỏe, thói quen và ăn uống",
-    "createdAt": "26/10/2026, 21:30:00",
-    "syncedGithub": true,
-    "targetWords": [
-      {
-        "chinese": "跑步",
-        "pinyin": "pǎobù",
-        "vietnamese": "chạy bộ"
-      },
-      {
-        "chinese": "身体",
-        "pinyin": "shēntǐ",
-        "vietnamese": "sức khỏe, thân thể"
-      },
-      {
-        "chinese": "锻炼",
-        "pinyin": "duànliàn",
-        "vietnamese": "rèn luyện, tập thể dục"
-      },
-      {
-        "chinese": "习惯",
-        "pinyin": "xíguàn",
-        "vietnamese": "thói quen"
-      },
-      {
-        "chinese": "坚持",
-        "pinyin": "jiānchí",
-        "vietnamese": "kiên trì"
-      }
-    ],
-    "lines": [
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "早上好，小华！今天早上的空气真清新，你也来公园跑步吗？",
-        "pinyin": "Zǎoshang hǎo, Xiǎohuá! Jīntiān zǎoshang de kōngqì zhēn qīngxīn, nǐ yě lái gōngyuán pǎobù ma?",
-        "vietnamese": "Chào buổi sáng Tiểu Hoa! Không khí sáng nay thật trong lành, bạn cũng đến công viên chạy bộ à?",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "早上好小明！是的，我每天早上都坚持来这里锻炼身体。",
-        "pinyin": "Zǎoshang hǎo Xiǎomíng! Shì de, wǒ měitiān zǎoshang dōu jiānchí lái zhèlǐ duànliàn shēntǐ.",
-        "vietnamese": "Chào buổi sáng Tiểu Minh! Đúng vậy, mỗi buổi sáng tôi đều kiên trì đến đây rèn luyện thân thể.",
-        "usedWords": [
-          "坚持",
-          "锻炼",
-          "身体"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "你一般每次跑多长时间？跑得快不快？",
-        "pinyin": "Nǐ yìbān měicì pǎo duō cháng shíjiān? Pǎo de kuài bu kuài?",
-        "vietnamese": "Thông thường mỗi lần bạn chạy bao lâu? Có chạy nhanh không?",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "我一般跑半个小时，大概五公里，速度不快，主要是慢跑。",
-        "pinyin": "Wǒ yìbān pǎo bàn gè xiǎoshí, dàgài wǔ gōnglǐ, sùdù bú kuài, zhǔyào shì mànpǎo.",
-        "vietnamese": "Tôi thường chạy nửa tiếng, khoảng năm cây số, tốc độ không nhanh, chủ yếu là chạy chậm.",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "慢跑对心脏非常好，而且不容易觉得累。",
-        "pinyin": "Mànpǎo duì xīnzàng fēicháng hǎo, érqiě bù róngyì juéde lèi.",
-        "vietnamese": "Chạy chậm rất tốt cho tim mạch, hơn nữa lại không dễ cảm thấy mệt.",
-        "usedWords": [
-          "跑步",
-          "身体"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "没错！跑步的时候一边听音乐或者听中文，时间过得特别快。",
-        "pinyin": "Méi cuò! Pǎobù de shíhou yìbiān tīng yīnyuè huòzhě tīng zhōngwén, shíjiān guò de tèbié kuài.",
-        "vietnamese": "Không sai! Lúc chạy bộ vừa chạy vừa nghe nhạc hoặc nghe tiếng Trung, thời gian trôi qua rất nhanh.",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "这个习惯太棒了！我也喜欢边跑步边听中文录音，既能锻炼又能学习。",
-        "pinyin": "Zhè gè xíguàn tài bàng le! Wǒ yě xǐhuan biān pǎobù biān tīng zhōngwén lùyīn, jì néng duànliàn yòu néng xuéxí.",
-        "vietnamese": "Thói quen này tuyệt quá! Tôi cũng thích vừa chạy bộ vừa nghe ghi âm tiếng Trung, vừa rèn luyện vừa học tập.",
-        "usedWords": [
-          "习惯",
-          "跑步",
-          "锻炼"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "跑步前你做热身运动了吗？热身非常重要。",
-        "pinyin": "Pǎobù qián nǐ zuò rèshēn yùndòng le ma? Rèshēn fēicháng zhòngyào.",
-        "vietnamese": "Trước khi chạy bộ bạn đã khởi động làm nóng người chưa? Khởi động vô cùng quan trọng.",
-        "usedWords": [
-          "跑步",
-          "锻炼"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "我刚刚做了五分钟拉伸，现在觉得全身都充满活力。",
-        "pinyin": "Wǒ gānggāng zuò le wǔ fēnzhōng lāshēn, xiànzài juéde quánshēn dōu chōngmǎn huólì.",
-        "vietnamese": "Tôi vừa mới giãn cơ năm phút, bây giờ cảm thấy toàn thân tràn đầy năng lượng.",
-        "usedWords": [
-          "身体"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "那太好了！我们一起跑两圈吧，按照自己的节奏来。",
-        "pinyin": "Nà tài hǎo le! Wǒmen yìqǐ pǎo liǎng quān ba, ànzhào zìjǐ de jiézòu lái.",
-        "vietnamese": "Thế thì tốt quá! Chúng ta cùng chạy hai vòng nhé, cứ theo nhịp điệu của bản thân.",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "好啊！你看，今天湖边的风景真美，微风吹着很舒服。",
-        "pinyin": "Hǎo a! Nǐ kàn, jīntiān hú biān de fēngjǐng zhēn měi, wēifēng chuī zhe hěn shūfu.",
-        "vietnamese": "Được thôi! Bạn nhìn xem, phong cảnh bên hồ hôm nay thật đẹp, gió nhẹ thổi rất dễ chịu.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "秋天的早晨最适合户外运动，不冷也不热。",
-        "pinyin": "Qiūtiān de zǎochén zuì shìhé hùwài yùndòng, bù lěng yě bú rè.",
-        "vietnamese": "Buổi sáng mùa thu thích hợp nhất để vận động ngoài trời, không lạnh cũng không nóng.",
-        "usedWords": [
-          "锻炼"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "小华，你觉得跑步最难的是什么？",
-        "pinyin": "Xiǎohuá, nǐ juéde pǎobù zuì nán de shì shénme?",
-        "vietnamese": "Tiểu Hoa, bạn thấy điều khó khăn nhất của việc chạy bộ là gì?",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "我觉得最难的是每天早起和坚持，只要穿上跑鞋出门，就成功了一半。",
-        "pinyin": "Wǒ juéde zuì nán de shì měitiān zǎoqǐ hé jiānchí, zhǐyào chuān shàng pǎoxié chūmén, jiù chénggōng le yíbàn.",
-        "vietnamese": "Tôi thấy khó nhất là dậy sớm mỗi ngày và kiên trì, chỉ cần xỏ giày ra khỏi cửa là đã thành công một nửa rồi.",
-        "usedWords": [
-          "坚持",
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "说得太对了！很多时候我们都是输给了自己的懒惰。",
-        "pinyin": "Shuō de tài duì le! Hěn duō shíhou wǒmen dōu shì shū gěi le zìjǐ de lǎnduò.",
-        "vietnamese": "Nói đúng lắm! Rất nhiều khi chúng ta đều chịu thua trước sự lười biếng của chính mình.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "养成早睡早起的好习惯，整天的工作和学习都会特别有效率。",
-        "pinyin": "Yǎngchéng zǎoshuì zǎoqǐ de hǎo xíguàn, zhěngtiān de gōngzuò hé xuéxí dōu huì tèbié yǒu xiàolǜ.",
-        "vietnamese": "Nuôi dưỡng thói quen tốt ngủ sớm dậy sớm, cả ngày làm việc và học tập đều sẽ đặc biệt hiệu quả.",
-        "usedWords": [
-          "习惯"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "跑完步以后，你一般喜欢吃什么早餐？",
-        "pinyin": "Pǎo wán bù yǐhòu, nǐ yìbān xǐhuan chī shénme zǎocān?",
-        "vietnamese": "Sau khi chạy bộ xong, bạn thường thích ăn món gì cho bữa sáng?",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "我喜欢喝一杯温水，然后吃两个鸡蛋和一片全麦面包，再喝一杯牛奶。",
-        "pinyin": "Wǒ xǐhuan hē yì bēi wēnshuǐ, ránhòu chī liǎng gè jīdàn hé yí piàn quánmài miànbāo, zài hē yì bēi niúnǎi.",
-        "vietnamese": "Tôi thích uống một cốc nước ấm, sau đó ăn hai quả trứng gà và một lát bánh mì nguyên cám, rồi uống thêm một cốc sữa bò.",
-        "usedWords": [
-          "身体"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "这样的早餐既营养又健康，热量也很适中。",
-        "pinyin": "Zhèyàng de zǎocān jì yíngyǎng yòu jiànkāng, rèliàng yě hěn shìzhōng.",
-        "vietnamese": "Bữa sáng như vậy vừa bổ dưỡng vừa tốt cho sức khỏe, lượng calo cũng rất vừa phải.",
-        "usedWords": [
-          "身体"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "你呢？跑完步会去喝咖啡吗？",
-        "pinyin": "Nǐ ne? Pǎo wán bù huì qù hē kāfēi ma?",
-        "vietnamese": "Còn bạn thì sao? Chạy bộ xong bạn có đi uống cà phê không?",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "会的！我习惯去公园门口那家小咖啡馆，点一杯美式咖啡。",
-        "pinyin": "Huì de! Wǒ xíguàn qù gōngyuán ménkǒu nà jiā xiǎo kāfēiguǎn, diǎn yì bēi měishì kāfēi.",
-        "vietnamese": "Có chứ! Tôi có thói quen ghé quán cà phê nhỏ ở cổng công viên, gọi một ly cà phê Americano.",
-        "usedWords": [
-          "习惯"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "黑咖啡能加快新陈代谢，运动后喝适量的咖啡确实很舒服。",
-        "pinyin": "Hēi kāfēi néng jiākuài xīnchéndàixiè, yùndòng hòu hē shìliàng de kāfēi quèshí hěn shūfu.",
-        "vietnamese": "Cà phê đen có thể đẩy nhanh trao đổi chất, vận động xong uống một lượng cà phê vừa phải thật sự rất sảng khoái.",
-        "usedWords": [
-          "身体",
-          "锻炼"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "一会儿跑完步，我们一起去那家咖啡馆坐坐吧，我请客！",
-        "pinyin": "Yíhuìr pǎo wán bù, wǒmen yìqǐ qù nà jiā kāfēiguǎn zuò zuo ba, wǒ qǐngkè!",
-        "vietnamese": "Lát nữa chạy bộ xong, chúng mình cùng ghé quán cà phê đó ngồi nhé, tôi mời!",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "太好了，谢谢你！今天能和你一起晨跑聊天，真的很有动力。",
-        "pinyin": "Tài hǎo le, xièxie nǐ! Jīntiān néng hé nǐ yìqǐ chénpǎo liáotiān, zhēnde hěn yǒu dònglì.",
-        "vietnamese": "Tuyệt quá, cảm ơn bạn nhé! Hôm nay được chạy bộ buổi sáng và trò chuyện cùng bạn thật sự rất có động lực.",
-        "usedWords": [
-          "跑步"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明",
-        "chinese": "明天早上六点半，我们还在这里见面，继续坚持！",
-        "pinyin": "Míngtiān zǎoshang liù diǎn bàn, wǒmen hái zài zhèlǐ jiànmiàn, jìxù jiānchí!",
-        "vietnamese": "Sáng mai sáu giờ rưỡi, chúng mình lại gặp nhau ở đây, tiếp tục kiên trì nhé!",
-        "usedWords": [
-          "坚持"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华",
-        "chinese": "一言为定！让我们一起加油，拥有健康的身体和快乐的心情！",
-        "pinyin": "Yì yán wéi dìng! Ràng wǒmen yìqǐ jiāyóu, yōngyǒu jiànkāng de shēntǐ hé kuàilè de xīnqíng!",
-        "vietnamese": "Nhất trí như vậy nhé! Chúng ta cùng cố lên, để có một cơ thể khỏe mạnh và tinh thần vui vẻ!",
-        "usedWords": [
-          "身体"
-        ]
-      }
-    ]
-  },
-  {
-    "id": 1729656000000,
-    "title": "在上海问路 (Du Lịch Thượng Hải)",
-    "titlePinyin": "zài shàng hǎi wèn lù",
-    "titleViet": "Hỏi đường đi ga tàu điện ngầm ở Thượng Hải",
-    "type": "conversation",
-    "theme": "🚇 Du lịch Thượng Hải & Hỏi đường tàu điện",
-    "prompt": "Đi du lịch Thượng Hải, bị lạc đường và hỏi người dân đường tới ga tàu điện ngầm",
-    "createdAt": "28/10/2026, 09:15:00",
-    "syncedGithub": true,
-    "targetWords": [
-      {
-        "chinese": "旅游",
-        "pinyin": "lǚyóu",
-        "vietnamese": "du lịch"
-      },
-      {
-        "chinese": "地铁",
-        "pinyin": "dìtiě",
-        "vietnamese": "tàu điện ngầm"
-      },
-      {
-        "chinese": "站",
-        "pinyin": "zhàn",
-        "vietnamese": "ga, trạm"
-      },
-      {
-        "chinese": "怎么走",
-        "pinyin": "zěnme zǒu",
-        "vietnamese": "đi như thế nào"
-      },
-      {
-        "chinese": "方便",
-        "pinyin": "fāngbiàn",
-        "vietnamese": "thuận tiện, tiện lợi"
-      }
-    ],
-    "lines": [
-      {
-        "speaker": "A",
-        "speakerName": "小明 (Du khách)",
-        "chinese": "你好！请问一下，我是来上海旅游的，好像迷路了。",
-        "pinyin": "Nǐ hǎo! Qǐngwèn yíxià, wǒ shì lái Shànghǎi lǚyóu de, hǎoxiàng mílù le.",
-        "vietnamese": "Xin chào! Cho tôi hỏi một chút, tôi đến Thượng Hải du lịch, hình như bị lạc đường rồi.",
-        "usedWords": [
-          "你好",
-          "旅游"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "你好！别着急，你想去哪里？我是上海本地人，可以帮你。",
-        "pinyin": "Nǐ hǎo! Bié zhāojí, nǐ xiǎng qù nǎlǐ? Wǒ shì Shànghǎi běndì rén, kěyǐ bāng nǐ.",
-        "vietnamese": "Chào bạn! Đừng lo lắng, bạn muốn đi đâu? Tôi là người Thượng Hải bản địa, có thể giúp bạn.",
-        "usedWords": [
-          "你好"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明 (Du khách)",
-        "chinese": "太好了！请问这附近有地铁站吗？我想坐地铁去人民广场。",
-        "pinyin": "Tài hǎo le! Qǐngwèn zhè fùjìn yǒu dìtiě zhàn ma? Wǒ xiǎng zuò dìtiě qù Rénmín Guǎngchǎng.",
-        "vietnamese": "Tốt quá rồi! Xin hỏi gần đây có ga tàu điện ngầm không? Tôi muốn đi tàu điện tới Quảng trường Nhân Dân.",
-        "usedWords": [
-          "地铁",
-          "站"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "有的！前面就有一个地铁站，走路大概只要五分钟。",
-        "pinyin": "Yǒu de! Qiánmiàn jiù yǒu yí gè dìtiě zhàn, zǒulù dàgài zhǐ yào wǔ fēnzhōng.",
-        "vietnamese": "Có đấy! Phía trước có một ga tàu điện ngầm, đi bộ chỉ khoảng năm phút thôi.",
-        "usedWords": [
-          "地铁",
-          "站"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明 (Du khách)",
-        "chinese": "从这里怎么走呢？是一直往前走，还是要转弯？",
-        "pinyin": "Cóng zhèlǐ zěnme zǒu ne? Shì yìzhí wǎng qián zǒu, háishì yào zhuǎnwān?",
-        "vietnamese": "Từ đây đi như thế nào ạ? Đi thẳng tiếp hay là phải rẽ?",
-        "usedWords": [
-          "怎么走"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "你沿着这条路直走，过了前面的红绿灯十字路口，然后向右转。",
-        "pinyin": "Nǐ yánzhe zhè tiáo lù zhí zǒu, guò le qiánmiàn de hónglǜdēng shízì lùkǒu, ránhòu xiàng yòu zhuǎn.",
-        "vietnamese": "Bạn đi thẳng theo con đường này, qua ngã tư đèn giao thông phía trước, rồi rẽ phải.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "右转之后走两百米，你就会看到地铁站的入口，那里是二号线。",
-        "pinyin": "Yòu zhuǎn zhīhòu zǒu liǎng bǎi mǐ, nǐ jiù huì kàndào dìtiě zhàn de rùkǒu, nàlǐ shì èr hào xiàn.",
-        "vietnamese": "Sau khi rẽ phải đi hai trăm mét, bạn sẽ thấy lối vào ga tàu điện ngầm, đó là tuyến số 2.",
-        "usedWords": [
-          "地铁",
-          "站"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明 (Du khách)",
-        "chinese": "二号线可以直接到人民广场吗？需要换乘吗？",
-        "pinyin": "Èr hào xiàn kěyǐ zhíjiē dào Rénmín Guǎngchǎng ma? Xūyào huànchéng ma?",
-        "vietnamese": "Tuyến số 2 có thể đi thẳng tới Quảng trường Nhân Dân không? Có cần chuyển tuyến không?",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "二号线可以直接到，不需要换乘，坐三站就到了，非常快。",
-        "pinyin": "Èr hào xiàn kěyǐ zhíjiē dào, bù xūyào huànchéng, zuò sān zhàn jiù dào le, fēicháng kuài.",
-        "vietnamese": "Tuyến số 2 đi thẳng được, không cần chuyển tuyến, ngồi ba ga là tới, rất nhanh.",
-        "usedWords": [
-          "站"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明 (Du khách)",
-        "chinese": "买地铁票支持微信或者支付宝扫码乘车吗？",
-        "pinyin": "Mǎi dìtiě piào zhīchí Wēixìn huòzhě Zhīfùbǎo sǎomǎ chéngchē ma?",
-        "vietnamese": "Mua vé tàu điện ngầm có hỗ trợ quét mã WeChat hoặc Alipay để đi xe không?",
-        "usedWords": [
-          "地铁"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "完全支持！在手机里开通上海乘车码，直接刷码进站，特别方便。",
-        "pinyin": "Wánquán zhīchí! Zài shǒujī lǐ kāitōng Shànghǎi chéngchē mǎ, zhíjiē shuāmǎ jìnzhàn, tèbié fāngbiàn.",
-        "vietnamese": "Hoàn toàn hỗ trợ! Mở mã đi xe Thượng Hải trong điện thoại là quét mã vào ga được luôn, cực kỳ thuận tiện.",
-        "usedWords": [
-          "站",
-          "方便"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明 (Du khách)",
-        "chinese": "逛完人民广场，我还想去外滩看夜景，怎么去最方便？",
-        "pinyin": "Guàng wán Rénmín Guǎngchǎng, wǒ hái xiǎng qù Wàitān kàn yèjǐng, zěnme qù zuì fāngbiàn?",
-        "vietnamese": "Dạo chơi xong Quảng trường Nhân Dân, tôi còn muốn ra Bến Thượng Hải ngắm cảnh đêm, đi thế nào tiện nhất?",
-        "usedWords": [
-          "方便"
-        ]
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "从人民广场继续坐二号线坐一站，到南京东路站下车就是外滩。",
-        "pinyin": "Cóng Rénmín Guǎngchǎng jìxù zuò èr hào xiàn zuò yí zhàn, dào Nánjīng Dōnglù zhàn xiàchē jiù shì Wàitān.",
-        "vietnamese": "Từ Quảng trường Nhân Dân tiếp tục đi tuyến số 2 một ga nữa, xuống ở ga Nam Kinh Đông Lộ là tới Bến Thượng Hải.",
-        "usedWords": [
-          "站"
-        ]
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明 (Du khách)",
-        "chinese": "附近有什么好吃的本帮菜推荐吗？",
-        "pinyin": "Fùjìn yǒu shénme hǎochī de běnbāng cài tuījiàn ma?",
-        "vietnamese": "Gần đó có món ăn Thượng Hải truyền thống nào ngon gợi ý không bạn?",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "南京路有很多老字号小笼包和生煎包，皮薄多汁，一定要尝尝！",
-        "pinyin": "Nánjīng lù yǒu hěn duō lǎozìhào xiǎolóngbāo hé shēngjiānbāo, pí báo duō zhī, yídìng yào chángcháng!",
-        "vietnamese": "Đường Nam Kinh có rất nhiều tiệm lâu đời bán tiểu long bao và bánh bao chiên, vỏ mỏng mọng nước, nhất định phải thử!",
-        "usedWords": []
-      },
-      {
-        "speaker": "A",
-        "speakerName": "小明 (Du khách)",
-        "chinese": "太感谢你的热情帮助了！遇到你真是太幸运了。",
-        "pinyin": "Tài gǎnxiè nǐ de rèqíng bāngzhù le! Yùdào nǐ zhēn shì tài xìngyùn le.",
-        "vietnamese": "Cảm ơn sự giúp đỡ nhiệt tình của bạn rất nhiều! Gặp được bạn thật sự quá may mắn.",
-        "usedWords": []
-      },
-      {
-        "speaker": "B",
-        "speakerName": "小华 (Người dân)",
-        "chinese": "不客气！祝你在上海旅游玩得开心！",
-        "pinyin": "Bú kèqi! Zhù nǐ zài Shànghǎi lǚyóu wán de kāixīn!",
-        "vietnamese": "Không có gì! Chúc bạn du lịch Thượng Hải thật vui vẻ!",
-        "usedWords": [
-          "旅游"
-        ]
-      }
-    ]
-  }
+﻿[
+    {
+        "id":  1794891000001,
+        "title":  "第一次约会",
+        "titlePinyin":  "Dì-yī cì yuēhuì",
+        "titleViet":  "Buổi hẹn hò đầu tiên",
+        "type":  "story",
+        "theme":  "Hẹn hò, gặp gỡ \u0026 tình cảm",
+        "prompt":  "Buổi hẹn hò đầu tiên ở quán cà phê trong công viên và món quà bất ngờ",
+        "createdAt":  "17/11/2026, 11:30:00",
+        "syncedGithub":  true,
+        "targetWords":  [
+                            {
+                                "chinese":  "约会",
+                                "pinyin":  "yuēhuì",
+                                "vietnamese":  "hẹn hò, cuộc hẹn"
+                            },
+                            {
+                                "chinese":  "联系",
+                                "pinyin":  "liánxì",
+                                "vietnamese":  "liên hệ, liên lạc"
+                            },
+                            {
+                                "chinese":  "聊天",
+                                "pinyin":  "liáotiān",
+                                "vietnamese":  "nói chuyện, tán gẫu"
+                            },
+                            {
+                                "chinese":  "正式",
+                                "pinyin":  "zhèngshì",
+                                "vietnamese":  "chính thức, trang trọng"
+                            },
+                            {
+                                "chinese":  "咖啡厅",
+                                "pinyin":  "kāfēitīng",
+                                "vietnamese":  "quán cà phê"
+                            },
+                            {
+                                "chinese":  "粉色",
+                                "pinyin":  "fěnsè",
+                                "vietnamese":  "màu hồng"
+                            },
+                            {
+                                "chinese":  "盒子",
+                                "pinyin":  "hézi",
+                                "vietnamese":  "chiếc hộp"
+                            },
+                            {
+                                "chinese":  "惊喜",
+                                "pinyin":  "jīngxǐ",
+                                "vietnamese":  "bất ngờ, ngạc nhiên vui mừng"
+                            },
+                            {
+                                "chinese":  "礼物",
+                                "pinyin":  "lǐwù",
+                                "vietnamese":  "quà tặng"
+                            },
+                            {
+                                "chinese":  "项链",
+                                "pinyin":  "xiàngliàn",
+                                "vietnamese":  "dây chuyền, vòng cổ"
+                            },
+                            {
+                                "chinese":  "喝茶",
+                                "pinyin":  "hē chá",
+                                "vietnamese":  "uống trà"
+                            },
+                            {
+                                "chinese":  "开心",
+                                "pinyin":  "kāixīn",
+                                "vietnamese":  "vui vẻ"
+                            }
+                        ],
+        "lines":  [
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "他们以前只有在网上联系，聊聊天，没见过面。",
+                          "pinyin":  "Tāmen yǐqián zhǐyǒu zài wǎngshàng liánxì, liáoliáo tiān, méi jiànguo miàn.",
+                          "vietnamese":  "Trước đây họ chỉ liên lạc và trò chuyện trên mạng, chưa từng gặp mặt nhau.",
+                          "usedWords":  [
+                                            "以前",
+                                            "只有",
+                                            "网上",
+                                            "联系",
+                                            "聊天",
+                                            "见面"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "今天是他们的第一次约会，正式见面所以他们都非常期待。",
+                          "pinyin":  "Jīntiān shì tāmen de dì-yī cì yuēhuì, zhèngshì jiànmiàn suǒyǐ tāmen dōu fēicháng qīdài.",
+                          "vietnamese":  "Hôm nay là buổi hẹn hò đầu tiên của họ, lần đầu gặp mặt chính thức nên cả hai đều rất mong chờ.",
+                          "usedWords":  [
+                                            "今天",
+                                            "约会",
+                                            "正式",
+                                            "见面",
+                                            "所以",
+                                            "非常",
+                                            "期待"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "今天天气很好，在公园里有家很不错的咖啡厅，所以男的和女的约好在公园见面。",
+                          "pinyin":  "Jīntiān tiānqì hěn hǎo, zài gōngyuán lǐ yǒu jiā hěn búcuò de kāfēitīng, suǒyǐ nán de hé nǚ de yuē hǎo zài gōngyuán jiànmiàn.",
+                          "vietnamese":  "Hôm nay thời tiết rất đẹp, trong công viên có một quán cà phê khá ổn, vì thế bạn nam và bạn nữ đã hẹn gặp nhau ở công viên.",
+                          "usedWords":  [
+                                            "天气",
+                                            "公园",
+                                            "不错",
+                                            "咖啡厅",
+                                            "约好",
+                                            "见面"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "他们坐下来以后，男的从包里拿出来一个粉色的盒子送给她。",
+                          "pinyin":  "Tāmen zuò xiàlái yǐhòu, nán de cóng bāo lǐ ná chūlái yí gè fěnsè de hézi sòng gěi tā.",
+                          "vietnamese":  "Sau khi ngồi xuống, bạn nam lấy từ trong túi ra một chiếc hộp màu hồng tặng cho cô ấy.",
+                          "usedWords":  [
+                                            "坐下",
+                                            "以后",
+                                            "粉色",
+                                            "盒子",
+                                            "送给"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "女的觉得很惊喜，她没想到男的会送给她礼物。",
+                          "pinyin":  "Nǚ de juéde hěn jīngxǐ, tā méi xiǎngdào nán de huì sòng gěi tā lǐwù.",
+                          "vietnamese":  "Bạn nữ cảm thấy rất bất ngờ và thích thú, cô không ngờ bạn nam lại tặng quà cho mình.",
+                          "usedWords":  [
+                                            "觉得",
+                                            "惊喜",
+                                            "没想到",
+                                            "送给",
+                                            "礼物"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "她笑着打开礼物，发现里面是一条很漂亮的项链。",
+                          "pinyin":  "Tā xiàozhe dǎkāi lǐwù, fāxiàn lǐmiàn shì yì tiáo hěn piàoliang de xiàngliàn.",
+                          "vietnamese":  "Cô mỉm cười mở hộp quà ra và thấy bên trong là một sợi dây chuyền rất đẹp.",
+                          "usedWords":  [
+                                            "笑",
+                                            "打开",
+                                            "礼物",
+                                            "发现",
+                                            "里面",
+                                            "漂亮",
+                                            "项链"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "他们一边喝茶，一边聊天，聊得很开心。",
+                          "pinyin":  "Tāmen yìbiān hē chá, yìbiān liáotiān, liáo de hěn kāixīn.",
+                          "vietnamese":  "Họ vừa uống trà vừa trò chuyện, nói chuyện với nhau vô cùng vui vẻ.",
+                          "usedWords":  [
+                                            "一边",
+                                            "喝茶",
+                                            "聊天",
+                                            "开心"
+                                        ]
+                      }
+                  ]
+    },
+    {
+        "id":  1794891000002,
+        "title":  "一个重要的会议",
+        "titlePinyin":  "Yí gè zhòngyào de huìyì",
+        "titleViet":  "Một cuộc họp quan trọng",
+        "type":  "story",
+        "theme":  "Công việc, công sở \u0026 giải quyết sự cố",
+        "prompt":  "Buổi sáng đi làm tham gia cuộc họp quan trọng nhưng xe bị hỏng và trời mưa to",
+        "createdAt":  "17/11/2026, 11:32:00",
+        "syncedGithub":  true,
+        "targetWords":  [
+                            {
+                                "chinese":  "会议",
+                                "pinyin":  "huìyì",
+                                "vietnamese":  "cuộc họp, hội nghị"
+                            },
+                            {
+                                "chinese":  "西装",
+                                "pinyin":  "xīzhuāng",
+                                "vietnamese":  "bộ vest, âu phục"
+                            },
+                            {
+                                "chinese":  "裙子",
+                                "pinyin":  "qúnzi",
+                                "vietnamese":  "váy, chân váy"
+                            },
+                            {
+                                "chinese":  "专业",
+                                "pinyin":  "zhuānyè",
+                                "vietnamese":  "chuyên nghiệp, chuyên ngành"
+                            },
+                            {
+                                "chinese":  "突然",
+                                "pinyin":  "tūrán",
+                                "vietnamese":  "đột nhiên, bất ngờ"
+                            },
+                            {
+                                "chinese":  "出租车",
+                                "pinyin":  "chūzūchē",
+                                "vietnamese":  "taxi"
+                            },
+                            {
+                                "chinese":  "倒霉",
+                                "pinyin":  "dǎoméi",
+                                "vietnamese":  "xui xẻo, không may"
+                            },
+                            {
+                                "chinese":  "雨伞",
+                                "pinyin":  "yǔsǎn",
+                                "vietnamese":  "cái ô, cây dù"
+                            },
+                            {
+                                "chinese":  "遮不住",
+                                "pinyin":  "zhē bu zhù",
+                                "vietnamese":  "không che nổi"
+                            },
+                            {
+                                "chinese":  "淋雨",
+                                "pinyin":  "lín yǔ",
+                                "vietnamese":  "ướt mưa, dầm mưa"
+                            },
+                            {
+                                "chinese":  "团队",
+                                "pinyin":  "tuánduì",
+                                "vietnamese":  "đội ngũ, nhóm, team"
+                            },
+                            {
+                                "chinese":  "失望",
+                                "pinyin":  "shīwàng",
+                                "vietnamese":  "thất vọng"
+                            },
+                            {
+                                "chinese":  "同事",
+                                "pinyin":  "tóngshì",
+                                "vietnamese":  "đồng nghiệp"
+                            },
+                            {
+                                "chinese":  "通知",
+                                "pinyin":  "tōngzhī",
+                                "vietnamese":  "thông báo"
+                            },
+                            {
+                                "chinese":  "及时",
+                                "pinyin":  "jíshí",
+                                "vietnamese":  "kịp thời, đúng lúc"
+                            },
+                            {
+                                "chinese":  "完成",
+                                "pinyin":  "wánchéng",
+                                "vietnamese":  "hoàn thành"
+                            },
+                            {
+                                "chinese":  "演讲",
+                                "pinyin":  "yǎnjiǎng",
+                                "vietnamese":  "thuyết trình, diễn thuyết"
+                            }
+                        ],
+        "lines":  [
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "今天我有一个重要的会议。",
+                          "pinyin":  "Jīntiān wǒ yǒu yí gè zhòngyào de huìyì.",
+                          "vietnamese":  "Hôm nay tôi có một cuộc họp quan trọng.",
+                          "usedWords":  [
+                                            "今天",
+                                            "重要",
+                                            "会议"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "我很早就起床了，好好准备。",
+                          "pinyin":  "Wǒ hěn zǎo jiù qǐchuáng le, hǎohāo zhǔnbèi.",
+                          "vietnamese":  "Tôi đã dậy từ rất sớm để chuẩn bị thật kỹ lưỡng.",
+                          "usedWords":  [
+                                            "很早",
+                                            "起床",
+                                            "好好",
+                                            "准备"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "我穿了一套西装和一条正式的裙子，感觉这套衣服让我看起来更专业。",
+                          "pinyin":  "Wǒ chuān le yí tào xīzhuāng hé yì tiáo zhèngshì de qúnzi, gǎnjué zhè tào yīfu ràng wǒ kàn qǐlái gèng zhuānyè.",
+                          "vietnamese":  "Tôi mặc một bộ vest cùng một chiếc chân váy trang trọng, cảm thấy bộ trang phục này giúp mình trông chuyên nghiệp hơn.",
+                          "usedWords":  [
+                                            "穿",
+                                            "西装",
+                                            "正式",
+                                            "裙子",
+                                            "感觉",
+                                            "衣服",
+                                            "专业"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "我打算开车，早一点来公司，但我发现车突然坏了。",
+                          "pinyin":  "Wǒ dǎsuàn kāichē, zǎo yìdiǎn lái gōngsī, dàn wǒ fāxiàn chē tūrán huài le.",
+                          "vietnamese":  "Tôi dự định lái xe đến công ty sớm hơn một chút, nhưng tôi phát hiện ra xe đột nhiên bị hỏng.",
+                          "usedWords":  [
+                                            "打算",
+                                            "开车",
+                                            "公司",
+                                            "发现",
+                                            "突然",
+                                            "坏"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "我只好在路边打出租车。",
+                          "pinyin":  "Wǒ zhǐhǎo zài lùbiān dǎ chūzūchē.",
+                          "vietnamese":  "Tôi đành phải đứng ở ven đường bắt xe taxi.",
+                          "usedWords":  [
+                                            "只好",
+                                            "路边",
+                                            "打车",
+                                            "出租车"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "真倒霉，外面雨下得很大，雨伞太小了遮不住，我还是淋雨了。",
+                          "pinyin":  "Zhēn dǎoméi, wàimiàn yǔ xià de hěn dà, yǔsǎn tài xiǎo le zhē bu zhù, wǒ háishì lín yǔ le.",
+                          "vietnamese":  "Thật xui xẻo, ngoài trời mưa rất to, chiếc ô quá nhỏ không che nổi nên tôi vẫn bị ướt mưa.",
+                          "usedWords":  [
+                                            "倒霉",
+                                            "外面",
+                                            "雨伞",
+                                            "遮不住",
+                                            "淋雨"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "我在路边等了很久，一辆车也没停下。",
+                          "pinyin":  "Wǒ zài lùbiān děng le hěn jiǔ, yí liàng chē yě méi tíng xià.",
+                          "vietnamese":  "Tôi đã đứng đợi ở ven đường rất lâu mà không có chiếc xe nào dừng lại.",
+                          "usedWords":  [
+                                            "路边",
+                                            "很久",
+                                            "停"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "我很着急因为这会议对我来说很重要，我不能让我的团队失望。",
+                          "pinyin":  "Wǒ hěn zháojí yīnwèi zhè huìyì duì wǒ lái shuō hěn zhòngyào, wǒ bù néng ràng wǒ de tuánduì shīwàng.",
+                          "vietnamese":  "Tôi rất sốt ruột vì cuộc họp này đối với tôi cực kỳ quan trọng, tôi không thể để cả nhóm thất vọng.",
+                          "usedWords":  [
+                                            "着急",
+                                            "因为",
+                                            "会议",
+                                            "重要",
+                                            "团队",
+                                            "失望"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "我一边给同事打电话通知他们，一边在努力打车，希望我没有迟到。",
+                          "pinyin":  "Wǒ yìbiān gěi tóngshì dǎ diànhuà tōngzhī tāmen, yìbiān zài nǔlì dǎchē, xīwàng wǒ méiyǒu chídào.",
+                          "vietnamese":  "Tôi vừa gọi điện thoại cho đồng nghiệp để báo trước, vừa cố gắng bắt xe, hy vọng mình không bị muộn.",
+                          "usedWords":  [
+                                            "一边",
+                                            "同事",
+                                            "打电话",
+                                            "通知",
+                                            "努力",
+                                            "打车",
+                                            "希望",
+                                            "迟到"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "十分钟后一辆车终于停在我面前。",
+                          "pinyin":  "Shí fēnzhōng hòu yí liàng chē zhōngyú tíng zài wǒ miànqián.",
+                          "vietnamese":  "Mười phút sau, cuối cùng cũng có một chiếc xe dừng lại ngay trước mặt tôi.",
+                          "usedWords":  [
+                                            "终于",
+                                            "停",
+                                            "面前"
+                                        ]
+                      },
+                      {
+                          "speaker":  "",
+                          "speakerName":  "",
+                          "chinese":  "会议开始前五分钟，我及时到了公司，跟团队完成演讲。",
+                          "pinyin":  "Huìyì kāishǐ qián wǔ fēnzhōng, wǒ jíshí dào le gōngsī, gēn tuánduì wánchéng yǎnjiǎng.",
+                          "vietnamese":  "Trước giờ họp 5 phút, tôi đã kịp thời đến được công ty và hoàn thành bài thuyết trình cùng nhóm.",
+                          "usedWords":  [
+                                            "会议",
+                                            "开始",
+                                            "及时",
+                                            "公司",
+                                            "团队",
+                                            "完成",
+                                            "演讲"
+                                        ]
+                      }
+                  ]
+    },
+    {
+        "title":  "上海公园晨跑与寻路记",
+        "titlePinyin":  "Shànghǎi gōngyuán chénpǎo yǔ xúnlù jì",
+        "titleViet":  "Chạy bộ buổi sáng ở công viên Thượng Hải và chuyện tìm đường",
+        "type":  "conversation",
+        "theme":  "Đi du lịch Thượng Hải, bị lạc đường và hỏi người dân đường tới ga tàu điện ngầm",
+        "lines":  [
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "小华，早安！你今天也来这个公园锻炼身体吗？",
+                          "pinyin":  "Xiǎohuá, zǎo\u0027ān! Nǐ jīntiān yě lái zhège gōngyuán duànliàn shēntǐ ma?",
+                          "vietnamese":  "Tiểu Hoa, chào buổi sáng! Hôm nay bạn cũng đến công viên này tập thể dục à?",
+                          "usedWords":  [
+                                            "公园",
+                                            "锻炼"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "是啊，小明。这里的空气真好，你看，蓝天多漂亮！",
+                          "pinyin":  "Shì a, Xiǎomíng. Zhèlǐ de kōngqì zhēn hǎo, nǐ kàn, lántiān duō piàoliang!",
+                          "vietnamese":  "Đúng vậy, Tiểu Minh. Không khí ở đây thật tốt, bạn nhìn xem, bầu trời xanh đẹp quá!",
+                          "usedWords":  [
+                                            "空气",
+                                            "蓝天"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "对，在上海跑步让我觉得压力变小了，心情很愉快。",
+                          "pinyin":  "Duì, zài Shànghǎi pǎobù ràng wǒ juéde yālì biàn xiǎo le, xīnqíng hěn yúkuài.",
+                          "vietnamese":  "Đúng, chạy bộ ở Thượng Hải khiến tôi cảm thấy áp lực giảm bớt, tâm trạng rất vui vẻ.",
+                          "usedWords":  [
+                                            "压力"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "我建议你每天都来，跑步对身体非常有好处。",
+                          "pinyin":  "Wǒ jiànyì nǐ měitiān dōu lái, pǎobù duì shēntǐ fēicháng yǒu hǎochù.",
+                          "vietnamese":  "Tôi kiến nghị bạn nên đến mỗi ngày, chạy bộ rất có lợi cho cơ thể.",
+                          "usedWords":  [
+                                            "建议"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "没错。我喜欢一边跑步一边听中文歌，练习听力。",
+                          "pinyin":  "Méicuò. Wǒ xǐhuān yìbiān pǎobù yìbiān tīng Zhōngwéngē, liànxí tīnglì.",
+                          "vietnamese":  "Không sai. Tôi thích vừa chạy bộ vừa nghe nhạc Trung Quốc để luyện nghe.",
+                          "usedWords":  [
+                                            "一边"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "好办法！你还记得小美吗？她以前在东北上学。",
+                          "pinyin":  "Hǎo bànfǎ! Nǐ hái jìde Xiǎoměi ma? Tā yǐqián zài Dōngběi shàng xué.",
+                          "vietnamese":  "Cách hay đấy! Bạn còn nhớ Tiểu Mỹ không? Cô ấy trước đây đi học ở vùng Đông Bắc.",
+                          "usedWords":  [
+                                            "小美",
+                                            "东北",
+                                            "上学"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "记得，她的普通话声调特别标准，帮了我很多。",
+                          "pinyin":  "Jìde, tā de pǔtōnghuà shēngdiào tèbié biāozhǔn, bāng le wǒ hěn duō.",
+                          "vietnamese":  "Nhớ chứ, thanh điệu tiếng Phổ thông của cô ấy đặc biệt chuẩn, đã giúp tôi rất nhiều.",
+                          "usedWords":  [
+                                            "声调"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "早上的运动总能给我很多启发，让我想出工作的好办法。",
+                          "pinyin":  "Zǎoshang de yùndòng zǒng néng gěi wǒ hěn duō qǐfā, ràng wǒ xiǎng chū gōngzuò de hǎo bànfǎ.",
+                          "vietnamese":  "Vận động buổi sáng luôn mang lại cho tôi nhiều gợi ý (khơi gợi), giúp tôi nghĩ ra cách giải quyết công việc tốt.",
+                          "usedWords":  [
+                                            "启发"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "确实。对了，我们跑了多久了？我想休息一下。",
+                          "pinyin":  "Quèshí. Duìle, wǒmen pǎo le duōjiǔ le? Wǒ xiǎng xiūxi yíxià.",
+                          "vietnamese":  "Xác thực là vậy. Đúng rồi, chúng ta chạy bao lâu rồi? Tôi muốn nghỉ ngơi một chút.",
+                          "usedWords":  [
+                                            "休息"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "我们跑了四十分钟了。哎呀，我不认识这里，这是哪儿？",
+                          "pinyin":  "Wǒmen pǎo le sìshí fēnzhōng le. Āiyā, wǒ bù rènshi zhèlǐ, zhè shì nǎr?",
+                          "vietnamese":  "Chúng ta chạy được 40 phút rồi. Ái chà, tôi không biết chỗ này, đây là đâu vậy?",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "糟糕，上海的公园太大了，我们好像迷路了。",
+                          "pinyin":  "Zāogāo, Shànghǎi de gōngyuán tài dà le, wǒmen hǎoxiàng mílù le.",
+                          "vietnamese":  "Hỏng rồi, công viên ở Thượng Hải lớn quá, hình như chúng ta lạc đường rồi.",
+                          "usedWords":  [
+                                            "公园"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "别担心，我们需要找地铁站回酒店吃早饭。",
+                          "pinyin":  "Bié dānxīn, wǒmen xūyào zhǎo dìtiězhàn huí jiǔdiàn chī zǎofàn.",
+                          "vietnamese":  "Đừng lo lắng, chúng ta cần tìm ga tàu điện ngầm để về khách sạn ăn sáng.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "你看，那边有一个路牌，我们过去看看。",
+                          "pinyin":  "Nǐ kàn, nàbiān yǒu yígè lùpái, wǒmen guòqù kànkan.",
+                          "vietnamese":  "Bạn nhìn kìa, đằng kia có một cái biển chỉ đường, chúng ta qua đó xem sao.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "路牌说地铁站在东边，要一直往前走。",
+                          "pinyin":  "Lùpái shuō dìtiězhàn zài dōngbiān, yào yìzhí wǎng qián zǒu.",
+                          "vietnamese":  "Biển chỉ đường nói ga tàu điện ngầm ở phía đông, phải đi thẳng về phía trước.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "好，那我们慢点走，顺便看看这里的风景。",
+                          "pinyin":  "Hǎo, nà wǒmen màn diǎn zǒu, shùnbiàn kànkan zhèlǐ de fēngjǐng.",
+                          "vietnamese":  "Được, vậy chúng ta đi chậm lại, nhân tiện ngắm phong cảnh ở đây luôn.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "虽然迷路了，但早上的阳光真的很舒服。",
+                          "pinyin":  "Suīrán mílù le, dàn zǎoshang de yángguāng zhēn de hěn shūfu.",
+                          "vietnamese":  "Tuy là lạc đường, nhưng ánh nắng buổi sáng thật sự rất dễ chịu.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "等一下去地铁站旁边喝杯咖啡吧，我有点渴了。",
+                          "pinyin":  "Děng yíxià qù dìtiězhàn pángbiān hē bēi kāfēi ba, wǒ yǒudiǎn kě le.",
+                          "vietnamese":  "Lát nữa đến cạnh ga tàu điện ngầm uống ly cà phê nhé, tôi hơi khát rồi.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "好主意，黑咖啡能让我工作时更有精神。",
+                          "pinyin":  "Hǎo zhǔyì, hēi kāfēi néng ràng wǒ gōngzuò shí gèng yǒu jīngshén.",
+                          "vietnamese":  "Ý hay đó, cà phê đen giúp tôi có tinh thần hơn khi làm việc.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "早餐也很重要，我们要补充营养。",
+                          "pinyin":  "Zǎofàn yě hěn zhòngyào, wǒmen yào bǔchōng yíngyǎng.",
+                          "vietnamese":  "Bữa sáng cũng rất quan trọng, chúng ta cần bổ sung dinh dưỡng.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "是的，健康的生活需要长期的坚持。",
+                          "pinyin":  "Shì de, jiànkāng de shēnghuó xūyào chángqī de jiānchí.",
+                          "vietnamese":  "Đúng vậy, cuộc sống khỏe mạnh cần sự kiên trì lâu dài.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "就像学习汉语一样，不能因为难就放弃。",
+                          "pinyin":  "Jiù xiàng xuéxí Hànyǔ yíyàng, bù néng yīnwèi nán jiù fàngqì.",
+                          "vietnamese":  "Giống như học tiếng Hán vậy, không thể vì khó mà bỏ cuộc.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "你说得对。看！前面就是地铁站的入口了。",
+                          "pinyin":  "Nǐ shuō de duì. Kàn! Qiánmiàn jiùshì dìtiězhàn de rùkǒu le.",
+                          "vietnamese":  "Bạn nói đúng. Nhìn kìa! Phía trước chính là lối vào ga tàu điện ngầm rồi.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "太好了，我们终于找到了，走吧。",
+                          "pinyin":  "Tài hǎo le, wǒmen zhōngyú zhǎodào le, zǒu ba.",
+                          "vietnamese":  "Tốt quá, cuối cùng chúng ta cũng tìm thấy rồi, đi thôi.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "明天早上我们还来这个公园跑步吗？",
+                          "pinyin":  "Míngtiān zǎoshang wǒmen hái lái zhège gōngyuán pǎobù ma?",
+                          "vietnamese":  "Sáng mai chúng ta vẫn đến công viên này chạy bộ chứ?",
+                          "usedWords":  [
+                                            "公园"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "当然，我们要互相鼓励，一起锻炼。",
+                          "pinyin":  "Dāngrán, wǒmen yào hùxiāng gǔlì, yìqǐ duànliàn.",
+                          "vietnamese":  "Tất nhiên rồi, chúng ta phải khích lệ lẫn nhau, cùng nhau tập luyện.",
+                          "usedWords":  [
+                                            "锻炼"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "没问题，那明天见，回去好好休息！",
+                          "pinyin":  "Méi wèntí, nà míngtiān jiàn, huíqù hǎohǎo xiūxi!",
+                          "vietnamese":  "Không vấn đề gì, vậy hẹn gặp lại ngày mai, về nhà nghỉ ngơi cho tốt nhé!",
+                          "usedWords":  [
+                                            "休息"
+                                        ]
+                      }
+                  ],
+        "id":  1793179335288,
+        "createdAt":  "02:22:15 28/10/2026",
+        "targetWords":  [
+                            {
+                                "id":  1793177624689,
+                                "vietnamese":  "áp lực",
+                                "chinese":  "压力",
+                                "pinyin":  "yālì",
+                                "meaning":  "áp lực",
+                                "topic":  "HSK",
+                                "difficulty":  "Easy",
+                                "learned":  true,
+                                "nextReview":  1793083659958,
+                                "reviewCount":  0
+                            },
+                            {
+                                "id":  1793177624641,
+                                "vietnamese":  "khơi gợi, gợi ý",
+                                "chinese":  "启发",
+                                "pinyin":  "qǐfā",
+                                "meaning":  "khơi gợi, gợi ý",
+                                "topic":  "HSK",
+                                "difficulty":  "Easy",
+                                "learned":  true,
+                                "nextReview":  1793083659956,
+                                "reviewCount":  0
+                            },
+                            {
+                                "id":  1793177624568,
+                                "vietnamese":  "công viên",
+                                "chinese":  "公园",
+                                "pinyin":  "gōngyuán",
+                                "meaning":  "công viên",
+                                "topic":  "HSK",
+                                "difficulty":  "Easy",
+                                "learned":  true,
+                                "nextReview":  1793083659953,
+                                "reviewCount":  0
+                            },
+                            {
+                                "id":  1793177624618,
+                                "vietnamese":  "bầu trời xanh",
+                                "chinese":  "蓝天",
+                                "pinyin":  "lántiān",
+                                "meaning":  "bầu trời xanh",
+                                "topic":  "HSK",
+                                "difficulty":  "Easy",
+                                "learned":  true,
+                                "nextReview":  1793083659955,
+                                "reviewCount":  0
+                            },
+                            {
+                                "id":  1793177623730,
+                                "vietnamese":  "đi học",
+                                "chinese":  "上学",
+                                "pinyin":  "shàng xué",
+                                "meaning":  "đi học",
+                                "topic":  "Bài 6",
+                                "difficulty":  "Easy",
+                                "learned":  true,
+                                "nextReview":  1793083659875,
+                                "reviewCount":  0
+                            }
+                        ],
+        "prompt":  "Đi du lịch Thượng Hải, bị lạc đường và hỏi người dân đường tới ga tàu điện ngầm",
+        "source":  "gemini (gemini-3-flash-preview)",
+        "syncedGithub":  true
+    },
+    {
+        "id":  1729654000000,
+        "title":  "在咖啡馆相遇",
+        "titlePinyin":  "zài kā fēi guǎn xiāng yù",
+        "titleViet":  "Gặp nhau ở quán cà phê",
+        "type":  "conversation",
+        "theme":  "Quán cà phê \u0026 Bạn bè",
+        "prompt":  "Gặp bạn cũ ở quán cà phê và trò chuyện về việc học tiếng Trung",
+        "createdAt":  "23/10/2026, 10:00:00",
+        "syncedGithub":  true,
+        "targetWords":  [
+                            {
+                                "chinese":  "咖啡",
+                                "pinyin":  "kāfēi",
+                                "vietnamese":  "cà phê"
+                            },
+                            {
+                                "chinese":  "朋友",
+                                "pinyin":  "péngyou",
+                                "vietnamese":  "bạn bè"
+                            },
+                            {
+                                "chinese":  "喜欢",
+                                "pinyin":  "xǐhuan",
+                                "vietnamese":  "thích"
+                            }
+                        ],
+        "lines":  [
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "你好！好久不见，你也喜欢来这家咖啡馆吗？",
+                          "pinyin":  "Nǐ hǎo! Hǎojiǔ bújiàn, nǐ yě xǐhuan lái zhè jiā kāfēiguǎn ma?",
+                          "vietnamese":  "Chào bạn! Lâu ngày không gặp, bạn cũng thích đến quán cà phê này à?",
+                          "usedWords":  [
+                                            "你好",
+                                            "喜欢",
+                                            "咖啡"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "你好，小明！是的，我和朋友经常在这里喝咖啡、学中文。",
+                          "pinyin":  "Nǐ hǎo, Xiǎomíng! Shì de, wǒ hé péngyou jīngcháng zài zhèlǐ hē kāfēi, xué zhōngwén.",
+                          "vietnamese":  "Chào Tiểu Minh! Đúng vậy, mình và bạn bè thường uống cà phê và học tiếng Trung ở đây.",
+                          "usedWords":  [
+                                            "你好",
+                                            "朋友",
+                                            "咖啡"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "太好了！我们一起喝咖啡、一起聊天吧。",
+                          "pinyin":  "Tài hǎo le! Wǒmen yìqǐ hē kāfēi, yìqǐ liáotiān ba.",
+                          "vietnamese":  "Tuyệt quá! Chúng ta cùng uống cà phê và trò chuyện nhé.",
+                          "usedWords":  [
+                                            "咖啡"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "好啊，认识你这样的好朋友我真高兴！",
+                          "pinyin":  "Hǎo a, rènshí nǐ zhèyàng de hǎo péngyou wǒ zhēn gāoxìng!",
+                          "vietnamese":  "Được chứ, quen được người bạn tốt như bạn mình thật sự rất vui!",
+                          "usedWords":  [
+                                            "朋友"
+                                        ]
+                      }
+                  ]
+    },
+    {
+        "id":  1729655000000,
+        "title":  "晨跑与健康生活 (Marathon Chạy Bộ)",
+        "titlePinyin":  "chén pǎo yǔ jiàn kāng shēng huó",
+        "titleViet":  "Chạy bộ buổi sáng và lối sống khỏe mạnh",
+        "type":  "conversation",
+        "theme":  "🏃 Chạy bộ thể thao \u0026 Sức khỏe (Bản dài 20-30 phút)",
+        "prompt":  "Hội thoại mẫu marathon dài luyện nghe thụ động khi chạy bộ, nói về thể thao, sức khỏe, thói quen và ăn uống",
+        "createdAt":  "26/10/2026, 21:30:00",
+        "syncedGithub":  true,
+        "targetWords":  [
+                            {
+                                "chinese":  "跑步",
+                                "pinyin":  "pǎobù",
+                                "vietnamese":  "chạy bộ"
+                            },
+                            {
+                                "chinese":  "身体",
+                                "pinyin":  "shēntǐ",
+                                "vietnamese":  "sức khỏe, thân thể"
+                            },
+                            {
+                                "chinese":  "锻炼",
+                                "pinyin":  "duànliàn",
+                                "vietnamese":  "rèn luyện, tập thể dục"
+                            },
+                            {
+                                "chinese":  "习惯",
+                                "pinyin":  "xíguàn",
+                                "vietnamese":  "thói quen"
+                            },
+                            {
+                                "chinese":  "坚持",
+                                "pinyin":  "jiānchí",
+                                "vietnamese":  "kiên trì"
+                            }
+                        ],
+        "lines":  [
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "早上好，小华！今天早上的空气真清新，你也来公园跑步吗？",
+                          "pinyin":  "Zǎoshang hǎo, Xiǎohuá! Jīntiān zǎoshang de kōngqì zhēn qīngxīn, nǐ yě lái gōngyuán pǎobù ma?",
+                          "vietnamese":  "Chào buổi sáng Tiểu Hoa! Không khí sáng nay thật trong lành, bạn cũng đến công viên chạy bộ à?",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "早上好小明！是的，我每天早上都坚持来这里锻炼身体。",
+                          "pinyin":  "Zǎoshang hǎo Xiǎomíng! Shì de, wǒ měitiān zǎoshang dōu jiānchí lái zhèlǐ duànliàn shēntǐ.",
+                          "vietnamese":  "Chào buổi sáng Tiểu Minh! Đúng vậy, mỗi buổi sáng tôi đều kiên trì đến đây rèn luyện thân thể.",
+                          "usedWords":  [
+                                            "坚持",
+                                            "锻炼",
+                                            "身体"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "你一般每次跑多长时间？跑得快不快？",
+                          "pinyin":  "Nǐ yìbān měicì pǎo duō cháng shíjiān? Pǎo de kuài bu kuài?",
+                          "vietnamese":  "Thông thường mỗi lần bạn chạy bao lâu? Có chạy nhanh không?",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "我一般跑半个小时，大概五公里，速度不快，主要是慢跑。",
+                          "pinyin":  "Wǒ yìbān pǎo bàn gè xiǎoshí, dàgài wǔ gōnglǐ, sùdù bú kuài, zhǔyào shì mànpǎo.",
+                          "vietnamese":  "Tôi thường chạy nửa tiếng, khoảng năm cây số, tốc độ không nhanh, chủ yếu là chạy chậm.",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "慢跑对心脏非常好，而且不容易觉得累。",
+                          "pinyin":  "Mànpǎo duì xīnzàng fēicháng hǎo, érqiě bù róngyì juéde lèi.",
+                          "vietnamese":  "Chạy chậm rất tốt cho tim mạch, hơn nữa lại không dễ cảm thấy mệt.",
+                          "usedWords":  [
+                                            "跑步",
+                                            "身体"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "没错！跑步的时候一边听音乐或者听中文，时间过得特别快。",
+                          "pinyin":  "Méi cuò! Pǎobù de shíhou yìbiān tīng yīnyuè huòzhě tīng zhōngwén, shíjiān guò de tèbié kuài.",
+                          "vietnamese":  "Không sai! Lúc chạy bộ vừa chạy vừa nghe nhạc hoặc nghe tiếng Trung, thời gian trôi qua rất nhanh.",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "这个习惯太棒了！我也喜欢边跑步边听中文录音，既能锻炼又能学习。",
+                          "pinyin":  "Zhè gè xíguàn tài bàng le! Wǒ yě xǐhuan biān pǎobù biān tīng zhōngwén lùyīn, jì néng duànliàn yòu néng xuéxí.",
+                          "vietnamese":  "Thói quen này tuyệt quá! Tôi cũng thích vừa chạy bộ vừa nghe ghi âm tiếng Trung, vừa rèn luyện vừa học tập.",
+                          "usedWords":  [
+                                            "习惯",
+                                            "跑步",
+                                            "锻炼"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "跑步前你做热身运动了吗？热身非常重要。",
+                          "pinyin":  "Pǎobù qián nǐ zuò rèshēn yùndòng le ma? Rèshēn fēicháng zhòngyào.",
+                          "vietnamese":  "Trước khi chạy bộ bạn đã khởi động làm nóng người chưa? Khởi động vô cùng quan trọng.",
+                          "usedWords":  [
+                                            "跑步",
+                                            "锻炼"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "我刚刚做了五分钟拉伸，现在觉得全身都充满活力。",
+                          "pinyin":  "Wǒ gānggāng zuò le wǔ fēnzhōng lāshēn, xiànzài juéde quánshēn dōu chōngmǎn huólì.",
+                          "vietnamese":  "Tôi vừa mới giãn cơ năm phút, bây giờ cảm thấy toàn thân tràn đầy năng lượng.",
+                          "usedWords":  [
+                                            "身体"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "那太好了！我们一起跑两圈吧，按照自己的节奏来。",
+                          "pinyin":  "Nà tài hǎo le! Wǒmen yìqǐ pǎo liǎng quān ba, ànzhào zìjǐ de jiézòu lái.",
+                          "vietnamese":  "Thế thì tốt quá! Chúng ta cùng chạy hai vòng nhé, cứ theo nhịp điệu của bản thân.",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "好啊！你看，今天湖边的风景真美，微风吹着很舒服。",
+                          "pinyin":  "Hǎo a! Nǐ kàn, jīntiān hú biān de fēngjǐng zhēn měi, wēifēng chuī zhe hěn shūfu.",
+                          "vietnamese":  "Được thôi! Bạn nhìn xem, phong cảnh bên hồ hôm nay thật đẹp, gió nhẹ thổi rất dễ chịu.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "秋天的早晨最适合户外运动，不冷也不热。",
+                          "pinyin":  "Qiūtiān de zǎochén zuì shìhé hùwài yùndòng, bù lěng yě bú rè.",
+                          "vietnamese":  "Buổi sáng mùa thu thích hợp nhất để vận động ngoài trời, không lạnh cũng không nóng.",
+                          "usedWords":  [
+                                            "锻炼"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "小华，你觉得跑步最难的是什么？",
+                          "pinyin":  "Xiǎohuá, nǐ juéde pǎobù zuì nán de shì shénme?",
+                          "vietnamese":  "Tiểu Hoa, bạn thấy điều khó khăn nhất của việc chạy bộ là gì?",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "我觉得最难的是每天早起和坚持，只要穿上跑鞋出门，就成功了一半。",
+                          "pinyin":  "Wǒ juéde zuì nán de shì měitiān zǎoqǐ hé jiānchí, zhǐyào chuān shàng pǎoxié chūmén, jiù chénggōng le yíbàn.",
+                          "vietnamese":  "Tôi thấy khó nhất là dậy sớm mỗi ngày và kiên trì, chỉ cần xỏ giày ra khỏi cửa là đã thành công một nửa rồi.",
+                          "usedWords":  [
+                                            "坚持",
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "说得太对了！很多时候我们都是输给了自己的懒惰。",
+                          "pinyin":  "Shuō de tài duì le! Hěn duō shíhou wǒmen dōu shì shū gěi le zìjǐ de lǎnduò.",
+                          "vietnamese":  "Nói đúng lắm! Rất nhiều khi chúng ta đều chịu thua trước sự lười biếng của chính mình.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "养成早睡早起的好习惯，整天的工作和学习都会特别有效率。",
+                          "pinyin":  "Yǎngchéng zǎoshuì zǎoqǐ de hǎo xíguàn, zhěngtiān de gōngzuò hé xuéxí dōu huì tèbié yǒu xiàolǜ.",
+                          "vietnamese":  "Nuôi dưỡng thói quen tốt ngủ sớm dậy sớm, cả ngày làm việc và học tập đều sẽ đặc biệt hiệu quả.",
+                          "usedWords":  [
+                                            "习惯"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "跑完步以后，你一般喜欢吃什么早餐？",
+                          "pinyin":  "Pǎo wán bù yǐhòu, nǐ yìbān xǐhuan chī shénme zǎocān?",
+                          "vietnamese":  "Sau khi chạy bộ xong, bạn thường thích ăn món gì cho bữa sáng?",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "我喜欢喝一杯温水，然后吃两个鸡蛋和一片全麦面包，再喝一杯牛奶。",
+                          "pinyin":  "Wǒ xǐhuan hē yì bēi wēnshuǐ, ránhòu chī liǎng gè jīdàn hé yí piàn quánmài miànbāo, zài hē yì bēi niúnǎi.",
+                          "vietnamese":  "Tôi thích uống một cốc nước ấm, sau đó ăn hai quả trứng gà và một lát bánh mì nguyên cám, rồi uống thêm một cốc sữa bò.",
+                          "usedWords":  [
+                                            "身体"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "这样的早餐既营养又健康，热量也很适中。",
+                          "pinyin":  "Zhèyàng de zǎocān jì yíngyǎng yòu jiànkāng, rèliàng yě hěn shìzhōng.",
+                          "vietnamese":  "Bữa sáng như vậy vừa bổ dưỡng vừa tốt cho sức khỏe, lượng calo cũng rất vừa phải.",
+                          "usedWords":  [
+                                            "身体"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "你呢？跑完步会去喝咖啡吗？",
+                          "pinyin":  "Nǐ ne? Pǎo wán bù huì qù hē kāfēi ma?",
+                          "vietnamese":  "Còn bạn thì sao? Chạy bộ xong bạn có đi uống cà phê không?",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "会的！我习惯去公园门口那家小咖啡馆，点一杯美式咖啡。",
+                          "pinyin":  "Huì de! Wǒ xíguàn qù gōngyuán ménkǒu nà jiā xiǎo kāfēiguǎn, diǎn yì bēi měishì kāfēi.",
+                          "vietnamese":  "Có chứ! Tôi có thói quen ghé quán cà phê nhỏ ở cổng công viên, gọi một ly cà phê Americano.",
+                          "usedWords":  [
+                                            "习惯"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "黑咖啡能加快新陈代谢，运动后喝适量的咖啡确实很舒服。",
+                          "pinyin":  "Hēi kāfēi néng jiākuài xīnchéndàixiè, yùndòng hòu hē shìliàng de kāfēi quèshí hěn shūfu.",
+                          "vietnamese":  "Cà phê đen có thể đẩy nhanh trao đổi chất, vận động xong uống một lượng cà phê vừa phải thật sự rất sảng khoái.",
+                          "usedWords":  [
+                                            "身体",
+                                            "锻炼"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "一会儿跑完步，我们一起去那家咖啡馆坐坐吧，我请客！",
+                          "pinyin":  "Yíhuìr pǎo wán bù, wǒmen yìqǐ qù nà jiā kāfēiguǎn zuò zuo ba, wǒ qǐngkè!",
+                          "vietnamese":  "Lát nữa chạy bộ xong, chúng mình cùng ghé quán cà phê đó ngồi nhé, tôi mời!",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "太好了，谢谢你！今天能和你一起晨跑聊天，真的很有动力。",
+                          "pinyin":  "Tài hǎo le, xièxie nǐ! Jīntiān néng hé nǐ yìqǐ chénpǎo liáotiān, zhēnde hěn yǒu dònglì.",
+                          "vietnamese":  "Tuyệt quá, cảm ơn bạn nhé! Hôm nay được chạy bộ buổi sáng và trò chuyện cùng bạn thật sự rất có động lực.",
+                          "usedWords":  [
+                                            "跑步"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明",
+                          "chinese":  "明天早上六点半，我们还在这里见面，继续坚持！",
+                          "pinyin":  "Míngtiān zǎoshang liù diǎn bàn, wǒmen hái zài zhèlǐ jiànmiàn, jìxù jiānchí!",
+                          "vietnamese":  "Sáng mai sáu giờ rưỡi, chúng mình lại gặp nhau ở đây, tiếp tục kiên trì nhé!",
+                          "usedWords":  [
+                                            "坚持"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华",
+                          "chinese":  "一言为定！让我们一起加油，拥有健康的身体和快乐的心情！",
+                          "pinyin":  "Yì yán wéi dìng! Ràng wǒmen yìqǐ jiāyóu, yōngyǒu jiànkāng de shēntǐ hé kuàilè de xīnqíng!",
+                          "vietnamese":  "Nhất trí như vậy nhé! Chúng ta cùng cố lên, để có một cơ thể khỏe mạnh và tinh thần vui vẻ!",
+                          "usedWords":  [
+                                            "身体"
+                                        ]
+                      }
+                  ]
+    },
+    {
+        "id":  1729656000000,
+        "title":  "在上海问路 (Du Lịch Thượng Hải)",
+        "titlePinyin":  "zài shàng hǎi wèn lù",
+        "titleViet":  "Hỏi đường đi ga tàu điện ngầm ở Thượng Hải",
+        "type":  "conversation",
+        "theme":  "🚇 Du lịch Thượng Hải \u0026 Hỏi đường tàu điện",
+        "prompt":  "Đi du lịch Thượng Hải, bị lạc đường và hỏi người dân đường tới ga tàu điện ngầm",
+        "createdAt":  "28/10/2026, 09:15:00",
+        "syncedGithub":  true,
+        "targetWords":  [
+                            {
+                                "chinese":  "旅游",
+                                "pinyin":  "lǚyóu",
+                                "vietnamese":  "du lịch"
+                            },
+                            {
+                                "chinese":  "地铁",
+                                "pinyin":  "dìtiě",
+                                "vietnamese":  "tàu điện ngầm"
+                            },
+                            {
+                                "chinese":  "站",
+                                "pinyin":  "zhàn",
+                                "vietnamese":  "ga, trạm"
+                            },
+                            {
+                                "chinese":  "怎么走",
+                                "pinyin":  "zěnme zǒu",
+                                "vietnamese":  "đi như thế nào"
+                            },
+                            {
+                                "chinese":  "方便",
+                                "pinyin":  "fāngbiàn",
+                                "vietnamese":  "thuận tiện, tiện lợi"
+                            }
+                        ],
+        "lines":  [
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明 (Du khách)",
+                          "chinese":  "你好！请问一下，我是来上海旅游的，好像迷路了。",
+                          "pinyin":  "Nǐ hǎo! Qǐngwèn yíxià, wǒ shì lái Shànghǎi lǚyóu de, hǎoxiàng mílù le.",
+                          "vietnamese":  "Xin chào! Cho tôi hỏi một chút, tôi đến Thượng Hải du lịch, hình như bị lạc đường rồi.",
+                          "usedWords":  [
+                                            "你好",
+                                            "旅游"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "你好！别着急，你想去哪里？我是上海本地人，可以帮你。",
+                          "pinyin":  "Nǐ hǎo! Bié zhāojí, nǐ xiǎng qù nǎlǐ? Wǒ shì Shànghǎi běndì rén, kěyǐ bāng nǐ.",
+                          "vietnamese":  "Chào bạn! Đừng lo lắng, bạn muốn đi đâu? Tôi là người Thượng Hải bản địa, có thể giúp bạn.",
+                          "usedWords":  [
+                                            "你好"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明 (Du khách)",
+                          "chinese":  "太好了！请问这附近有地铁站吗？我想坐地铁去人民广场。",
+                          "pinyin":  "Tài hǎo le! Qǐngwèn zhè fùjìn yǒu dìtiě zhàn ma? Wǒ xiǎng zuò dìtiě qù Rénmín Guǎngchǎng.",
+                          "vietnamese":  "Tốt quá rồi! Xin hỏi gần đây có ga tàu điện ngầm không? Tôi muốn đi tàu điện tới Quảng trường Nhân Dân.",
+                          "usedWords":  [
+                                            "地铁",
+                                            "站"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "有的！前面就有一个地铁站，走路大概只要五分钟。",
+                          "pinyin":  "Yǒu de! Qiánmiàn jiù yǒu yí gè dìtiě zhàn, zǒulù dàgài zhǐ yào wǔ fēnzhōng.",
+                          "vietnamese":  "Có đấy! Phía trước có một ga tàu điện ngầm, đi bộ chỉ khoảng năm phút thôi.",
+                          "usedWords":  [
+                                            "地铁",
+                                            "站"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明 (Du khách)",
+                          "chinese":  "从这里怎么走呢？是一直往前走，还是要转弯？",
+                          "pinyin":  "Cóng zhèlǐ zěnme zǒu ne? Shì yìzhí wǎng qián zǒu, háishì yào zhuǎnwān?",
+                          "vietnamese":  "Từ đây đi như thế nào ạ? Đi thẳng tiếp hay là phải rẽ?",
+                          "usedWords":  [
+                                            "怎么走"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "你沿着这条路直走，过了前面的红绿灯十字路口，然后向右转。",
+                          "pinyin":  "Nǐ yánzhe zhè tiáo lù zhí zǒu, guò le qiánmiàn de hónglǜdēng shízì lùkǒu, ránhòu xiàng yòu zhuǎn.",
+                          "vietnamese":  "Bạn đi thẳng theo con đường này, qua ngã tư đèn giao thông phía trước, rồi rẽ phải.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "右转之后走两百米，你就会看到地铁站的入口，那里是二号线。",
+                          "pinyin":  "Yòu zhuǎn zhīhòu zǒu liǎng bǎi mǐ, nǐ jiù huì kàndào dìtiě zhàn de rùkǒu, nàlǐ shì èr hào xiàn.",
+                          "vietnamese":  "Sau khi rẽ phải đi hai trăm mét, bạn sẽ thấy lối vào ga tàu điện ngầm, đó là tuyến số 2.",
+                          "usedWords":  [
+                                            "地铁",
+                                            "站"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明 (Du khách)",
+                          "chinese":  "二号线可以直接到人民广场吗？需要换乘吗？",
+                          "pinyin":  "Èr hào xiàn kěyǐ zhíjiē dào Rénmín Guǎngchǎng ma? Xūyào huànchéng ma?",
+                          "vietnamese":  "Tuyến số 2 có thể đi thẳng tới Quảng trường Nhân Dân không? Có cần chuyển tuyến không?",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "二号线可以直接到，不需要换乘，坐三站就到了，非常快。",
+                          "pinyin":  "Èr hào xiàn kěyǐ zhíjiē dào, bù xūyào huànchéng, zuò sān zhàn jiù dào le, fēicháng kuài.",
+                          "vietnamese":  "Tuyến số 2 đi thẳng được, không cần chuyển tuyến, ngồi ba ga là tới, rất nhanh.",
+                          "usedWords":  [
+                                            "站"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明 (Du khách)",
+                          "chinese":  "买地铁票支持微信或者支付宝扫码乘车吗？",
+                          "pinyin":  "Mǎi dìtiě piào zhīchí Wēixìn huòzhě Zhīfùbǎo sǎomǎ chéngchē ma?",
+                          "vietnamese":  "Mua vé tàu điện ngầm có hỗ trợ quét mã WeChat hoặc Alipay để đi xe không?",
+                          "usedWords":  [
+                                            "地铁"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "完全支持！在手机里开通上海乘车码，直接刷码进站，特别方便。",
+                          "pinyin":  "Wánquán zhīchí! Zài shǒujī lǐ kāitōng Shànghǎi chéngchē mǎ, zhíjiē shuāmǎ jìnzhàn, tèbié fāngbiàn.",
+                          "vietnamese":  "Hoàn toàn hỗ trợ! Mở mã đi xe Thượng Hải trong điện thoại là quét mã vào ga được luôn, cực kỳ thuận tiện.",
+                          "usedWords":  [
+                                            "站",
+                                            "方便"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明 (Du khách)",
+                          "chinese":  "逛完人民广场，我还想去外滩看夜景，怎么去最方便？",
+                          "pinyin":  "Guàng wán Rénmín Guǎngchǎng, wǒ hái xiǎng qù Wàitān kàn yèjǐng, zěnme qù zuì fāngbiàn?",
+                          "vietnamese":  "Dạo chơi xong Quảng trường Nhân Dân, tôi còn muốn ra Bến Thượng Hải ngắm cảnh đêm, đi thế nào tiện nhất?",
+                          "usedWords":  [
+                                            "方便"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "从人民广场继续坐二号线坐一站，到南京东路站下车就是外滩。",
+                          "pinyin":  "Cóng Rénmín Guǎngchǎng jìxù zuò èr hào xiàn zuò yí zhàn, dào Nánjīng Dōnglù zhàn xiàchē jiù shì Wàitān.",
+                          "vietnamese":  "Từ Quảng trường Nhân Dân tiếp tục đi tuyến số 2 một ga nữa, xuống ở ga Nam Kinh Đông Lộ là tới Bến Thượng Hải.",
+                          "usedWords":  [
+                                            "站"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明 (Du khách)",
+                          "chinese":  "附近有什么好吃的本帮菜推荐吗？",
+                          "pinyin":  "Fùjìn yǒu shénme hǎochī de běnbāng cài tuījiàn ma?",
+                          "vietnamese":  "Gần đó có món ăn Thượng Hải truyền thống nào ngon gợi ý không bạn?",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "南京路有很多老字号小笼包和生煎包，皮薄多汁，一定要尝尝！",
+                          "pinyin":  "Nánjīng lù yǒu hěn duō lǎozìhào xiǎolóngbāo hé shēngjiānbāo, pí báo duō zhī, yídìng yào chángcháng!",
+                          "vietnamese":  "Đường Nam Kinh có rất nhiều tiệm lâu đời bán tiểu long bao và bánh bao chiên, vỏ mỏng mọng nước, nhất định phải thử!",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "小明 (Du khách)",
+                          "chinese":  "太感谢你的热情帮助了！遇到你真是太幸运了。",
+                          "pinyin":  "Tài gǎnxiè nǐ de rèqíng bāngzhù le! Yùdào nǐ zhēn shì tài xìngyùn le.",
+                          "vietnamese":  "Cảm ơn sự giúp đỡ nhiệt tình của bạn rất nhiều! Gặp được bạn thật sự quá may mắn.",
+                          "usedWords":  [
+
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "小华 (Người dân)",
+                          "chinese":  "不客气！祝你在上海旅游玩得开心！",
+                          "pinyin":  "Bú kèqi! Zhù nǐ zài Shànghǎi lǚyóu wán de kāixīn!",
+                          "vietnamese":  "Không có gì! Chúc bạn du lịch Thượng Hải thật vui vẻ!",
+                          "usedWords":  [
+                                            "旅游"
+                                        ]
+                      }
+                  ]
+    }
 ]

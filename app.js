@@ -31,7 +31,7 @@ const DEFAULT_CONFIG = {
     "vocabJsonUrl": "https://raw.githubusercontent.com/tienhp11690/Chinese/main/vocab.json",
     "githubStoriesFile": "stories.json",
     "storiesJsonUrl": "https://raw.githubusercontent.com/tienhp11690/Chinese/main/stories.json",
-    "syncStrategy": "sheets-first"
+    "syncStrategy": "github-first"
 };
 
 // ==================== HELPER FUNCTIONS ====================
@@ -1683,7 +1683,9 @@ async function syncFromSheets(isBackground = false) {
             }
         });
 
-        vocab = newVocab;
+        // Giữ lại các từ vựng mới có trong local/github mà chưa có trên Google Sheets
+        const existingNotInSheet = vocab.filter(v => v.chinese && !newVocab.some(nv => nv.chinese === v.chinese));
+        vocab = [...newVocab, ...existingNotInSheet];
         save();
         buildCharMap();
         updateLastSyncTime();
@@ -2308,24 +2310,22 @@ function loadSavedStories() {
         savedStories = [];
     }
 
-    // Tự động nạp các bài mẫu mặc định từ stories.json (bao gồm bài Marathon Chạy Bộ 26 câu) nếu chưa có
-    if (savedStories.length === 0 || !savedStories.some(s => s.id === 1729655000000)) {
-        fetch('./stories.json').then(r => r.json()).then(data => {
-            if (Array.isArray(data) && data.length > 0) {
-                const existingIds = new Set(savedStories.map(s => s.id));
-                const toAdd = data.filter(d => !existingIds.has(d.id));
-                if (toAdd.length > 0) {
-                    savedStories = [...savedStories, ...toAdd];
-                    saveSavedStories();
-                    renderSavedStoriesList();
-                    if (!currentStory && savedStories.length > 0) {
-                        currentStory = savedStories[savedStories.length - 1];
-                        renderCurrentStory();
-                    }
+    // Tự động nạp các bài mẫu từ stories.json nếu có bài mới
+    fetch('./stories.json').then(r => r.json()).then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+            const existingIds = new Set(savedStories.map(s => s.id));
+            const toAdd = data.filter(d => !existingIds.has(d.id));
+            if (toAdd.length > 0) {
+                savedStories = [...savedStories, ...toAdd].sort((a, b) => (b.id || 0) - (a.id || 0));
+                saveSavedStories();
+                renderSavedStoriesList();
+                if (!currentStory && savedStories.length > 0) {
+                    currentStory = savedStories[0];
+                    renderCurrentStory();
                 }
             }
-        }).catch(() => {});
-    }
+        }
+    }).catch(() => {});
 }
 
 function saveSavedStories() {
@@ -7167,8 +7167,18 @@ async function init() {
 
     // Synchronization logic
     const syncAndFallback = async () => {
-        const syncStrategy = localStorage.getItem('sync-strategy') || 'sheets-first';
-        if (syncStrategy === 'sheets-first') {
+        const syncStrategy = localStorage.getItem('sync-strategy') || 'github-first';
+        if (syncStrategy === 'github-first') {
+            console.log('🐙 Prioritizing GitHub/Local vocab database...');
+            const localSuccess = await syncFromLocalVocabJson();
+            if (!localSuccess) {
+                const ghSuccess = await syncFromGitHubFallback();
+                if (!ghSuccess) {
+                    await syncFromSheets(true);
+                }
+            }
+            renderLibrary();
+        } else if (syncStrategy === 'sheets-first') {
             const success = await syncFromSheets(true); // true = silent background sync
             if (!success) {
                 const ghSuccess = await syncFromGitHubFallback();
