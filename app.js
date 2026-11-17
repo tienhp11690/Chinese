@@ -464,16 +464,54 @@ function hideLoading() {
     if (overlay) overlay.classList.remove('show');
 }
 
-// ==================== PAGE NAVIGATION ====================
+// ==================== PAGE NAVIGATION & URL ROUTING ====================
 
-window.switchPage = function (page) {
+let isHandlingRoute = false;
+
+window.getRoute = function () {
+    let hash = window.location.hash || '';
+    if (hash.startsWith('#')) {
+        hash = hash.substring(1);
+    }
+    hash = hash.trim();
+    if (hash) {
+        return hash;
+    }
+    // Fallback to localStorage saved route if no hash in URL
+    const saved = localStorage.getItem('chinese-app-last-route');
+    if (saved) return saved.trim();
+    return 'library';
+};
+
+window.setRoute = function (route, pushHistory = true) {
+    if (!route) return;
+    try {
+        localStorage.setItem('chinese-app-last-route', route);
+        const newHash = '#' + route;
+        if (window.location.hash !== newHash) {
+            isHandlingRoute = true;
+            if (pushHistory) {
+                history.pushState(null, '', newHash);
+            } else {
+                history.replaceState(null, '', newHash);
+            }
+            setTimeout(() => { isHandlingRoute = false; }, 60);
+        }
+    } catch (e) {
+        console.warn('setRoute error:', e);
+        isHandlingRoute = false;
+    }
+};
+
+window.switchPage = function (page, updateRoute = true) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
 
     const pageEl = document.getElementById(page);
     if (pageEl) pageEl.classList.add('active');
 
-    const tabEl = document.querySelector(`.tab[onclick*="'${page}'"]`);
+    const tabEl = document.querySelector(`.tab[data-page="${page}"]`) ||
+        document.querySelector(`.tab[onclick*="'${page}'"]`);
     if (tabEl) {
         tabEl.classList.add('active');
     } else if (typeof event !== 'undefined' && event && event.target && event.target.classList.contains('tab')) {
@@ -487,7 +525,91 @@ window.switchPage = function (page) {
     if (page === 'stories') renderStoriesTab();
     if (page === 'hsk-hub') renderHskHubPage();
     if (page === 'config') updateConfig();
+
+    if (updateRoute && !isHandlingRoute) {
+        window.setRoute(page);
+    }
 };
+
+window.applyRoute = function (route, updateUrl = false) {
+    if (!route) route = 'library';
+    isHandlingRoute = true;
+
+    try {
+        const parts = route.split('/').map(p => decodeURIComponent(p.trim()));
+        let page = parts[0] || 'library';
+        const subId = parts[1] || '';
+
+        // Aliases
+        if (page === 'hsk') page = 'hsk-hub';
+        if (page === 'story') page = 'stories';
+
+        const VALID_PAGES = ['library', 'flashcard', 'groups', 'sentences', 'stories', 'hsk-hub', 'add', 'config'];
+        if (!VALID_PAGES.includes(page)) {
+            page = 'library';
+        }
+
+        // 1. Activate page & tab (do not push redundant URL update)
+        window.switchPage(page, false);
+
+        // 2. Handle subpages
+        if (page === 'hsk-hub') {
+            if (subId) {
+                const found = hskMaterials.find(m => String(m.id) === String(subId));
+                if (found) {
+                    window.openHskMaterial(subId, false);
+                } else {
+                    // Try again if materials are loading
+                    setTimeout(() => {
+                        const lateFound = hskMaterials.find(m => String(m.id) === String(subId));
+                        if (lateFound) window.openHskMaterial(subId, false);
+                    }, 200);
+                }
+            } else {
+                window.closeHskStudio(false);
+            }
+        } else if (page === 'stories') {
+            if (subId) {
+                const story = savedStories.find(s => String(s.id) === String(subId));
+                if (story) {
+                    window.viewSavedStory(subId, false);
+                } else {
+                    setTimeout(() => {
+                        const lateStory = savedStories.find(s => String(s.id) === String(subId));
+                        if (lateStory) window.viewSavedStory(subId, false);
+                    }, 200);
+                }
+            }
+        }
+
+        if (updateUrl) {
+            window.setRoute(route, false);
+        } else {
+            localStorage.setItem('chinese-app-last-route', route);
+        }
+    } finally {
+        setTimeout(() => { isHandlingRoute = false; }, 60);
+    }
+};
+
+window.restoreAppRoute = function () {
+    const route = window.getRoute();
+    console.log('📍 Restoring active page & subpage route:', route);
+    window.applyRoute(route, true);
+};
+
+// Listen for browser Back/Forward navigation
+window.addEventListener('popstate', () => {
+    if (isHandlingRoute) return;
+    const route = window.getRoute();
+    window.applyRoute(route, false);
+});
+
+window.addEventListener('hashchange', () => {
+    if (isHandlingRoute) return;
+    const route = window.getRoute();
+    window.applyRoute(route, false);
+});
 
 // ==================== LIBRARY ====================
 
@@ -2418,7 +2540,15 @@ function loadSavedStories() {
                 savedStories = [...savedStories, ...toAdd].sort((a, b) => (b.id || 0) - (a.id || 0));
                 saveSavedStories();
                 renderSavedStoriesList();
-                if (!currentStory && savedStories.length > 0) {
+                const curRoute = window.getRoute ? window.getRoute() : '';
+                if (curRoute.startsWith('stories/')) {
+                    const targetId = curRoute.split('/')[1];
+                    const found = savedStories.find(s => String(s.id) === String(targetId));
+                    if (found) {
+                        currentStory = found;
+                        renderCurrentStory();
+                    }
+                } else if (!currentStory && savedStories.length > 0) {
                     currentStory = savedStories[0];
                     renderCurrentStory();
                 }
@@ -5620,6 +5750,10 @@ window.saveCurrentStory = function () {
     saveSavedStories();
     renderSavedStoriesList();
 
+    if (!isHandlingRoute && currentStory && currentStory.id) {
+        window.setRoute(`stories/${currentStory.id}`);
+    }
+
     const savedEl = document.getElementById('stories-saved-count');
     const savedBadgeEl = document.getElementById('saved-count-badge');
     if (savedEl) savedEl.textContent = savedStories.length;
@@ -5631,20 +5765,26 @@ window.saveCurrentStory = function () {
     }
 };
 
-window.viewSavedStory = function (id) {
-    const story = savedStories.find(s => s.id === id);
+window.viewSavedStory = function (id, updateRoute = true) {
+    const story = savedStories.find(s => String(s.id) === String(id));
     if (story) {
         currentStory = story;
         renderCurrentStory();
         const container = document.getElementById('current-story-container');
-        if (container) container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (container && updateRoute) {
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         status(`📖 Đang xem bài: ${story.title || 'Bài đã lưu'}`, 'success');
+
+        if (updateRoute && !isHandlingRoute) {
+            window.setRoute(`stories/${id}`);
+        }
     }
 };
 
 window.deleteSavedStory = function (id) {
     if (confirm('Bạn có chắc chắn muốn xóa bài đã lưu này?')) {
-        savedStories = savedStories.filter(s => s.id !== id);
+        savedStories = savedStories.filter(s => String(s.id) !== String(id));
         saveSavedStories();
         renderSavedStoriesList();
 
@@ -5652,6 +5792,16 @@ window.deleteSavedStory = function (id) {
         const savedBadgeEl = document.getElementById('saved-count-badge');
         if (savedEl) savedEl.textContent = savedStories.length;
         if (savedBadgeEl) savedBadgeEl.textContent = `${savedStories.length} bài`;
+
+        if (currentStory && String(currentStory.id) === String(id)) {
+            currentStory = savedStories.length > 0 ? savedStories[0] : null;
+            if (currentStory) {
+                renderCurrentStory();
+                window.setRoute(`stories/${currentStory.id}`);
+            } else {
+                window.setRoute('stories');
+            }
+        }
 
         status('🗑️ Đã xóa bài!', 'success');
     }
@@ -6529,7 +6679,7 @@ function renderHskCatalog() {
     }).join('');
 }
 
-window.openHskMaterial = function (id) {
+window.openHskMaterial = function (id, updateRoute = true) {
     const found = hskMaterials.find(m => String(m.id) === String(id));
     if (!found) return;
 
@@ -6540,16 +6690,34 @@ window.openHskMaterial = function (id) {
     const studio = document.getElementById('hsk-active-studio');
     if (studio) {
         studio.style.display = 'block';
-        studio.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (updateRoute) {
+            studio.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    if (updateRoute && !isHandlingRoute) {
+        window.setRoute(`hsk-hub/${id}`);
     }
 };
 
-window.closeHskStudio = function () {
+window.closeHskStudio = function (updateRoute = true) {
     stopHskJoggingMode();
     const studio = document.getElementById('hsk-active-studio');
     if (studio) studio.style.display = 'none';
     currentHskMaterial = null;
     renderHskCatalog();
+
+    if (updateRoute && !isHandlingRoute) {
+        window.setRoute('hsk-hub');
+    }
+};
+
+window.renderHskMaterialDetail = function (id) {
+    if (id) {
+        window.openHskMaterial(id, false);
+    } else if (currentHskMaterial) {
+        renderHskStudio(currentHskMaterial);
+    }
 };
 
 function renderHskStudio(material) {
@@ -7321,7 +7489,7 @@ async function init() {
         ];
         buildCharMap();
     }
-    renderLibrary();
+    window.restoreAppRoute();
     updateConfig();
 
     // 2. Start all async tasks in parallel without blocking UI
