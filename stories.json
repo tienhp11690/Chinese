@@ -1,4 +1,374 @@
-[
+﻿[
+    {
+        "id":  1794895000001,
+        "title":  "亚布力与雪乡旅游包车及滑雪预订",
+        "titlePinyin":  "Yàbùlì yǔ Xuěxiāng lǚyóu bāochē jí huáxuě yùdìng",
+        "titleViet":  "Đàm phán thuê xe, trượt tuyết và tour Tuyết Hương tại Yabuli",
+        "type":  "conversation",
+        "theme":  "Du lịch Cáp Nhĩ Tân, Yabuli \u0026 Tuyết Hương (Hắc Long Giang)",
+        "prompt":  "Hội thoại thực tế giữa du khách (Tien Pham) và chủ homestay Yabuli: đàm phán xe ghép/bao xe đi Tuyết Hương, đặt vé trượt tuyết, thuê đồ và kiểm soát ngân sách du lịch",
+        "createdAt":  "17/11/2026, 18:55:00",
+        "syncedGithub":  true,
+        "targetWords":  [
+                            {
+                                "chinese":  "拼车",
+                                "pinyin":  "pīnchē",
+                                "vietnamese":  "đi ghép xe, đi chung xe (tiết kiệm chi phí)"
+                            },
+                            {
+                                "chinese":  "包车",
+                                "pinyin":  "bāochē",
+                                "vietnamese":  "thuê bao nguyên xe, xe riêng trọn gói"
+                            },
+                            {
+                                "chinese":  "滑雪场",
+                                "pinyin":  "huáxuěchǎng",
+                                "vietnamese":  "khu trượt tuyết, sân trượt tuyết"
+                            },
+                            {
+                                "chinese":  "滑雪票",
+                                "pinyin":  "huáxuě piào",
+                                "vietnamese":  "vé vào cổng trượt tuyết"
+                            },
+                            {
+                                "chinese":  "教练",
+                                "pinyin":  "jiàoliàn",
+                                "vietnamese":  "huấn luyện viên, người hướng dẫn"
+                            },
+                            {
+                                "chinese":  "装备",
+                                "pinyin":  "zhuāngbèi",
+                                "vietnamese":  "trang thiết bị, dụng cụ (trượt tuyết)"
+                            },
+                            {
+                                "chinese":  "滑雪服",
+                                "pinyin":  "huáxuěfú",
+                                "vietnamese":  "bộ quần áo trượt tuyết"
+                            },
+                            {
+                                "chinese":  "温泉",
+                                "pinyin":  "wēnquán",
+                                "vietnamese":  "suối nước nóng"
+                            },
+                            {
+                                "chinese":  "索道",
+                                "pinyin":  "suǒdào",
+                                "vietnamese":  "đường cáp treo trên núi"
+                            },
+                            {
+                                "chinese":  "缆车",
+                                "pinyin":  "lǎnchē",
+                                "vietnamese":  "thùng cáp treo, cáp treo"
+                            },
+                            {
+                                "chinese":  "航拍",
+                                "pinyin":  "hángpāi",
+                                "vietnamese":  "quay phim / chụp ảnh trên không bằng drone (flycam)"
+                            },
+                            {
+                                "chinese":  "雪地摩托",
+                                "pinyin":  "xuědì mótuō",
+                                "vietnamese":  "xe mô tô chạy trên tuyết"
+                            },
+                            {
+                                "chinese":  "雪乡",
+                                "pinyin":  "Xuěxiāng",
+                                "vietnamese":  "Tuyết Hương (Làng tuyết nổi tiếng ở Hắc Long Giang)"
+                            },
+                            {
+                                "chinese":  "退房",
+                                "pinyin":  "tuìfáng",
+                                "vietnamese":  "trả phòng (khách sạn, homestay)"
+                            },
+                            {
+                                "chinese":  "停靠",
+                                "pinyin":  "tíngkào",
+                                "vietnamese":  "dừng đỗ, tấp vào ven đường"
+                            },
+                            {
+                                "chinese":  "明细",
+                                "pinyin":  "míngxì",
+                                "vietnamese":  "bảng kê chi tiết, danh sách chi tiết chi phí"
+                            },
+                            {
+                                "chinese":  "性价比",
+                                "pinyin":  "xìngjiàbǐ",
+                                "vietnamese":  "tỷ lệ chất lượng trên giá cả (đáng tiền, giá hời)"
+                            },
+                            {
+                                "chinese":  "体验",
+                                "pinyin":  "tǐyàn",
+                                "vietnamese":  "trải nghiệm"
+                            },
+                            {
+                                "chinese":  "体验感",
+                                "pinyin":  "tǐyàngǎn",
+                                "vietnamese":  "cảm giác trải nghiệm (khi dùng dịch vụ)"
+                            },
+                            {
+                                "chinese":  "实惠",
+                                "pinyin":  "shíhuì",
+                                "vietnamese":  "thực tế, vừa túi tiền, giá tốt"
+                            },
+                            {
+                                "chinese":  "竞争力",
+                                "pinyin":  "jìngzhēnglì",
+                                "vietnamese":  "tính cạnh tranh (giá cả, dịch vụ)"
+                            },
+                            {
+                                "chinese":  "民宿",
+                                "pinyin":  "mínsù",
+                                "vietnamese":  "homestay, nhà trọ dân dã của người bản địa"
+                            },
+                            {
+                                "chinese":  "蹦迪",
+                                "pinyin":  "bèngdí",
+                                "vietnamese":  "nhảy đầm, quẩy nhạc hội ngoài trời"
+                            },
+                            {
+                                "chinese":  "旺季",
+                                "pinyin":  "wàngjì",
+                                "vietnamese":  "mùa cao điểm (du lịch)"
+                            },
+                            {
+                                "chinese":  "预算",
+                                "pinyin":  "yùsuàn",
+                                "vietnamese":  "ngân sách dự kiến"
+                            },
+                            {
+                                "chinese":  "透明",
+                                "pinyin":  "tòumíng",
+                                "vietnamese":  "minh bạch, rõ ràng (về giá)"
+                            },
+                            {
+                                "chinese":  "缘分",
+                                "pinyin":  "yuánfèn",
+                                "vietnamese":  "duyên phận, có duyên gặp gỡ"
+                            },
+                            {
+                                "chinese":  "节省",
+                                "pinyin":  "jiéshěng",
+                                "vietnamese":  "tiết kiệm (chi phí, thời gian)"
+                            },
+                            {
+                                "chinese":  "成本",
+                                "pinyin":  "chéngběn",
+                                "vietnamese":  "chi phí, giá thành"
+                            },
+                            {
+                                "chinese":  "接送",
+                                "pinyin":  "jiēsòng",
+                                "vietnamese":  "đưa đón (sân bay, điểm tham quan)"
+                            },
+                            {
+                                "chinese":  "一日游",
+                                "pinyin":  "yírìyóu",
+                                "vietnamese":  "tour tham quan trọn gói trong ngày"
+                            },
+                            {
+                                "chinese":  "沿途",
+                                "pinyin":  "yántú",
+                                "vietnamese":  "dọc đường, trên suốt quãng đường đi"
+                            },
+                            {
+                                "chinese":  "超预算",
+                                "pinyin":  "chāo yùsuàn",
+                                "vietnamese":  "vượt quá ngân sách chi tiêu"
+                            },
+                            {
+                                "chinese":  "实在价",
+                                "pinyin":  "shízàijià",
+                                "vietnamese":  "giá thật lòng, giá hữu nghị, không chặt chém"
+                            },
+                            {
+                                "chinese":  "大熊猫",
+                                "pinyin":  "dàxióngmāo",
+                                "vietnamese":  "gấu trúc lớn"
+                            },
+                            {
+                                "chinese":  "熊猫馆",
+                                "pinyin":  "xióngmāoguǎn",
+                                "vietnamese":  "nhà gấu trúc (ở Yabuli)"
+                            },
+                            {
+                                "chinese":  "车队",
+                                "pinyin":  "chēduì",
+                                "vietnamese":  "đội xe, nhà xe du lịch"
+                            }
+                        ],
+        "lines":  [
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "Tien Pham (Du khách)",
+                          "chinese":  "老板好！我们在亚布力打算玩两天，计划1月2号去滑雪、泡森林温泉，1月3号坐索道上大锅盔山看雪景航拍、去熊猫馆看大熊猫，再体验雪地摩托。请问店里有合作的拼车一日游、或者景点往返接送吗？",
+                          "pinyin":  "Lǎobǎn hǎo! Wǒmen zài Yàbùlì dǎsuàn wán liǎng tiān, jìhuà 1 yuè 2 hào qù huáxuě, pào sēnlín wēnquán, 1 yuè 3 hào zuò suǒdào shàng Dàguōkuī Shān kàn xuějǐng hángpāi, qù xióngmāoguǎn kàn dàxióngmāo, zài tǐyàn xuědì mótuō. Qǐngwèn diàn lǐ yǒu hézuò de pīnchē yírìyóu, huòzhě jǐngdiǎn wǎngfǎn jiēsòng ma?",
+                          "vietnamese":  "Chào ông chủ! Chúng tôi dự định ở Yabuli chơi 2 ngày, kế hoạch ngày 2/1 đi trượt tuyết, tắm suối nước nóng rừng thông; ngày 3/1 đi cáp treo lên núi Đại Oa Khôi ngắm tuyết quay flycam, đi nhà gấu trúc xem gấu trúc, rồi trải nghiệm mô tô tuyết. Xin hỏi bên mình có tour ghép trong ngày hoặc xe ghép đưa đón khứ hồi không?",
+                          "usedWords":  [
+                                            "滑雪",
+                                            "温泉",
+                                            "索道",
+                                            "航拍",
+                                            "雪地摩托",
+                                            "拼车",
+                                            "一日游",
+                                            "接送",
+                                            "大熊猫",
+                                            "熊猫馆",
+                                            "体验"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "民宿老板 (Chủ homestay Yabuli)",
+                          "chinese":  "您好！你说的这些我都能帮您预订，包括大秃顶子山的雪地摩托体验和用车。拼车的话提前两天我帮你找。",
+                          "pinyin":  "Nín hǎo! Nǐ shuō de zhèxiē wǒ dōu néng bāng nín yùdìng, bāokuò Dàtūdǐngzi Shān de xuědì mótuō tǐyàn hé yòngchē. Pīnchē de huà tíqián liǎng tiān wǒ bāng nǐ zhǎo.",
+                          "vietnamese":  "Xin chào bạn! Những điểm bạn vừa nói tôi đều có thể giúp bạn đặt trước hết, bao gồm cả trải nghiệm mô tô tuyết ở núi Đại Ngốc Đỉnh Tử và xe cộ. Về xe ghép thì trước 2 ngày tôi sẽ tìm ghép cho bạn.",
+                          "usedWords":  [
+                                            "预订",
+                                            "雪地摩托",
+                                            "体验",
+                                            "拼车"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "Tien Pham (Du khách)",
+                          "chinese":  "给我安排和别人拼车也行，只要能节省费用。另外，我想请教练，还想租一套滑雪服和装备，滑雪票和租装备需要提前几天预订吗？",
+                          "pinyin":  "Gěi wǒ ānpái hé biérén pīnchē yě xíng, zhǐyào néng jiéshěng fèiyong. Lìngwài, wǒ xiǎng qǐng jiàoliàn, hái xiǎng zū yí tào huáxuěfú hé zhuāngbèi, huáxuě piào hé zū zhuāngbèi xūyào tíqián jǐ tiān yùdìng ma?",
+                          "vietnamese":  "Xếp cho tôi xe đi ghép với người khác cũng được, miễn là tiết kiệm chi phí. Ngoài ra, tôi muốn thuê huấn luyện viên và thuê cả bộ đồ trượt tuyết lẫn trang thiết bị, vé trượt tuyết và thuê đồ có cần đặt trước bao nhiêu ngày không?",
+                          "usedWords":  [
+                                            "拼车",
+                                            "节省",
+                                            "教练",
+                                            "滑雪服",
+                                            "装备",
+                                            "滑雪票"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "民宿老板 (Chủ homestay Yabuli)",
+                          "chinese":  "滑雪票等你们来了再定就行，不用提前预订。",
+                          "pinyin":  "Huáxuě piào děng nǐmen lái le zài dìng jiù xíng, bú yòng tíqián yùdìng.",
+                          "vietnamese":  "Vé trượt tuyết đợi các bạn đến nơi rồi đặt là được, không cần phải đặt trước đâu.",
+                          "usedWords":  [
+                                            "滑雪票"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "Tien Pham (Du khách)",
+                          "chinese":  "另外，1月4号早上退房后我们要去中国雪乡。请问有拼车或包车去雪乡吗？我们希望路上能沿着亚雪公路稍作停留，比如在大秃顶子山停一下拍照，不知道有没有这种沿途停靠的方案？",
+                          "pinyin":  "Lìngwài, 1 yuè 4 hào zǎoshang tuìfáng hòu wǒmen yào qù Zhōngguó Xuěxiāng. Qǐngwèn yǒu pīnchē huò bāochē qù Xuěxiāng ma? Wǒmen xīwàng lùshang néng yánzhe Yà-Xuě gōnglù shāo zuò tíngliú, bǐrú zài Dàtūdǐngzi Shān tíng yíxià pāizhào, bù zhīdào yǒu méiyǒu zhè zhǒng yántú tíngkào de fāng\u0027àn?",
+                          "vietnamese":  "Ngoài ra, sáng 4/1 sau khi trả phòng chúng tôi muốn đi Tuyết Hương. Xin hỏi có xe ghép hoặc bao xe đi Tuyết Hương không? Chúng tôi hy vọng trên đường có thể chạy dọc đường cao tốc Á Tuyết dừng lại một chút, ví dụ dừng ở núi Đại Ngốc Đỉnh Tử chụp ảnh, không biết có phương án dừng đỗ dọc đường như thế không?",
+                          "usedWords":  [
+                                            "退房",
+                                            "雪乡",
+                                            "拼车",
+                                            "包车",
+                                            "沿途",
+                                            "停靠"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "民宿老板 (Chủ homestay Yabuli)",
+                          "chinese":  "拼车和包车价格差不了太多，但是包车的体验感好。拼车的话时间就会很紧。",
+                          "pinyin":  "Pīnchē hé bāochē jiàgé chà bu liǎo tài duō, dànshì bāochē de tǐyàngǎn hǎo. Pīnchē de huà shíjiān jiù huì hěn jǐn.",
+                          "vietnamese":  "Giá xe ghép với bao xe không chênh nhau nhiều đâu, nhưng bao xe trải nghiệm sẽ thích hơn nhiều. Đi ghép xe thì thời gian sẽ rất gấp.",
+                          "usedWords":  [
+                                            "拼车",
+                                            "包车",
+                                            "体验感"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "Tien Pham (Du khách)",
+                          "chinese":  "实话跟老板说，我们也在对比咨询几家车队和平台的价格。如果您这边能给我们一个实惠又有竞争力的实在价，我们肯定优先找您帮忙安排，毕竟住在您家也更省心！",
+                          "pinyin":  "Shíhuà gēn lǎobǎn shuō, wǒmen yě zài duìbǐ zīxún jǐ jiā chēduì hé píngtái de jiàgé. Rúguǒ nín zhèbiān néng gěi wǒmen yí ge shíhuì yòu yǒu jìngzhēnglì de shízàijià, wǒmen kěndìng yōuxiān zhǎo nín bāngmáng ānpái, bìjìng zhù zài nín jiā yě gèng shěngxīn!",
+                          "vietnamese":  "Nói thật với ông chủ, chúng tôi cũng đang so sánh giá của vài đội xe và các nền tảng. Nếu bên anh cho một mức giá hợp lý, cạnh tranh và thật lòng, chúng tôi chắc chắn ưu tiên nhờ anh sắp xếp, dù sao ở nhà anh cũng an tâm tiện lợi hơn!",
+                          "usedWords":  [
+                                            "车队",
+                                            "实惠",
+                                            "竞争力",
+                                            "实在价"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "民宿老板 (Chủ homestay Yabuli)",
+                          "chinese":  "放心放心，没问题！包车的话从亚布力到雪乡来回500块钱，安排舒适的SUV，随时在外面等你们，晚上大概8点左右蹦迪玩完随时能回。",
+                          "pinyin":  "Fàngxīn fàngxīn, méi wèntí! Bāochē de huà cóng Yàbùlì dào Xuěxiāng láihuí 500 kuài qián, ānpái shūshì de SUV, suíshí zài wàimiàn děng nǐmen, wǎnshang dàgài 8 diǎn zuǒyòu bèngdí wán wán suíshí néng huí.",
+                          "vietnamese":  "Yên tâm yên tâm, không vấn đề gì! Nếu bao xe thì từ Yabuli đi Tuyết Hương khứ hồi 500 tệ, bố trí xe SUV êm ái, xe chờ sẵn bên ngoài bất cứ lúc nào, buổi tối khoảng 8 giờ quẩy nhạc hội xong muốn về lúc nào cũng được.",
+                          "usedWords":  [
+                                            "包车",
+                                            "雪乡",
+                                            "蹦迪"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "民宿老板 (Chủ homestay Yabuli)",
+                          "chinese":  "咱们是几个人呀？你放心啊哥，因为我也一直在做旅游，价格都很透明，肯定不会让你多花一分钱，买票也都是最低价。",
+                          "pinyin":  "Zánmen shì jǐ ge rén ya? Nǐ fàngxīn a gē, yīnwèi wǒ yě yìzhí zài zuò lǚyóu, jiàgé dōu hěn tòumíng, kěndìng bú huì ràng nǐ duō huā yì fēn qián, mǎi piào yě dōu shì zuì dī jià.",
+                          "vietnamese":  "Đoàn mình là mấy người thế anh? Anh cứ yên tâm anh nhé, vì em cũng làm du lịch suốt, giá cả đều rất minh bạch, chắc chắn không để anh phải tốn thêm một cắc nào, mua vé cũng toàn là giá thấp nhất.",
+                          "usedWords":  [
+                                            "透明"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "Tien Pham (Du khách)",
+                          "chinese":  "我们这趟一共玩12天，所以每个景点都得尽量优化控制成本，不然整趟行程很容易超预算。能拼车还是尽量帮我们拼车吧。",
+                          "pinyin":  "Wǒmen zhè tàng yígòng wán 12 tiān, suǒyǐ měi ge jǐngdiǎn dōu děi jǐnliàng yōuhuà kòngzhì chéngběn, bùrán zhěng tàng xíngchéng hěn róngyì chāo yùsuàn. Néng pīnchē hái shì jǐnliàng bāng wǒmen pīnchē ba.",
+                          "vietnamese":  "Chúng tôi chuyến này đi tổng cộng 12 ngày, nên từng điểm tham quan đều phải cố gắng tối ưu kiểm soát chi phí, nếu không cả hành trình rất dễ vượt ngân sách dự kiến. Nếu ghép được xe thì vẫn cố gắng giúp chúng tôi ghép xe nhé.",
+                          "usedWords":  [
+                                            "成本",
+                                            "预算",
+                                            "超预算",
+                                            "拼车"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "民宿老板 (Chủ homestay Yabuli)",
+                          "chinese":  "嗯嗯能理解！我看了一下你的日期，那时候是旺季，游客正多，到时候帮你联系一下看看有没有同样行程有拼车意愿的游客。",
+                          "pinyin":  "Èn\u0027èn néng lǐjiě! Wǒ kàn le yíxià nǐ de rìqī, nà shíhou shì wàngjì, yóukè zhèng duō, dàoshí bāng nǐ liánxì yíxià kànkan yǒu méiyǒu tóngyàng xíngchéng yǒu pīnchē yìyuàn de yóukè.",
+                          "vietnamese":  "Dạ vâng em hiểu chứ! Em xem qua ngày của anh rồi, lúc đó là mùa cao điểm, khách du lịch đang đông, đến lúc đó em sẽ liên hệ giúp anh xem có khách nào cùng lịch trình có nguyện vọng ghép xe không.",
+                          "usedWords":  [
+                                            "旺季",
+                                            "拼车"
+                                        ]
+                      },
+                      {
+                          "speaker":  "B",
+                          "speakerName":  "民宿老板 (Chủ homestay Yabuli)",
+                          "chinese":  "如果拼不成，包车给你找一辆舒适的SUV体验感更好。到时不管你们在哈尔滨还是雪乡，我都会告诉你好吃好玩、价格实惠的地方。你们住我家民宿也是缘分，我保证让你们全程少花钱、体验最好！",
+                          "pinyin":  "Rúguǒ pīn bu chéng, bāochē gěi nǐ zhǎo yí liàng shūshì de SUV tǐyàngǎn gèng hǎo. Dàoshí bùguǎn nǐmen zài Hā\u0027ěrbīn hái shì Xuěxiāng, wǒ dōu huì gàosu nǐ hǎochī hǎowán, jiàgé shíhuì de dìfang. Nǐmen zhù wǒ jiā mínsù yě shì yuánfèn, wǒ bǎozhèng ràng nǐmen quánchéng shǎo huā qián, tǐyàn zuì hǎo!",
+                          "vietnamese":  "Nếu không ghép được, bao xe em kiếm cho anh một chiếc SUV êm ái trải nghiệm sẽ thích hơn. Đến lúc đó dù các anh ở Cáp Nhĩ Tân hay Tuyết Hương, em đều sẽ chỉ cho anh những chỗ ăn ngon chơi vui, giá cả phải chăng. Các anh ở homestay nhà em cũng là cái duyên, em đảm bảo giúp các anh cả hành trình vừa bớt tốn tiền, vừa có trải nghiệm tuyệt vời nhất!",
+                          "usedWords":  [
+                                            "包车",
+                                            "体验感",
+                                            "雪乡",
+                                            "实惠",
+                                            "民宿",
+                                            "缘分",
+                                            "体验"
+                                        ]
+                      },
+                      {
+                          "speaker":  "A",
+                          "speakerName":  "Tien Pham (Du khách)",
+                          "chinese":  "太感谢老板了！有您这么热心实在的本地人指导和安排，我们就省心放心多了！",
+                          "pinyin":  "Tài gǎnxiè lǎobǎn le! Yǒu nín zhème rèxīn shízài de běndìrén zhǐdǎo hé ānpái, wǒmen jiù shěngxīn fàngxīn duō le!",
+                          "vietnamese":  "Cảm ơn ông chủ nhiều lắm! Có người bản xứ nhiệt tình và thật thà như anh hướng dẫn và thu xếp, chúng tôi bớt lo và yên tâm hơn rất nhiều!",
+                          "usedWords":  [
+                                            "实在价"
+                                        ]
+                      }
+                  ]
+    },
     {
         "id":  1794891000001,
         "title":  "第一次约会",
