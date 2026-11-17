@@ -1822,60 +1822,68 @@ body {
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
-/* 1. Target word: Vibrant Purple/Violet highlight with bold border */
-.story-word.target-word {
+/* 1. Target word (Chưa thuộc): Vibrant Purple/Violet highlight with bold border */
+.story-word.target-word.unlearned-word,
+.story-word.target-word:not(.learned-word) {
     color: #5b21b6;
     font-weight: 800;
-    background: rgba(139, 92, 246, 0.18);
+    background: rgba(139, 92, 246, 0.22);
     border-bottom: 2.5px solid #8b5cf6;
     border-radius: 4px;
     padding: 1px 4px;
 }
 
-.story-word.target-word:hover {
+.story-word.target-word.unlearned-word:hover,
+.story-word.target-word:not(.learned-word):hover {
     background: #8b5cf6;
     color: white;
     border-bottom-color: #7c3aed;
 }
 
-/* 2. Known words in library (Unlearned): Vibrant Indigo/Blue pill highlight */
-.story-word.known-word {
+/* 2. Known words in library (CHƯA THUỘC): Highlight rõ ràng */
+.story-word.unlearned-word,
+.story-word.known-word.unlearned-word {
     color: #3730a3;
     font-weight: 700;
-    background: rgba(99, 102, 241, 0.14);
+    background: rgba(99, 102, 241, 0.18);
     border-bottom: 2.5px solid #6366f1;
     border-radius: 4px;
     padding: 1px 4px;
 }
 
-.story-word.known-word:hover {
+.story-word.unlearned-word:hover,
+.story-word.known-word.unlearned-word:hover {
     background: #4f46e5;
     color: white;
     border-bottom-color: #4338ca;
 }
 
-/* 3. Learned words in library: Emerald Green pill highlight */
-.story-word.learned-word {
-    color: #065f46;
-    font-weight: 600;
-    background: rgba(16, 185, 129, 0.15);
-    border-bottom: 2.5px solid #10b981;
-    border-radius: 4px;
-    padding: 1px 4px;
+/* 3. Learned words (ĐÃ HỌC THUỘC): FONT THƯỜNG - Không tô nền highlight */
+.story-word.learned-word,
+.story-word.target-word.learned-word,
+.story-word.known-word.learned-word {
+    color: inherit;
+    font-weight: 400 !important;
+    background: transparent !important;
+    border-bottom: 1.5px dotted rgba(156, 163, 175, 0.45) !important;
+    border-radius: 2px;
+    padding: 0 1px !important;
 }
 
-.story-word.learned-word:hover {
-    background: #10b981;
-    color: white;
-    border-bottom-color: #059669;
+.story-word.learned-word:hover,
+.story-word.target-word.learned-word:hover,
+.story-word.known-word.learned-word:hover {
+    background: rgba(16, 185, 129, 0.14) !important;
+    color: #059669 !important;
+    border-bottom: 1.5px solid #10b981 !important;
 }
 
-/* 4. NEW WORD: Outside existing library! Highlighted in warm amber/rose */
+/* 4. NEW WORD: Outside existing library! Highlighted in warm amber */
 .story-word.new-word {
     color: #b45309;
-    font-weight: 600;
-    background: rgba(245, 158, 11, 0.13);
-    border-bottom: 2px dashed #f59e0b;
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.18);
+    border-bottom: 2.5px dashed #f59e0b;
     border-radius: 4px;
     padding: 1px 4px;
     padding-right: 9px;
@@ -1942,12 +1950,15 @@ body {
     background: #8b5cf6;
 }
 
+.legend-dot.unlearned,
 .legend-dot.known-unlearned {
     background: #6366f1;
 }
 
+.legend-dot.learned,
 .legend-dot.known-learned {
-    background: #10b981;
+    background: #e2e8f0;
+    border: 1.5px solid #94a3b8;
 }
 
 .legend-dot.new {

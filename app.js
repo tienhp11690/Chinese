@@ -2353,22 +2353,23 @@ function renderInteractiveSentence(sentence, targetWordsSet = new Set(), isQuiz 
         let classType = '';
         let titleHint = '';
 
-        if (targetWordsSet.has(w)) {
-            classType = 'target-word';
-            titleHint = `🎯 Từ mục tiêu ôn tập: ${escapeHtml(w)}`;
-        } else if (vocabMap.has(w)) {
-            const vWord = vocabMap.get(w);
+        const vWord = vocabMap.get(w);
+        const isTarget = targetWordsSet.has(w);
+
+        if (vWord) {
             if (vWord.learned) {
-                classType = 'known-word learned-word';
-                titleHint = `✅ Có trong danh sách (Đã thuộc): ${escapeHtml(w)} (${vWord.pinyin || ''}) - ${escapeHtml(vWord.vietnamese || vWord.meaning || '')}`;
+                // ĐÃ HỌC THUỘC -> FONT THƯỜNG (không tô màu highlight)
+                classType = isTarget ? 'target-word learned-word' : 'learned-word';
+                titleHint = `✅ Đã thuộc (Font thường): ${escapeHtml(w)} (${vWord.pinyin || ''}) - ${escapeHtml(vWord.vietnamese || vWord.meaning || '')}`;
             } else {
-                classType = 'known-word unlearned-word';
-                titleHint = `📚 Có trong danh sách (Chưa thuộc): ${escapeHtml(w)} (${vWord.pinyin || ''}) - ${escapeHtml(vWord.vietnamese || vWord.meaning || '')}`;
+                // CHƯA THUỘC -> HIGHLIGHT NỔI BẬT
+                classType = isTarget ? 'target-word unlearned-word' : 'known-word unlearned-word';
+                titleHint = `📚 Chưa thuộc (Highlight): ${escapeHtml(w)} (${vWord.pinyin || ''}) - ${escapeHtml(vWord.vietnamese || vWord.meaning || '')} (Chạm để tra nghĩa & nhớ)`;
             }
         } else {
-            // NEW WORD OUTSIDE VOCAB!
-            classType = 'new-word';
-            titleHint = `✨ Từ mới ngoài danh sách: ${escapeHtml(w)} (chạm để tra nghĩa & lưu)`;
+            // TỪ MỚI NGOÀI DANH SÁCH -> HIGHLIGHT CAM
+            classType = isTarget ? 'target-word unlearned-word' : 'new-word';
+            titleHint = `✨ Từ mới (Highlight): ${escapeHtml(w)} (Chạm để tra nghĩa & đánh dấu đã nhớ)`;
         }
 
         return `<span class="story-word ${classType}" onclick="showWordDetail('${escapeQuotes(w)}')" title="${titleHint}">${escapeHtml(w)}</span>`;
@@ -4196,14 +4197,9 @@ window.renderCurrentStory = function () {
             <!-- Legend Bar -->
             <div class="story-legend-bar">
                 <span style="font-weight:700; color:var(--g8); margin-right:4px">💡 Chú thích:</span>
-                <span class="legend-item"><span class="legend-dot target"></span> Từ mục tiêu ôn tập</span>
-                <span class="legend-item"><span class="legend-dot known-unlearned"></span> Trong list (chưa thuộc)</span>
-                <span class="legend-item"><span class="legend-dot known-learned"></span> Trong list (đã thuộc)</span>
-                <span class="legend-item"><span class="legend-dot new"></span> Từ mới ngoài list (chạm để xem &amp; lưu)</span>
-            </div>
-                <span class="legend-item"><span class="legend-dot known-unlearned"></span> Trong list (chưa thuộc)</span>
-                <span class="legend-item"><span class="legend-dot known-learned"></span> Trong list (đã thuộc)</span>
-                <span class="legend-item"><span class="legend-dot new"></span> Từ mới ngoài list (chạm để xem &amp; lưu)</span>
+                <span class="legend-item"><span class="legend-dot known-unlearned"></span> Chưa thuộc (Highlight tím/xanh)</span>
+                <span class="legend-item"><span class="legend-dot new"></span> Từ mới ngoài kho (Highlight cam)</span>
+                <span class="legend-item"><span class="legend-dot known-learned"></span> Đã thuộc (Font thường)</span>
             </div>
 
             <!-- Content -->
@@ -5420,15 +5416,15 @@ window.showWordDetail = function (chinese) {
         // --- CASE A: WORD ALREADY IN VOCABULARY ---
         if (badgeEl) {
             if (inVocab.learned) {
-                badgeEl.textContent = '✅ Đã thuộc trong Thư viện';
+                badgeEl.textContent = '✅ Đã thuộc trong Thư viện (Font thường)';
                 badgeEl.style.background = '#dcfce7';
                 badgeEl.style.color = '#15803d';
                 badgeEl.style.border = '1px solid #86efac';
             } else {
-                badgeEl.textContent = '📚 Đã có trong Thư viện';
-                badgeEl.style.background = '#e0f2fe';
-                badgeEl.style.color = '#0369a1';
-                badgeEl.style.border = '1px solid #7dd3fc';
+                badgeEl.textContent = '📚 Đã có trong Thư viện (Chưa thuộc - Highlight)';
+                badgeEl.style.background = '#fee2e2';
+                badgeEl.style.color = '#b91c1c';
+                badgeEl.style.border = '1px solid #fca5a5';
             }
         }
 
@@ -5451,11 +5447,19 @@ window.showWordDetail = function (chinese) {
         if (speakBtn) speakBtn.onclick = () => speak(chinese);
         if (strokeBtn) strokeBtn.onclick = () => { closeWordDetailModal(); showStrokeOrder(chinese); };
         if (learnBtn) {
-            learnBtn.innerHTML = inVocab.learned ? '✅ Đã thuộc' : '⭕ Đánh dấu đã thuộc';
+            if (inVocab.learned) {
+                learnBtn.innerHTML = '✅ Đã thuộc (Bấm để chuyển thành chưa thuộc)';
+                learnBtn.style.background = '#10b981';
+                learnBtn.style.color = '#fff';
+            } else {
+                learnBtn.innerHTML = '⭕ Đánh dấu đã nhớ (Chuyển sang font thường)';
+                learnBtn.style.background = '#6366f1';
+                learnBtn.style.color = '#fff';
+            }
             learnBtn.onclick = () => {
                 inVocab.learned = !inVocab.learned;
                 save();
-                status(`${inVocab.learned ? '✅ Đã thuộc' : '⭕ Chưa học'}: ${chinese}`, 'success');
+                status(`${inVocab.learned ? '✅ Đã đánh dấu nhớ' : '⭕ Đã chuyển sang chưa thuộc'}: ${chinese}`, 'success');
                 showWordDetail(chinese);
                 if (document.getElementById('stories')?.classList.contains('active')) {
                     renderStoriesTab();
@@ -5464,12 +5468,18 @@ window.showWordDetail = function (chinese) {
                 if (document.getElementById('library')?.classList.contains('active')) {
                     renderLibrary();
                 }
+                if (document.getElementById('sentences')?.classList.contains('active')) {
+                    renderSentences();
+                }
+                if (document.getElementById('hsk-hub')?.classList.contains('active') && currentHskMaterial) {
+                    renderHskMaterialDetail(currentHskMaterial.id);
+                }
             };
         }
     } else {
         // --- CASE B: NEW WORD OUTSIDE VOCABULARY ---
         if (badgeEl) {
-            badgeEl.textContent = '✨ Từ mới ngoài Thư viện';
+            badgeEl.textContent = '✨ Từ mới ngoài Thư viện (Highlight cam)';
             badgeEl.style.background = '#fef3c7';
             badgeEl.style.color = '#b45309';
             badgeEl.style.border = '1px solid #fcd34d';
@@ -5512,15 +5522,29 @@ window.showWordDetail = function (chinese) {
     modal.classList.add('show');
 };
 
-window.addCurrentModalWordToLibrary = function () {
+window.addCurrentModalWordToLibrary = function (isLearned = false) {
     if (!currentWordDetail || !currentWordDetail.chinese) return;
 
     const chinese = currentWordDetail.chinese;
 
     // Check if already in library
-    if (vocab.some(w => w.chinese === chinese)) {
-        status(`ℹ️ Từ "${chinese}" đã có trong thư viện từ vựng!`, 'warning');
+    const existing = vocab.find(w => w.chinese === chinese);
+    if (existing) {
+        existing.learned = isLearned;
+        save();
+        status(`${isLearned ? '✅ Đã thuộc' : '📚 Chưa thuộc'}: "${chinese}"!`, 'success');
         showWordDetail(chinese);
+        renderLibrary();
+        if (document.getElementById('stories')?.classList.contains('active')) {
+            renderStoriesTab();
+            renderCurrentStory();
+        }
+        if (document.getElementById('sentences')?.classList.contains('active')) {
+            renderSentences();
+        }
+        if (document.getElementById('hsk-hub')?.classList.contains('active') && currentHskMaterial) {
+            renderHskMaterialDetail(currentHskMaterial.id);
+        }
         return;
     }
 
@@ -5539,7 +5563,7 @@ window.addCurrentModalWordToLibrary = function () {
         pinyin: pinyin,
         topic: selectedTopic,
         difficulty: 'Easy',
-        learned: false,
+        learned: isLearned,
         nextReview: Date.now(),
         reviewCount: 0
     };
@@ -5561,8 +5585,11 @@ window.addCurrentModalWordToLibrary = function () {
     if (document.getElementById('sentences')?.classList.contains('active')) {
         renderSentences();
     }
+    if (document.getElementById('hsk-hub')?.classList.contains('active') && currentHskMaterial) {
+        renderHskMaterialDetail(currentHskMaterial.id);
+    }
 
-    status(`🎉 Đã thêm từ "${chinese}" (${pinyin}: ${finalMeaning}) vào thư viện!`, 'success');
+    status(isLearned ? `✅ Đã lưu và đánh dấu đã nhớ (font thường): "${chinese}"!` : `📥 Đã thêm "${chinese}" vào thư viện!`, 'success');
 
     // Instantly refresh modal to show updated status ("Đã có trong Thư viện")
     showWordDetail(chinese);
@@ -6646,7 +6673,7 @@ function renderHskStudio(material) {
             <div class="hsk-sentence-item" id="hsk-line-${idx}">
                 <div class="hsk-sentence-index">${num}</div>
                 <div class="hsk-sentence-content">
-                    <div class="hsk-sentence-zh">${speakerTag}${line.chinese}</div>
+                    <div class="hsk-sentence-zh">${speakerTag}${renderInteractiveSentence(line.chinese)}</div>
                     ${line.pinyin ? `<div class="hsk-sentence-pinyin">${line.pinyin}</div>` : ''}
                     ${line.vietnamese ? `<div class="hsk-sentence-vi">${line.vietnamese}</div>` : ''}
                 </div>
