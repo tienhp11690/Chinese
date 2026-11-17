@@ -1623,9 +1623,11 @@ async function requestGeminiContent(apiKey, bodyObj, timeoutMs = 16000) {
     // 3. gemini-3.8-flash: latest generation
     // 4. gemini-flash-latest: dynamic pointer to latest flash
     const modelsToTry = [
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
         'gemini-3.5-flash',
         'gemini-3-flash-preview',
-        'gemini-3.8-flash',
         'gemini-flash-latest'
     ];
     let lastError = null;
@@ -7568,6 +7570,672 @@ window.deleteHskCustomMaterial = function (id) {
     status('🗑️ Đã xóa bài học!', 'success');
 };
 
+// ==================== SCREEN CHAT SCROLL COLLECTOR & TRAVEL VOCAB STUDIO ====================
+
+let scannerStream = null;
+let scannerCaptureInterval = null;
+let scannerCapturedFrames = [];
+let scannerClipboardActive = false;
+let scannerClipboardItems = [];
+let scannerClipboardInterval = null;
+let scannerAnalyzedResult = null;
+
+window.openChatScannerModal = function () {
+    const modal = document.getElementById('chat-scanner-modal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+};
+
+window.closeChatScannerModal = function () {
+    stopScreenChatRecording();
+    stopClipboardListener();
+    const modal = document.getElementById('chat-scanner-modal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+};
+
+window.switchScannerMode = function (mode) {
+    document.querySelectorAll('.hsk-m-tab[id^="tab-scan-"]').forEach(t => t.classList.remove('active'));
+    const pScreen = document.getElementById('panel-scan-screen');
+    const pClip = document.getElementById('panel-scan-clip');
+    const pPaste = document.getElementById('panel-scan-paste');
+    const pBook = document.getElementById('panel-scan-bookmark');
+
+    if (pScreen) pScreen.style.display = 'none';
+    if (pClip) pClip.style.display = 'none';
+    if (pPaste) pPaste.style.display = 'none';
+    if (pBook) pBook.style.display = 'none';
+
+    const tab = document.getElementById(`tab-scan-${mode}`);
+    const panel = document.getElementById(`panel-scan-${mode}`);
+    if (tab) tab.classList.add('active');
+    if (panel) panel.style.display = 'block';
+};
+
+window.startScreenChatRecording = async function () {
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+            status('⚠️ Trình duyệt của bạn không hỗ trợ chia sẻ màn hình trực tiếp. Vui lòng dùng chế độ Clipboard hoặc Dán văn bản!', 'error');
+            return;
+        }
+
+        scannerStream = await navigator.mediaDevices.getDisplayMedia({
+            video: {
+                displaySurface: 'window',
+                cursor: 'always'
+            },
+            audio: false
+        });
+
+        scannerCapturedFrames = [];
+        updateCapturedFramesUI();
+
+        const video = document.createElement('video');
+        video.srcObject = scannerStream;
+        video.muted = true;
+        await video.play();
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const btnStart = document.getElementById('btn-start-screen-record');
+        const btnStop = document.getElementById('btn-stop-screen-record');
+        const btnSnap = document.getElementById('btn-snap-frame');
+        const statsEl = document.getElementById('screen-record-stats');
+
+        if (btnStart) btnStart.style.display = 'none';
+        if (btnStop) btnStop.style.display = 'inline-flex';
+        if (btnSnap) btnSnap.style.display = 'inline-flex';
+        if (statsEl) statsEl.style.display = 'block';
+
+        const takeSnapshot = () => {
+            if (!scannerStream || !scannerStream.active) return;
+            canvas.width = video.videoWidth || 1280;
+            canvas.height = video.videoHeight || 720;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+            if (scannerCapturedFrames.length < 15) {
+                scannerCapturedFrames.push(dataUrl);
+                updateCapturedFramesUI();
+            }
+        };
+
+        // Snapshot đầu tiên
+        setTimeout(takeSnapshot, 600);
+
+        // Chụp định kỳ mỗi 2 giây khi người dùng cuộn
+        scannerCaptureInterval = setInterval(takeSnapshot, 2000);
+
+        scannerStream.getVideoTracks()[0].onended = () => {
+            stopScreenChatRecording();
+        };
+
+        status('🟢 Đang quay màn hình! Hãy chuyển sang app chat (WeChat, Zalo...) và cuộn qua các đoạn hội thoại.', 'info');
+    } catch (err) {
+        console.error('startScreenChatRecording error:', err);
+        status(`⚠️ Lỗi chia sẻ màn hình: ${err.message}`, 'error');
+        stopScreenChatRecording();
+    }
+};
+
+window.captureManualFrame = function () {
+    if (!scannerStream || !scannerStream.active) {
+        status('⚠️ Chưa bật chia sẻ màn hình!', 'warning');
+        return;
+    }
+    const v = document.createElement('video');
+    v.srcObject = scannerStream;
+    v.muted = true;
+    v.play().then(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = v.videoWidth || 1280;
+        canvas.height = v.videoHeight || 720;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        scannerCapturedFrames.push(dataUrl);
+        updateCapturedFramesUI();
+        status(`📸 Đã chụp thêm 1 khung hình (Tổng: ${scannerCapturedFrames.length} ảnh)`, 'success');
+    });
+};
+
+window.stopScreenChatRecording = function () {
+    if (scannerCaptureInterval) {
+        clearInterval(scannerCaptureInterval);
+        scannerCaptureInterval = null;
+    }
+    if (scannerStream) {
+        scannerStream.getTracks().forEach(t => t.stop());
+        scannerStream = null;
+    }
+    const btnStart = document.getElementById('btn-start-screen-record');
+    const btnStop = document.getElementById('btn-stop-screen-record');
+    const btnSnap = document.getElementById('btn-snap-frame');
+    if (btnStart) btnStart.style.display = 'inline-flex';
+    if (btnStop) btnStop.style.display = 'none';
+    if (btnSnap) btnSnap.style.display = 'none';
+
+    if (scannerCapturedFrames.length > 0) {
+        status(`⏹️ Đã hoàn tất! Đã thu thập ${scannerCapturedFrames.length} ảnh cuộn. Sẵn sàng bóc tách!`, 'success');
+    }
+};
+
+function updateCapturedFramesUI() {
+    const badge = document.getElementById('frames-count-badge');
+    if (badge) badge.textContent = scannerCapturedFrames.length;
+
+    const preview = document.getElementById('screen-frames-preview');
+    if (preview) {
+        preview.innerHTML = scannerCapturedFrames.map((frame, idx) => `
+            <div style="position:relative; flex-shrink:0; width:110px; height:70px; border-radius:8px; overflow:hidden; border:2px solid #cbd5e1; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                <img src="${frame}" style="width:100%; height:100%; object-fit:cover;">
+                <span style="position:absolute; bottom:2px; right:4px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:1px 4px; border-radius:4px;">#${idx + 1}</span>
+            </div>
+        `).join('');
+    }
+}
+
+window.toggleClipboardListener = async function () {
+    scannerClipboardActive = !scannerClipboardActive;
+    const btn = document.getElementById('btn-toggle-clip-listener');
+    if (scannerClipboardActive) {
+        if (btn) {
+            btn.innerHTML = '⏹️ Đang lắng nghe... (Bấm để dừng)';
+            btn.style.background = '#ef4444';
+        }
+        status('🟢 Đang lắng nghe Clipboard! Hãy cuộn app chat và nhấn Ctrl+C các đoạn thoại.', 'info');
+
+        scannerClipboardInterval = setInterval(async () => {
+            if (!scannerClipboardActive) return;
+            try {
+                if (document.hasFocus && document.hasFocus()) {
+                    const text = await navigator.clipboard.readText();
+                    if (text && text.trim() && /[\u4e00-\u9fa5]/.test(text)) {
+                        const trimmed = text.trim();
+                        if (!scannerClipboardItems.includes(trimmed)) {
+                            scannerClipboardItems.push(trimmed);
+                            updateClipboardUI();
+                        }
+                    }
+                }
+            } catch (e) { }
+        }, 1200);
+    } else {
+        stopClipboardListener();
+    }
+};
+
+function stopClipboardListener() {
+    scannerClipboardActive = false;
+    if (scannerClipboardInterval) {
+        clearInterval(scannerClipboardInterval);
+        scannerClipboardInterval = null;
+    }
+    const btn = document.getElementById('btn-toggle-clip-listener');
+    if (btn) {
+        btn.innerHTML = '🟢 Bắt đầu lắng nghe Clipboard';
+        btn.style.background = '#6366f1';
+    }
+}
+
+function updateClipboardUI() {
+    const list = document.getElementById('clip-stream-list');
+    if (list) {
+        if (scannerClipboardItems.length === 0) {
+            list.innerHTML = '<span style="color:#94a3b8; font-style:italic;">Chưa có đoạn chat nào được copy. Hãy bôi đen và nhấn Ctrl+C trong app chat...</span>';
+        } else {
+            list.innerHTML = scannerClipboardItems.map((item, idx) => `
+                <div style="padding:4px 8px; border-bottom:1px solid #f1f5f9; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center;">
+                    <span><b>[${idx + 1}]</b> ${escapeHtml(item.substring(0, 70))}${item.length > 70 ? '...' : ''}</span>
+                    <button class="btn btn-sm" onclick="scannerClipboardItems.splice(${idx}, 1); updateClipboardUI();" style="padding:1px 6px; font-size:10px; background:#ef4444;">✕</button>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+window.handleScannerImageUpload = function (event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            scannerCapturedFrames.push(e.target.result);
+            updateCapturedFramesUI();
+        };
+        reader.readAsDataURL(file);
+    });
+    status(`🖼️ Đã nạp ${files.length} ảnh chụp màn hình cuộn!`, 'success');
+};
+
+window.copyBookmarkletCode = function () {
+    const code = `javascript:(function(){const s=document.createElement('script');s.src='https://tienhp11690.github.io/Chinese/tools/chat_scroll_collector.js?t='+Date.now();document.body.appendChild(s);})();`;
+    navigator.clipboard.writeText(code).then(() => {
+        status('📋 Đã copy mã Bookmarklet! Bạn có thể dán vào DevTools Console hoặc tạo Bookmark trên trình duyệt.', 'success');
+    });
+};
+
+window.processChatExtractionAndAnalysis = async function () {
+    const travelTopic = document.getElementById('scanner-travel-topic')?.value || 'Du lịch Trung Quốc';
+    const targetLevel = document.getElementById('scanner-target-level')?.value || 'HSK 3';
+    const pasteText = document.getElementById('scanner-paste-textarea')?.value?.trim() || '';
+
+    // Check data source
+    const hasFrames = scannerCapturedFrames.length > 0;
+    const hasClips = scannerClipboardItems.length > 0;
+    const hasPaste = pasteText.length > 0;
+
+    if (!hasFrames && !hasClips && !hasPaste) {
+        status('⚠️ Chưa có dữ liệu chat nào! Vui lòng quay màn hình cuộn, gom clipboard, hoặc dán đoạn chat.', 'warning');
+        return;
+    }
+
+    const loadingEl = document.getElementById('scanner-loading');
+    const resultsEl = document.getElementById('scanner-results-section');
+    const loadingText = document.getElementById('scanner-loading-text');
+    const loadingSubtext = document.getElementById('scanner-loading-subtext');
+
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (resultsEl) resultsEl.style.display = 'none';
+
+    try {
+        const apiKey = localStorage.getItem('gemini-api-key');
+        let parsedDialogues = [];
+        let extractedTitle = `Hội Thoại Du Lịch: ${travelTopic}`;
+        let extractedTitleViet = `Hội thoại tình huống: ${travelTopic}`;
+
+        if (apiKey) {
+            if (hasFrames) {
+                if (loadingText) loadingText.textContent = '🤖 Gemini Vision đang bóc tách nội dung từ các ảnh cuộn màn hình...';
+                if (loadingSubtext) loadingSubtext.textContent = `Đang xử lý ${scannerCapturedFrames.length} ảnh chụp, khử trùng lặp và gắn Pinyin + tiếng Việt...`;
+
+                // Select at most 8 representative frames
+                const framesToSend = scannerCapturedFrames.slice(-8);
+
+                const prompt = `Dưới đây là các ảnh chụp liên tiếp của màn hình chat tiếng Trung khi người dùng cuộn (scroll) qua một cuộc trò chuyện.
+Chủ đề trọng tâm: Du lịch Trung Quốc (${travelTopic}), trình độ khoảng ${targetLevel}.
+Yêu cầu của bạn:
+1. Đọc và bóc tách TOÀN BỘ các câu thoại trong cuộc trò chuyện theo đúng thứ tự thời gian.
+2. Khử trùng lặp (deduplicate) các câu hoặc đoạn văn bản bị lặp lại giữa các ảnh chụp do quá trình cuộn màn hình.
+3. Nhận diện các lượt thoại giữa các nhân vật (Người nói A, Người nói B, hoặc tên/vai trò cụ thể như 'Khách du lịch', 'Nhân viên khách sạn', 'Tài xế taxi', 'Phục vụ bàn', 'Người bản xứ').
+4. Mỗi câu thoại gắn kèm: speaker (tên nhân vật), chinese (chữ Hán), pinyin (phiên âm chuẩn có dấu thanh), vietnamese (dịch nghĩa tiếng Việt tự nhiên).
+5. Trả về DUY NHẤT một JSON hợp lệ có định dạng:
+{
+  "title": "Tiêu đề tiếng Trung ngắn gọn (ví dụ: 在酒店办理入住)",
+  "titleViet": "Tiêu đề tiếng Việt tương ứng (ví dụ: Nhận phòng tại khách sạn)",
+  "dialogues": [
+    { "speaker": "A", "chinese": "您好，我有预订。", "pinyin": "Nín hǎo, wǒ yǒu yùdìng.", "vietnamese": "Xin chào, tôi có đặt phòng trước." }
+  ]
+}`;
+
+                const parts = [{ text: prompt }];
+                framesToSend.forEach(f => {
+                    parts.push({
+                        inlineData: {
+                            mimeType: 'image/jpeg',
+                            data: f.replace(/^data:image\/\w+;base64,/, '')
+                        }
+                    });
+                });
+
+                const res = await requestGeminiContent(apiKey, { contents: [{ parts }] }, 25000);
+                const jsonMatch = res.text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const data = JSON.parse(jsonMatch[0]);
+                    if (data.title) extractedTitle = data.title;
+                    if (data.titleViet) extractedTitleViet = data.titleViet;
+                    if (Array.isArray(data.dialogues)) parsedDialogues = data.dialogues;
+                }
+            } else {
+                // Text mode (Clipboard or Pasted)
+                const combinedRawText = [
+                    ...scannerClipboardItems,
+                    pasteText
+                ].filter(Boolean).join('\n---\n');
+
+                if (loadingText) loadingText.textContent = '🤖 Gemini đang phân tích và chuẩn hóa hội thoại du lịch...';
+                if (loadingSubtext) loadingSubtext.textContent = 'Đang phân vai nhân vật, gắn Pinyin và dịch nghĩa tiếng Việt...';
+
+                const prompt = `Dưới đây là nội dung chat/hội thoại tiếng Trung thô được gom lại:
+"""
+${combinedRawText}
+"""
+Chủ đề: Du lịch Trung Quốc (${travelTopic}), trình độ ${targetLevel}.
+Yêu cầu:
+1. Sắp xếp lại thành một chuỗi hội thoại hoàn chỉnh, tự nhiên, liền mạch giữa 2 nhân vật (A và B hoặc vai trò cụ thể như Khách du lịch, Nhân viên, v.v.).
+2. Khử các đoạn trùng lặp, tin nhắn rác hoặc icon không cần thiết.
+3. Gắn kèm Pinyin chuẩn có dấu thanh và dịch nghĩa tiếng Việt tự nhiên cho từng câu.
+4. Trả về DUY NHẤT định dạng JSON:
+{
+  "title": "Tiêu đề tiếng Trung ngắn",
+  "titleViet": "Tiêu đề tiếng Việt",
+  "dialogues": [
+    { "speaker": "Khách du lịch", "chinese": "...", "pinyin": "...", "vietnamese": "..." }
+  ]
+}`;
+
+                const res = await requestGeminiContent(apiKey, {
+                    contents: [{ parts: [{ text: prompt }] }]
+                }, 20000);
+
+                const jsonMatch = res.text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const data = JSON.parse(jsonMatch[0]);
+                    if (data.title) extractedTitle = data.title;
+                    if (data.titleViet) extractedTitleViet = data.titleViet;
+                    if (Array.isArray(data.dialogues)) parsedDialogues = data.dialogues;
+                }
+            }
+        } else {
+            // Offline fallback parser
+            const allRaw = [...scannerClipboardItems, pasteText].join('\n');
+            const lines = allRaw.split('\n').map(l => l.trim()).filter(l => /[\u4e00-\u9fa5]/.test(l));
+
+            parsedDialogues = lines.map((l, idx) => {
+                let speaker = (idx % 2 === 0) ? 'Khách du lịch (A)' : 'Người bản xứ (B)';
+                let zh = l;
+                if (l.includes('：') || l.includes(':')) {
+                    const parts = l.split(/[:：]/);
+                    speaker = parts[0].trim();
+                    zh = parts.slice(1).join(':').trim();
+                }
+                return {
+                    speaker: speaker,
+                    chinese: zh,
+                    pinyin: generatePinyin(zh),
+                    vietnamese: 'Đang dịch nghĩa...'
+                };
+            });
+        }
+
+        if (parsedDialogues.length === 0) {
+            throw new Error('Không bóc tách được câu thoại tiếng Trung nào từ dữ liệu cung cấp!');
+        }
+
+        // ==================== VOCABULARY ANALYSIS ====================
+        const vocabMap = new Map();
+        vocab.forEach(v => { if (v && v.chinese) vocabMap.set(v.chinese, v); });
+
+        const newWordsMap = new Map();
+        let totalWordsTokenized = 0;
+        let learnedCount = 0;
+        let unlearnedCount = 0;
+
+        parsedDialogues.forEach(d => {
+            const tokens = segmentChineseSentence(d.chinese);
+            tokens.forEach(tok => {
+                const w = tok.text;
+                if (!w || !/[\u4e00-\u9fa5]/.test(w) || w.length < 1) return;
+                totalWordsTokenized++;
+
+                if (vocabMap.has(w)) {
+                    const v = vocabMap.get(w);
+                    if (v.learned) learnedCount++;
+                    else unlearnedCount++;
+                } else {
+                    if (!newWordsMap.has(w)) {
+                        newWordsMap.set(w, {
+                            chinese: w,
+                            pinyin: generatePinyin(w),
+                            meaning: BUILTIN_CHINESE_DICT[w] || '',
+                            count: 1
+                        });
+                    } else {
+                        newWordsMap.get(w).count++;
+                    }
+                }
+            });
+        });
+
+        // Translate new words without meaning
+        const newWordsList = Array.from(newWordsMap.values());
+        for (const nw of newWordsList) {
+            if (!nw.meaning) {
+                nw.meaning = BUILTIN_CHINESE_DICT[nw.chinese] || 'Từ mới trong bài';
+            }
+        }
+
+        scannerAnalyzedResult = {
+            title: extractedTitle,
+            titleViet: extractedTitleViet,
+            category: 'Du lịch Trung Quốc',
+            situation: travelTopic,
+            level: targetLevel,
+            dialogues: parsedDialogues,
+            newWords: newWordsList,
+            totalSentences: parsedDialogues.length
+        };
+
+        // Render Results UI
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (resultsEl) resultsEl.style.display = 'block';
+
+        const elTotalS = document.getElementById('res-total-sentences');
+        const elNewW = document.getElementById('res-new-words');
+        const elUnlearned = document.getElementById('res-unlearned-words');
+        const elLearned = document.getElementById('res-learned-words');
+        const elTitle = document.getElementById('res-dialogue-title');
+
+        if (elTotalS) elTotalS.textContent = parsedDialogues.length;
+        if (elNewW) elNewW.textContent = newWordsList.length;
+        if (elUnlearned) elUnlearned.textContent = unlearnedCount;
+        if (elLearned) elLearned.textContent = learnedCount;
+        if (elTitle) elTitle.textContent = `💬 ${extractedTitle} (${extractedTitleViet})`;
+
+        // Render New Words Chips
+        const newVocabCountEl = document.getElementById('res-new-vocab-count');
+        if (newVocabCountEl) newVocabCountEl.textContent = newWordsList.length;
+
+        const chipsContainer = document.getElementById('res-new-vocab-chips');
+        if (chipsContainer) {
+            if (newWordsList.length === 0) {
+                chipsContainer.innerHTML = '<span style="color:#059669; font-weight:600;">🎉 Tuyệt vời! Toàn bộ từ vựng trong bài đều đã có trong Thư viện của bạn!</span>';
+            } else {
+                chipsContainer.innerHTML = newWordsList.map(nw => `
+                    <div style="background:#fff; border:1px solid #fcd34d; padding:6px 10px; border-radius:8px; display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <strong style="color:#b45309; font-size:1rem; cursor:pointer;" onclick="showWordDetail('${escapeQuotes(nw.chinese)}')">${escapeHtml(nw.chinese)}</strong>
+                        <span style="color:#64748b; font-size:0.8rem;">(${escapeHtml(nw.pinyin)})</span>
+                        <span style="color:#334155; font-size:0.8rem;">: ${escapeHtml(nw.meaning)}</span>
+                        <button class="btn btn-sm" onclick="showWordDetail('${escapeQuotes(nw.chinese)}')" style="padding:2px 6px; font-size:10px; background:#6366f1;">Tra</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Render Interactive Dialogue Flow
+        const flowContainer = document.getElementById('res-dialogue-flow');
+        if (flowContainer) {
+            flowContainer.innerHTML = parsedDialogues.map((d, idx) => {
+                const speakerBadge = d.speaker ? `<span style="display:inline-block; background:rgba(99,102,241,0.12); color:#4338ca; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:6px; margin-bottom:4px;">${escapeHtml(d.speaker)}</span>` : '';
+                const interactiveZh = renderInteractiveSentence(d.chinese);
+
+                return `
+                    <div style="background:#f8fafc; border-left:3.5px solid #6366f1; padding:10px 14px; border-radius:0 10px 10px 0; margin-bottom:4px;">
+                        ${speakerBadge}
+                        <div style="font-size:1.15rem; font-family:'Noto Sans SC', sans-serif; line-height:1.6; margin-bottom:4px;">
+                            ${interactiveZh}
+                        </div>
+                        ${d.pinyin ? `<div style="color:var(--g6); font-size:0.85rem; font-style:italic; margin-bottom:2px;">${escapeHtml(d.pinyin)}</div>` : ''}
+                        ${d.vietnamese ? `<div style="color:var(--g8); font-size:0.9rem;">${escapeHtml(d.vietnamese)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        status(`🎉 Đã bóc tách thành công ${parsedDialogues.length} câu thoại du lịch & phát hiện ${newWordsList.length} từ mới!`, 'success');
+    } catch (err) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        console.error('processChatExtractionAndAnalysis error:', err);
+        status(`❌ Lỗi bóc tách hội thoại: ${err.message}`, 'error');
+    }
+};
+
+window.addAllScannerNewWordsToVocab = function (isLearned) {
+    if (!scannerAnalyzedResult || !scannerAnalyzedResult.newWords) return;
+
+    const newWords = scannerAnalyzedResult.newWords;
+    if (newWords.length === 0) {
+        status('ℹ️ Không có từ mới nào để thêm!', 'info');
+        return;
+    }
+
+    const existingSet = new Set(vocab.map(v => v.chinese));
+    let addedCount = 0;
+
+    newWords.forEach(nw => {
+        if (!existingSet.has(nw.chinese)) {
+            existingSet.add(nw.chinese);
+            vocab.unshift({
+                id: Date.now() + Math.floor(Math.random() * 10000),
+                chinese: nw.chinese,
+                pinyin: nw.pinyin || generatePinyin(nw.chinese),
+                vietnamese: nw.meaning || 'Từ mới du lịch',
+                meaning: nw.meaning || 'Từ mới du lịch',
+                topic: 'Du lịch Trung Quốc',
+                difficulty: scannerAnalyzedResult.level || 'HSK 3',
+                learned: isLearned,
+                nextReview: Date.now(),
+                reviewCount: 0
+            });
+            addedCount++;
+        }
+    });
+
+    save();
+    buildCharMap();
+    renderLibrary();
+
+    // Re-render dialogue flow to immediately update highlight styles!
+    if (scannerAnalyzedResult && scannerAnalyzedResult.dialogues) {
+        const flowContainer = document.getElementById('res-dialogue-flow');
+        if (flowContainer) {
+            flowContainer.innerHTML = scannerAnalyzedResult.dialogues.map((d, idx) => {
+                const speakerBadge = d.speaker ? `<span style="display:inline-block; background:rgba(99,102,241,0.12); color:#4338ca; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:6px; margin-bottom:4px;">${escapeHtml(d.speaker)}</span>` : '';
+                const interactiveZh = renderInteractiveSentence(d.chinese);
+
+                return `
+                    <div style="background:#f8fafc; border-left:3.5px solid #6366f1; padding:10px 14px; border-radius:0 10px 10px 0; margin-bottom:4px;">
+                        ${speakerBadge}
+                        <div style="font-size:1.15rem; font-family:'Noto Sans SC', sans-serif; line-height:1.6; margin-bottom:4px;">
+                            ${interactiveZh}
+                        </div>
+                        ${d.pinyin ? `<div style="color:var(--g6); font-size:0.85rem; font-style:italic; margin-bottom:2px;">${escapeHtml(d.pinyin)}</div>` : ''}
+                        ${d.vietnamese ? `<div style="color:var(--g8); font-size:0.9rem;">${escapeHtml(d.vietnamese)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    status(isLearned
+        ? `✅ Đã thêm ${addedCount} từ mới vào Thư viện với trạng thái ĐÃ NHỚ (font thường)!`
+        : `📚 Đã thêm ${addedCount} từ mới vào Thư viện với trạng thái CHƯA THUỘC (highlight)!`, 'success');
+};
+
+window.saveScannerResultAsHskMaterial = function () {
+    if (!scannerAnalyzedResult || !scannerAnalyzedResult.dialogues) return;
+
+    const newMaterial = {
+        id: `travel-${Date.now()}`,
+        level: scannerAnalyzedResult.level || 'HSK 3',
+        type: 'conversation',
+        category: 'Du lịch Trung Quốc',
+        title: scannerAnalyzedResult.title || 'Du Lịch Trung Quốc',
+        titleViet: scannerAnalyzedResult.titleViet || 'Hội thoại du lịch Trung Quốc',
+        duration: `${Math.ceil(scannerAnalyzedResult.dialogues.length * 0.4)} phút`,
+        theme: scannerAnalyzedResult.situation || 'Du lịch Trung Quốc',
+        lines: scannerAnalyzedResult.dialogues.map((d, i) => ({
+            id: i + 1,
+            speaker: d.speaker ? d.speaker.substring(0, 4) : 'A',
+            speakerName: d.speaker || 'Nhân vật',
+            chinese: d.chinese,
+            pinyin: d.pinyin || generatePinyin(d.chinese),
+            vietnamese: d.vietnamese || ''
+        })),
+        isCustom: true
+    };
+
+    hskMaterials.unshift(newMaterial);
+    saveHskCustomMaterials();
+    closeChatScannerModal();
+
+    switchPage('hsk-hub');
+    openHskMaterial(newMaterial.id);
+    status(`🎉 Đã tạo thành công bài học HSK & Luyện nghe chạy bộ: "${newMaterial.title}"!`, 'success');
+};
+
+window.saveScannerResultAsStory = function () {
+    if (!scannerAnalyzedResult || !scannerAnalyzedResult.dialogues) return;
+
+    const newStory = {
+        id: Date.now(),
+        type: 'conversation',
+        title: scannerAnalyzedResult.title || 'Hội thoại du lịch Trung Quốc',
+        titleChinese: scannerAnalyzedResult.title || '中国旅游对话',
+        prompt: `Hội thoại chủ đề: ${scannerAnalyzedResult.situation || 'Du lịch Trung Quốc'}`,
+        timestamp: Date.now(),
+        syncedGithub: false,
+        lines: scannerAnalyzedResult.dialogues.map((d, i) => ({
+            id: i + 1,
+            speaker: d.speaker ? d.speaker.substring(0, 4) : 'A',
+            speakerName: d.speaker || 'Nhân vật',
+            chinese: d.chinese,
+            pinyin: d.pinyin || generatePinyin(d.chinese),
+            vietnamese: d.vietnamese || ''
+        })),
+        targetWords: (scannerAnalyzedResult.newWords || []).slice(0, 10).map(nw => ({
+            chinese: nw.chinese,
+            pinyin: nw.pinyin,
+            vietnamese: nw.meaning
+        }))
+    };
+
+    savedStories.unshift(newStory);
+    saveSavedStories();
+    renderSavedStoriesList();
+    closeChatScannerModal();
+
+    switchPage('stories');
+    viewSavedStory(newStory.id);
+    status(`🎉 Đã lưu bài hội thoại vào mục Truyện & Hội Thoại: "${newStory.title}"!`, 'success');
+};
+
+window.exportScannerResultToGitHub = async function () {
+    if (!scannerAnalyzedResult || !scannerAnalyzedResult.dialogues) return;
+
+    // Save as story first
+    const newStory = {
+        id: Date.now(),
+        type: 'conversation',
+        title: scannerAnalyzedResult.title || 'Hội thoại du lịch Trung Quốc',
+        titleChinese: scannerAnalyzedResult.title || '中国旅游对话',
+        prompt: `Du lịch Trung Quốc: ${scannerAnalyzedResult.situation || 'Hội thoại thực tế'}`,
+        timestamp: Date.now(),
+        syncedGithub: true,
+        lines: scannerAnalyzedResult.dialogues.map((d, i) => ({
+            id: i + 1,
+            speaker: d.speaker || 'A',
+            chinese: d.chinese,
+            pinyin: d.pinyin || generatePinyin(d.chinese),
+            vietnamese: d.vietnamese || ''
+        }))
+    };
+
+    savedStories.unshift(newStory);
+    saveSavedStories();
+    renderSavedStoriesList();
+
+    // Push story to GitHub DB
+    await pushStoryToGitHubDb(newStory, false);
+
+    // Also push vocab if user added new words
+    await syncToGitHub();
+};
+
 // ==================== INITIALIZATION (OPTIMIZED) ====================
 
 async function init() {
@@ -7647,6 +8315,20 @@ async function init() {
     }
 
     await Promise.allSettled(setupTasks);
+
+    // Kiểm tra nếu có đoạn chat vừa được import từ Bookmarklet
+    const importedChat = localStorage.getItem('chinese-app-imported-chat');
+    if (importedChat) {
+        localStorage.removeItem('chinese-app-imported-chat');
+        setTimeout(() => {
+            openChatScannerModal();
+            switchScannerMode('paste');
+            const textarea = document.getElementById('scanner-paste-textarea');
+            if (textarea) textarea.value = importedChat;
+            status('📥 Đã tự động nạp đoạn chat từ Bookmarklet! Bấm Bắt đầu bóc tách để phân tích.', 'success');
+        }, 500);
+    }
+
     console.log('✅ Initialization complete - DEBUG V2');
 }
 
