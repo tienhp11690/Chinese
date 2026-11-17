@@ -1828,14 +1828,22 @@ async function syncFromLocalVocabJson() { return window.syncVocabFromGitHub(true
 
 window.syncToGitHub = async function () {
     const token = localStorage.getItem('github-token');
-    const repo = localStorage.getItem('github-repo');
-    const file = localStorage.getItem('github-file');
+    const repo = localStorage.getItem('github-repo') || 'tienhp11690/Chinese';
+    const file = localStorage.getItem('github-file') || 'vocab.json';
 
-    if (!token || !repo || !file) { status('⚠️ Chưa cấu hình GitHub!', 'error'); return; }
-    showLoading('Đang đẩy lên GitHub...', 'Vui lòng chờ...');
+    if (!token) {
+        status('⚠️ Chưa cấu hình GitHub Token trong Cài đặt! Cần token có quyền "repo" để cập nhật file vocab.json.', 'error');
+        return;
+    }
+    showLoading('Đang đẩy vocab lên GitHub...', 'Vui lòng chờ...');
 
     try {
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(vocab, null, 2))));
+        const payload = {
+            version: "1.0",
+            updated: new Date().toISOString(),
+            vocab: vocab
+        };
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
         let sha = null;
         try {
             const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
@@ -1846,22 +1854,40 @@ window.syncToGitHub = async function () {
 
         const res = await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
             method: 'PUT',
-            headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: `Update vocab - ${new Date().toISOString()}`, content, ...(sha && { sha }) })
+            headers: {
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({ message: `Update vocab [skip ci] - ${new Date().toISOString()}`, content, ...(sha && { sha }) })
         });
 
-        if (res.ok) { hideLoading(); status('✅ Đã đẩy lên GitHub!', 'success'); }
-        else throw new Error((await res.json()).message || 'GitHub error');
-    } catch (e) { hideLoading(); status(`❌ Lỗi: ${e.message}`, 'error'); }
+        if (res.ok) {
+            hideLoading();
+            status(`✅ Đã lưu trạng thái ${vocab.length} từ vựng vào ${file} trên GitHub!`, 'success');
+        } else {
+            throw new Error((await res.json()).message || 'GitHub error');
+        }
+    } catch (e) {
+        hideLoading();
+        status(`❌ Lỗi: ${e.message}`, 'error');
+    }
 };
 
 window.exportData = function () {
-    const dataStr = JSON.stringify(vocab, null, 2);
+    const payload = {
+        version: "1.0",
+        updated: new Date().toISOString(),
+        vocab: vocab
+    };
+    const dataStr = JSON.stringify(payload, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `vocab-${Date.now()}.json`; a.click();
-    status('📥 Đã xuất dữ liệu!', 'success');
+    a.href = url;
+    a.download = 'vocab.json';
+    a.click();
+    status('📥 Đã tải file vocab.json về máy!', 'success');
 };
 
 window.importData = function (event) {
@@ -6299,6 +6325,52 @@ const HSK_DEFAULT_MATERIALS = [
             { id: 6, speaker: '', speakerName: '', chinese: '每天积累几个词汇，坚持听几段录音，你的进步就已经在不知不觉中发生。', pinyin: 'Měitiān jīlěi jǐ gè cíhuì, jiānchí tīng jǐ duàn lùyīn, nǐ de jìnbù jiù yǐjīng zài bùzhī-bùjué zhōng fāshēng.', vietnamese: 'Mỗi ngày tích lũy vài từ vựng, kiên trì nghe vài đoạn băng, sự tiến bộ của bạn đã đang diễn ra mà chính bạn không hề hay biết.' },
             { id: 7, speaker: '', speakerName: '', chinese: '不要轻视每一次微小的努力，因为它们正是通往成功的坚实台阶。', pinyin: 'Bú yào qīngshì měi yí cì wēixiǎo de nǔlì, yīnwèi tāmen zhèng shì tōngwǎng chénggōng de jiānshí táijiē.', vietnamese: 'Đừng bao giờ coi nhẹ mỗi nỗ lực nhỏ nhoi, bởi vì chúng chính là những bậc thang vững chắc dẫn lối đến thành công.' },
             { id: 8, speaker: '', speakerName: '', chinese: '坚定你的信念，勇敢向前迈进，终有一天你会感谢那个曾经不言放弃的自己。', pinyin: 'Jiāndìng nǐ de xìnniàn, yǒnggǎn xiàng qián màijìn, zhōng yǒu yì tiān nǐ huì gǎnxiè nà ge céngjīng bù yán fàngqì de zìjǐ.', vietnamese: 'Hãy kiên định niềm tin, dũng cảm tiến bước về phía trước, sẽ có một ngày bạn thầm cảm ơn chính mình vì đã không từng buông xuôi.' }
+        ]
+    },
+    // --- HSK 3: Bài đọc mẫu ---
+    {
+        id: 'hsk3-date',
+        level: 'HSK 3',
+        type: 'story',
+        category: 'Hẹn hò',
+        duration: '1.5 phút',
+        title: '第一次约会',
+        titlePinyin: 'Dì-yī cì yuēhuì',
+        titleViet: 'Buổi hẹn hò đầu tiên',
+        theme: 'Hẹn hò, gặp gỡ & tình cảm',
+        lines: [
+            { id: 1, speaker: '', speakerName: '', chinese: '他们以前只有在网上联系，聊聊天，没见过面。', pinyin: 'Tāmen yǐqián zhǐyǒu zài wǎngshàng liánxì, liáoliáo tiān, méi jiànguo miàn.', vietnamese: 'Trước đây họ chỉ liên lạc và trò chuyện trên mạng, chưa từng gặp mặt nhau.' },
+            { id: 2, speaker: '', speakerName: '', chinese: '今天是他们的第一次约会，正式见面所以他们都非常期待。', pinyin: 'Jīntiān shì tāmen de dì-yī cì yuēhuì, zhèngshì jiànmiàn suǒyǐ tāmen dōu fēicháng qīdài.', vietnamese: 'Hôm nay là buổi hẹn hò đầu tiên của họ, lần đầu gặp mặt chính thức nên cả hai đều rất mong chờ.' },
+            { id: 3, speaker: '', speakerName: '', chinese: '今天天气很好，在公园里有家很不错的咖啡厅，所以男的和女的约好在公园见面。', pinyin: 'Jīntiān tiānqì hěn hǎo, zài gōngyuán lǐ yǒu jiā hěn búcuò de kāfēitīng, suǒyǐ nán de hé nǚ de yuē hǎo zài gōngyuán jiànmiàn.', vietnamese: 'Hôm nay thời tiết rất đẹp, trong công viên có một quán cà phê khá ổn, vì thế bạn nam và bạn nữ đã hẹn gặp nhau ở công viên.' },
+            { id: 4, speaker: '', speakerName: '', chinese: '他们坐下来以后，男的从包里拿出来一个粉色的盒子送给她。', pinyin: 'Tāmen zuò xiàlái yǐhòu, nán de cóng bāo lǐ ná chūlái yí gè fěnsè de hézi sòng gěi tā.', vietnamese: 'Sau khi ngồi xuống, bạn nam lấy từ trong túi ra một chiếc hộp màu hồng tặng cho cô ấy.' },
+            { id: 5, speaker: '', speakerName: '', chinese: '女的觉得很惊喜，她没想到男的会送给她礼物。', pinyin: 'Nǚ de juéde hěn jīngxǐ, tā méi xiǎngdào nán de huì sòng gěi tā lǐwù.', vietnamese: 'Bạn nữ cảm thấy rất bất ngờ và thích thú, cô không ngờ bạn nam lại tặng quà cho mình.' },
+            { id: 6, speaker: '', speakerName: '', chinese: '她笑着打开礼物，发现里面是一条很漂亮的项链。', pinyin: 'Tā xiàozhe dǎkāi lǐwù, fāxiàn lǐmiàn shì yì tiáo hěn piàoliang de xiàngliàn.', vietnamese: 'Cô mỉm cười mở hộp quà ra và thấy bên trong là một sợi dây chuyền rất đẹp.' },
+            { id: 7, speaker: '', speakerName: '', chinese: '他们一边喝茶，一边聊天，聊得很开心。', pinyin: 'Tāmen yìbiān hē chá, yìbiān liáotiān, liáo de hěn kāixīn.', vietnamese: 'Họ vừa uống trà vừa trò chuyện, nói chuyện với nhau vô cùng vui vẻ.' }
+        ]
+    },
+    // --- HSK 4: Bài đọc mẫu ---
+    {
+        id: 'hsk4-meeting',
+        level: 'HSK 4',
+        type: 'story',
+        category: 'Công sở',
+        duration: '2.0 phút',
+        title: '一个重要的会议',
+        titlePinyin: 'Yí gè zhòngyào de huìyì',
+        titleViet: 'Một cuộc họp quan trọng',
+        theme: 'Công việc & xử lý tình huống phát sinh',
+        lines: [
+            { id: 1, speaker: '', speakerName: '', chinese: '今天我有一个重要的会议。', pinyin: 'Jīntiān wǒ yǒu yí gè zhòngyào de huìyì.', vietnamese: 'Hôm nay tôi có một cuộc họp quan trọng.' },
+            { id: 2, speaker: '', speakerName: '', chinese: '我很早就起床了，好好准备。', pinyin: 'Wǒ hěn zǎo jiù qǐchuáng le, hǎohāo zhǔnbèi.', vietnamese: 'Tôi đã dậy từ rất sớm để chuẩn bị thật kỹ lưỡng.' },
+            { id: 3, speaker: '', speakerName: '', chinese: '我穿了一套西装和一条正式的裙子，感觉这套衣服让我看起来更专业。', pinyin: 'Wǒ chuān le yí tào xīzhuāng hé yì tiáo zhèngshì de qúnzi, gǎnjué zhè tào yīfu ràng wǒ kàn qǐlái gèng zhuānyè.', vietnamese: 'Tôi mặc một bộ vest cùng một chiếc chân váy trang trọng, cảm thấy bộ trang phục này giúp mình trông chuyên nghiệp hơn.' },
+            { id: 4, speaker: '', speakerName: '', chinese: '我打算开车，早一点来公司，但我发现车突然坏了。', pinyin: 'Wǒ dǎsuàn kāichē, zǎo yìdiǎn lái gōngsī, dàn wǒ fāxiàn chē tūrán huài le.', vietnamese: 'Tôi dự định lái xe đến công ty sớm hơn một chút, nhưng tôi phát hiện ra xe đột nhiên bị hỏng.' },
+            { id: 5, speaker: '', speakerName: '', chinese: '我只好在路边打出租车。', pinyin: 'Wǒ zhǐhǎo zài lùbiān dǎ chūzūchē.', vietnamese: 'Tôi đành phải đứng ở ven đường bắt xe taxi.' },
+            { id: 6, speaker: '', speakerName: '', chinese: '真倒霉，外面雨下得很大，雨伞太小了遮不住，我还是淋雨了。', pinyin: 'Zhēn dǎoméi, wàimiàn yǔ xià de hěn dà, yǔsǎn tài xiǎo le zhē bu zhù, wǒ háishì lín yǔ le.', vietnamese: 'Thật xui xẻo, ngoài trời mưa rất to, chiếc ô quá nhỏ không che nổi nên tôi vẫn bị ướt mưa.' },
+            { id: 7, speaker: '', speakerName: '', chinese: '我在路边等了很久，一辆车也没停下。', pinyin: 'Wǒ zài lùbiān děng le hěn jiǔ, yí liàng chē yě méi tíng xià.', vietnamese: 'Tôi đã đứng đợi ở ven đường rất lâu mà không có chiếc xe nào dừng lại.' },
+            { id: 8, speaker: '', speakerName: '', chinese: '我很着急因为这会议对我来说很重要，我不能让我的团队失望。', pinyin: 'Wǒ hěn zháojí yīnwèi zhè huìyì duì wǒ lái shuō hěn zhòngyào, wǒ bù néng ràng wǒ de tuánduì shīwàng.', vietnamese: 'Tôi rất sốt ruột vì cuộc họp này đối với tôi cực kỳ quan trọng, tôi không thể để cả nhóm thất vọng.' },
+            { id: 9, speaker: '', speakerName: '', chinese: '我一边给同事打电话通知他们，一边在努力打车，希望我没有迟到。', pinyin: 'Wǒ yìbiān gěi tóngshì dǎ diànhuà tōngzhī tāmen, yìbiān zài nǔlì dǎchē, xīwàng wǒ méiyǒu chídào.', vietnamese: 'Tôi vừa gọi điện thoại cho đồng nghiệp để báo trước, vừa cố gắng bắt xe, hy vọng mình không bị muộn.' },
+            { id: 10, speaker: '', speakerName: '', chinese: '十分钟后一辆车终于停在我面前。', pinyin: 'Shí fēnzhōng hòu yí liàng chē zhōngyú tíng zài wǒ miànqián.', vietnamese: 'Mười phút sau, cuối cùng cũng có một chiếc xe dừng lại ngay trước mặt tôi.' },
+            { id: 11, speaker: '', speakerName: '', chinese: '会议开始前五分钟，我及时到了公司，跟团队完成演讲。', pinyin: 'Huìyì kāishǐ qián wǔ fēnzhōng, wǒ jíshí dào le gōngsī, gēn tuánduì wánchéng yǎnjiǎng.', vietnamese: 'Trước giờ họp 5 phút, tôi đã kịp thời đến được công ty và hoàn thành bài thuyết trình cùng nhóm.' }
         ]
     }
 ];

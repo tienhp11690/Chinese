@@ -58,9 +58,17 @@
                     <div class="stat">✅ Đã học: <span class="n" id="learned">0</span></div>
                     <div class="stat" id="hide-stats">Hiện <span class="n" id="visible-count">0</span> từ</div>
                 </div>
-                <button type="button" class="btn btn-sm" onclick="syncVocabFromGitHub()" style="background:#0284c7; color:#fff; font-weight:600" title="Tải lại từ vựng mới nhất từ GitHub">
-                    🐙 Tải từ GitHub
-                </button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                    <button type="button" class="btn btn-sm" onclick="syncVocabFromGitHub()" style="background:#0284c7; color:#fff; font-weight:600" title="Tải lại từ vựng mới nhất từ GitHub">
+                        🐙 Tải từ GitHub
+                    </button>
+                    <button type="button" class="btn btn-sm" onclick="syncToGitHub()" style="background:#059669; color:#fff; font-weight:600" title="Lưu trạng thái các từ đã thuộc lên GitHub (Cần Token trong Cài đặt)">
+                        ☁️ Lưu lên GitHub
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="exportData()" title="Tải file vocab.json về máy">
+                        📥 Xuất file
+                    </button>
+                </div>
             </div>
 
             <div class="hide-learned-toggle" onclick="toggleHideLearned()">
