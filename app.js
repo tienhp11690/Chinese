@@ -1622,13 +1622,17 @@ async function requestGeminiContent(apiKey, bodyObj, timeoutMs = 16000) {
     // 2. gemini-3-flash-preview: excellent preview alternative
     // 3. gemini-3.8-flash: latest generation
     // 4. gemini-flash-latest: dynamic pointer to latest flash
+    // Google Generative Language models in priority order (multimodal Vision + Text):
+    // 1. gemini-1.5-flash: high availability, standard vision model, lowest latency
+    // 2. gemini-2.0-flash: next generation flash
+    // 3. gemini-1.5-flash-8b: fast lightweight model
+    // 4. gemini-1.5-pro: complex reasoning
     const modelsToTry = [
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
         'gemini-1.5-flash',
-        'gemini-3.5-flash',
-        'gemini-3-flash-preview',
-        'gemini-flash-latest'
+        'gemini-2.0-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-1.5-pro',
+        'gemini-2.0-flash-exp'
     ];
     let lastError = null;
 
@@ -7585,6 +7589,23 @@ window.openChatScannerModal = function () {
     if (modal) {
         modal.classList.add('show');
     }
+    const keyInput = document.getElementById('scanner-gemini-key');
+    if (keyInput) {
+        keyInput.value = localStorage.getItem('gemini-api-key') || '';
+    }
+};
+
+window.saveScannerGeminiKey = function () {
+    const keyInput = document.getElementById('scanner-gemini-key');
+    const key = keyInput?.value?.trim() || '';
+    if (!key) {
+        status('⚠️ Vui lòng nhập Gemini API Key hợp lệ!', 'warning');
+        return;
+    }
+    localStorage.setItem('gemini-api-key', key);
+    const settingsKeyInput = document.getElementById('setting-gemini-key');
+    if (settingsKeyInput) settingsKeyInput.value = key;
+    status('✅ Đã lưu Gemini API Key! Sẵn sàng bóc tách hội thoại từ ảnh màn hình.', 'success');
 };
 
 window.closeChatScannerModal = function () {
@@ -7614,6 +7635,41 @@ window.switchScannerMode = function (mode) {
     if (panel) panel.style.display = 'block';
 };
 
+function resizeImageToDataUrl(sourceImgOrCanvas, maxDim = 960, quality = 0.72) {
+    const srcW = sourceImgOrCanvas.videoWidth || sourceImgOrCanvas.naturalWidth || sourceImgOrCanvas.width || 1280;
+    const srcH = sourceImgOrCanvas.videoHeight || sourceImgOrCanvas.naturalHeight || sourceImgOrCanvas.height || 720;
+
+    let targetW = srcW;
+    let targetH = srcH;
+    if (srcW > maxDim || srcH > maxDim) {
+        if (srcW > srcH) {
+            targetW = maxDim;
+            targetH = Math.round((srcH * maxDim) / srcW);
+        } else {
+            targetH = maxDim;
+            targetW = Math.round((srcW * maxDim) / srcH);
+        }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(sourceImgOrCanvas, 0, 0, targetW, targetH);
+    return canvas.toDataURL('image/jpeg', quality);
+}
+
+function sampleFramesEvenly(frames, maxCount = 6) {
+    if (!frames || frames.length <= maxCount) return [...frames];
+    const sampled = [];
+    const step = (frames.length - 1) / (maxCount - 1);
+    for (let i = 0; i < maxCount; i++) {
+        const index = Math.round(i * step);
+        sampled.push(frames[index]);
+    }
+    return sampled;
+}
+
 window.startScreenChatRecording = async function () {
     try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
@@ -7637,9 +7693,6 @@ window.startScreenChatRecording = async function () {
         video.muted = true;
         await video.play();
 
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
         const btnStart = document.getElementById('btn-start-screen-record');
         const btnStop = document.getElementById('btn-stop-screen-record');
         const btnSnap = document.getElementById('btn-snap-frame');
@@ -7652,10 +7705,7 @@ window.startScreenChatRecording = async function () {
 
         const takeSnapshot = () => {
             if (!scannerStream || !scannerStream.active) return;
-            canvas.width = video.videoWidth || 1280;
-            canvas.height = video.videoHeight || 720;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            const dataUrl = resizeImageToDataUrl(video, 960, 0.72);
 
             if (scannerCapturedFrames.length < 15) {
                 scannerCapturedFrames.push(dataUrl);
@@ -7690,12 +7740,7 @@ window.captureManualFrame = function () {
     v.srcObject = scannerStream;
     v.muted = true;
     v.play().then(() => {
-        const canvas = document.createElement('canvas');
-        canvas.width = v.videoWidth || 1280;
-        canvas.height = v.videoHeight || 720;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        const dataUrl = resizeImageToDataUrl(v, 960, 0.72);
         scannerCapturedFrames.push(dataUrl);
         updateCapturedFramesUI();
         status(`📸 Đã chụp thêm 1 khung hình (Tổng: ${scannerCapturedFrames.length} ảnh)`, 'success');
@@ -7804,12 +7849,17 @@ window.handleScannerImageUpload = function (event) {
     Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = (e) => {
-            scannerCapturedFrames.push(e.target.result);
-            updateCapturedFramesUI();
+            const img = new Image();
+            img.onload = () => {
+                const resized = resizeImageToDataUrl(img, 960, 0.72);
+                scannerCapturedFrames.push(resized);
+                updateCapturedFramesUI();
+            };
+            img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     });
-    status(`🖼️ Đã nạp ${files.length} ảnh chụp màn hình cuộn!`, 'success');
+    status(`🖼️ Đang nạp và tối ưu ${files.length} ảnh chụp màn hình cuộn!`, 'success');
 };
 
 window.copyBookmarkletCode = function () {
@@ -7818,6 +7868,85 @@ window.copyBookmarkletCode = function () {
         status('📋 Đã copy mã Bookmarklet! Bạn có thể dán vào DevTools Console hoặc tạo Bookmark trên trình duyệt.', 'success');
     });
 };
+
+function extractDialoguesFromAiResponse(rawText) {
+    let title = '';
+    let titleViet = '';
+    let dialogues = [];
+
+    if (!rawText || typeof rawText !== 'string') return { title, titleViet, dialogues };
+
+    let clean = rawText.trim();
+    clean = clean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+    const objMatch = clean.match(/\{[\s\S]*\}/);
+    if (objMatch) {
+        try {
+            const data = JSON.parse(objMatch[0]);
+            if (data.title) title = data.title;
+            if (data.titleViet) titleViet = data.titleViet;
+            if (Array.isArray(data.dialogues)) dialogues = data.dialogues;
+            else if (Array.isArray(data.lines)) dialogues = data.lines;
+            else if (Array.isArray(data.conversation)) dialogues = data.conversation;
+        } catch (e) {
+            console.warn('extractDialoguesFromAiResponse obj error:', e);
+        }
+    }
+
+    if (dialogues.length === 0) {
+        const arrMatch = clean.match(/\[[\s\S]*\]/);
+        if (arrMatch) {
+            try {
+                const arr = JSON.parse(arrMatch[0]);
+                if (Array.isArray(arr) && arr.length > 0) {
+                    dialogues = arr;
+                }
+            } catch (e) {
+                console.warn('extractDialoguesFromAiResponse arr error:', e);
+            }
+        }
+    }
+
+    let sanitized = dialogues.map((d, idx) => {
+        const zh = (d.chinese || d.zh || d.sentence || d.text || '').trim();
+        const py = (d.pinyin || d.py || (zh ? generatePinyin(zh) : '')).trim();
+        const vi = (d.vietnamese || d.vi || d.meaning || d.translation || '').trim();
+        const spk = (d.speaker || d.role || (idx % 2 === 0 ? 'Người nói A' : 'Người nói B')).trim();
+        return {
+            speaker: spk,
+            chinese: zh,
+            pinyin: py,
+            vietnamese: vi
+        };
+    }).filter(d => /[\u4e00-\u9fa5]/.test(d.chinese));
+
+    if (sanitized.length === 0) {
+        const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+        lines.forEach((line, idx) => {
+            if (/[\u4e00-\u9fa5]/.test(line)) {
+                let speaker = (idx % 2 === 0) ? 'Người nói A' : 'Người nói B';
+                let content = line;
+                const match = line.match(/^([^:：]{1,15})[:：]\s*(.*)$/);
+                if (match) {
+                    speaker = match[1].trim();
+                    content = match[2].trim();
+                }
+                const zhMatch = content.match(/[\u4e00-\u9fa5\s，。！？、“”‘’（）,.!?]+/);
+                const zh = zhMatch ? zhMatch[0].trim() : content;
+                if (zh && /[\u4e00-\u9fa5]/.test(zh)) {
+                    sanitized.push({
+                        speaker: speaker,
+                        chinese: zh,
+                        pinyin: generatePinyin(zh),
+                        vietnamese: ''
+                    });
+                }
+            }
+        });
+    }
+
+    return { title, titleViet, dialogues: sanitized };
+}
 
 window.processChatExtractionAndAnalysis = async function () {
     const travelTopic = document.getElementById('scanner-travel-topic')?.value || 'Du lịch Trung Quốc';
@@ -7834,6 +7963,21 @@ window.processChatExtractionAndAnalysis = async function () {
         return;
     }
 
+    const apiKey = localStorage.getItem('gemini-api-key');
+
+    // Nếu người dùng chọn chụp màn hình hoặc upload ảnh mà CHƯA có Gemini API Key
+    if (hasFrames && !apiKey) {
+        const keyInput = document.getElementById('scanner-gemini-key');
+        if (keyInput) {
+            keyInput.focus();
+            keyInput.style.border = '2px solid #ef4444';
+            setTimeout(() => { if (keyInput) keyInput.style.border = ''; }, 3000);
+        }
+        status('🔑 Cần Gemini API Key để AI đọc chữ từ ảnh cuộn màn hình! Hãy nhập key vào ô phía trên rồi bấm "Lưu Key", hoặc dùng tab "📋 Gom Clipboard" để dùng ngoại tuyến.', 'warning');
+        alert('⚠️ Chưa có Gemini API Key để bóc tách ảnh màn hình!\n\nĐể AI nhận diện chữ tiếng Trung từ các ảnh chụp màn hình cuộn, hệ thống cần Google Gemini Vision API (hoàn toàn miễn phí).\n\nCách xử lý:\n1. Nhập API Key vào ô màu tím ở ngay đầu cửa sổ này và bấm "Lưu Key" (lấy key miễn phí tại aistudio.google.com).\n2. Hoặc nếu không có API Key, bạn hãy chuyển sang tab "📋 Tự Động Gom Clipboard" (chỉ cần bôi đen câu thoại & Ctrl+C) để bóc tách ngoại tuyến 100% không cần key.');
+        return;
+    }
+
     const loadingEl = document.getElementById('scanner-loading');
     const resultsEl = document.getElementById('scanner-results-section');
     const loadingText = document.getElementById('scanner-loading-text');
@@ -7843,7 +7987,6 @@ window.processChatExtractionAndAnalysis = async function () {
     if (resultsEl) resultsEl.style.display = 'none';
 
     try {
-        const apiKey = localStorage.getItem('gemini-api-key');
         let parsedDialogues = [];
         let extractedTitle = `Hội Thoại Du Lịch: ${travelTopic}`;
         let extractedTitleViet = `Hội thoại tình huống: ${travelTopic}`;
@@ -7853,10 +7996,10 @@ window.processChatExtractionAndAnalysis = async function () {
                 if (loadingText) loadingText.textContent = '🤖 Gemini Vision đang bóc tách nội dung từ các ảnh cuộn màn hình...';
                 if (loadingSubtext) loadingSubtext.textContent = `Đang xử lý ${scannerCapturedFrames.length} ảnh chụp, khử trùng lặp và gắn Pinyin + tiếng Việt...`;
 
-                // Select at most 8 representative frames
-                const framesToSend = scannerCapturedFrames.slice(-8);
+                // Select at most 6 representative frames evenly
+                const framesToSend = sampleFramesEvenly(scannerCapturedFrames, 6);
 
-                const prompt = `Dưới đây là các ảnh chụp liên tiếp của màn hình chat tiếng Trung khi người dùng cuộn (scroll) qua một cuộc trò chuyện.
+                const prompt = `Dưới đây là các ảnh chụp màn hình liên tiếp khi cuộn (scroll) qua một cuộc trò chuyện tiếng Trung trong app chat.
 Chủ đề trọng tâm: Du lịch Trung Quốc (${travelTopic}), trình độ khoảng ${targetLevel}.
 Yêu cầu của bạn:
 1. Đọc và bóc tách TOÀN BỘ các câu thoại trong cuộc trò chuyện theo đúng thứ tự thời gian.
@@ -7883,12 +8026,11 @@ Yêu cầu của bạn:
                 });
 
                 const res = await requestGeminiContent(apiKey, { contents: [{ parts }] }, 25000);
-                const jsonMatch = res.text.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    const data = JSON.parse(jsonMatch[0]);
-                    if (data.title) extractedTitle = data.title;
-                    if (data.titleViet) extractedTitleViet = data.titleViet;
-                    if (Array.isArray(data.dialogues)) parsedDialogues = data.dialogues;
+                const extracted = extractDialoguesFromAiResponse(res.text);
+                if (extracted.title) extractedTitle = extracted.title;
+                if (extracted.titleViet) extractedTitleViet = extracted.titleViet;
+                if (extracted.dialogues && extracted.dialogues.length > 0) {
+                    parsedDialogues = extracted.dialogues;
                 }
             } else {
                 // Text mode (Clipboard or Pasted)
@@ -7906,7 +8048,7 @@ ${combinedRawText}
 """
 Chủ đề: Du lịch Trung Quốc (${travelTopic}), trình độ ${targetLevel}.
 Yêu cầu:
-1. Sắp xếp lại thành một chuỗi hội thoại hoàn chỉnh, tự nhiên, liền mạch giữa 2 nhân vật (A và B hoặc vai trò cụ thể như Khách du lịch, Nhân viên, v.v.).
+1. Sắp xếp lại thành một chuỗi hội thoại hoàn chỉnh, tự nhiên, liền mạch giữa các nhân vật.
 2. Khử các đoạn trùng lặp, tin nhắn rác hoặc icon không cần thiết.
 3. Gắn kèm Pinyin chuẩn có dấu thanh và dịch nghĩa tiếng Việt tự nhiên cho từng câu.
 4. Trả về DUY NHẤT định dạng JSON:
@@ -7922,12 +8064,11 @@ Yêu cầu:
                     contents: [{ parts: [{ text: prompt }] }]
                 }, 20000);
 
-                const jsonMatch = res.text.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    const data = JSON.parse(jsonMatch[0]);
-                    if (data.title) extractedTitle = data.title;
-                    if (data.titleViet) extractedTitleViet = data.titleViet;
-                    if (Array.isArray(data.dialogues)) parsedDialogues = data.dialogues;
+                const extracted = extractDialoguesFromAiResponse(res.text);
+                if (extracted.title) extractedTitle = extracted.title;
+                if (extracted.titleViet) extractedTitleViet = extracted.titleViet;
+                if (extracted.dialogues && extracted.dialogues.length > 0) {
+                    parsedDialogues = extracted.dialogues;
                 }
             }
         } else {
@@ -7952,8 +8093,18 @@ Yêu cầu:
             });
         }
 
+        // Ensure each dialogue line has pinyin and vietnamese
+        parsedDialogues.forEach(d => {
+            if (!d.pinyin) d.pinyin = generatePinyin(d.chinese);
+            if (!d.vietnamese || d.vietnamese === 'Đang dịch nghĩa...') {
+                const tokens = segmentChineseSentence(d.chinese);
+                const meanings = tokens.map(t => BUILTIN_CHINESE_DICT[t.text]).filter(Boolean);
+                d.vietnamese = meanings.length > 0 ? meanings.join(' / ') : 'Hội thoại du lịch';
+            }
+        });
+
         if (parsedDialogues.length === 0) {
-            throw new Error('Không bóc tách được câu thoại tiếng Trung nào từ dữ liệu cung cấp!');
+            throw new Error('Không bóc tách được câu thoại tiếng Trung nào từ dữ liệu cung cấp! Vui lòng thử lại với ảnh rõ hơn hoặc dán trực tiếp đoạn chat.');
         }
 
         // ==================== VOCABULARY ANALYSIS ====================

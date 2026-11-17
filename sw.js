@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chinese-app-pwa-v15';
+const CACHE_NAME = 'chinese-app-pwa-v16';
 
 const STATIC_ASSETS = [
     './',
@@ -51,6 +51,12 @@ self.addEventListener('activate', (event) => {
 // 3. Fetch Event: Network-First for app code, offline fallback
 self.addEventListener('fetch', (event) => {
     const request = event.request;
+
+    // Bỏ qua các request không phải http/https (như chrome-extension://, blob:, data:) để không lỗi Cache.put
+    if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) {
+        return;
+    }
+
     const url = new URL(request.url);
 
     // Không can thiệp vào các API động (Google Sheets, Gemini AI, GitHub API, GitHub Raw, Google Translate TTS)
