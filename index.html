@@ -28,7 +28,7 @@
             document.write('<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"><\/script>');
         }
     </script>
-    <link rel="stylesheet" href="styles.css?v=20261117c">
+    <link rel="stylesheet" href="styles.css?v=20261117d">
     <script>
         // Phục hồi tab & page tức thì khi tải trang để không giật màn hình
         (function () {
@@ -549,17 +549,36 @@
                 <div style="background:#f1f5f9; border:1px solid #cbd5e1; padding:8px 12px; border-radius:6px; margin-bottom:12px; font-size:0.85rem; color:#334155;">
                     🔗 <strong>Repo URL:</strong> <a href="https://github.com/tienhp11690/Chinese" target="_blank" rel="noopener noreferrer" style="color:#2563eb; font-weight:600; text-decoration:none;">github.com/tienhp11690/Chinese</a>
                 </div>
-                <input type="text" id="github-token" class="input-field" placeholder="GitHub Personal Access Token">
-                <input type="text" id="github-repo" class="input-field" placeholder="username/repo-name">
-                <input type="text" id="github-file" class="input-field" placeholder="data/vocab.json"
-                    value="data/vocab.json">
+
+                <!-- Cảnh báo hướng dẫn cấp quyền Token -->
+                <div style="background:#fef3c7; border:1px solid #fde047; padding:12px 14px; border-radius:8px; margin-bottom:14px; font-size:0.85rem; color:#92400e; line-height:1.5;">
+                    <strong>🔑 Lưu ý quan trọng khi tạo GitHub Token để không bị lỗi <i>"not accessible"</i>:</strong>
+                    <ul style="margin:6px 0 0 18px; padding:0;">
+                        <li><b>Với Fine-grained Token (loại token mới):</b>
+                            <br>• Mục <i>Repository access</i>: Phải chọn <b>"Only select repositories"</b> &rarr; chọn repo <b><code>Chinese</code></b>.
+                            <br>• Mục <i>Repository permissions</i>: Tìm dòng <b>Contents</b> &rarr; đổi từ <i>"No access"</i> thành <b>"Read and write"</b>.
+                        </li>
+                        <li style="margin-top:6px;"><b>Với Classic Token (loại token cũ):</b>
+                            <br>• Phải tích chọn scope <b><code>repo</code></b> (Full control of private/public repositories).
+                        </li>
+                    </ul>
+                </div>
+
+                <label style="display:block; margin-bottom:4px; font-weight:600;">GitHub Personal Access Token:</label>
+                <input type="password" id="github-token" class="input-field" placeholder="ghp_... hoặc github_pat_...">
+                
+                <label style="display:block; margin-top:10px; margin-bottom:4px; font-weight:600;">Repository (owner/repo):</label>
+                <input type="text" id="github-repo" class="input-field" placeholder="tienhp11690/Chinese" value="tienhp11690/Chinese">
+                
+                <label style="display:block; margin-top:10px; margin-bottom:4px; font-weight:600;">File Vocab trên GitHub:</label>
+                <input type="text" id="github-file" class="input-field" placeholder="vocab.json" value="vocab.json">
 
                 <!-- NEW: Vocab JSON URL for fallback -->
                 <label style="display:block; margin-top:12px; margin-bottom:6px; font-weight:600;">
                     📦 URL vocab.json (Fallback khi Sheets fail):
                 </label>
                 <input type="text" id="vocab-json-url" class="input-field"
-                    placeholder="https://raw.githubusercontent.com/username/repo/main/data/vocab.json">
+                    placeholder="https://raw.githubusercontent.com/tienhp11690/Chinese/main/vocab.json">
                 <p style="font-size:0.85rem; color:#666; margin-top:6px;">
                     URL trực tiếp đến file vocab.json trên GitHub. App sẽ tự động load từ đây nếu Google Sheets không
                     khả dụng.
@@ -1065,12 +1084,12 @@
     <!-- Status Toast -->
     <div class="status" id="status"></div>
 
-    <script src="app.js?v=20261117c"></script>
+    <script src="app.js?v=20261117d"></script>
     <script>
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=20261117c')
+                navigator.serviceWorker.register('./sw.js?v=20261117d')
                     .then((reg) => {
                         console.log('✅ PWA Service Worker registered:', reg.scope);
                         reg.update();

@@ -1559,7 +1559,15 @@ function updateConfig() {
 
     Object.entries(fields).forEach(([id, key]) => {
         const el = document.getElementById(id);
-        if (el) el.value = localStorage.getItem(key) || (id === 'github-file' ? 'vocab.json' : (id === 'github-stories-file' ? 'stories.json' : ''));
+        if (el) {
+            let val = localStorage.getItem(key);
+            if (id === 'github-file' && (!val || val === 'data/vocab.json')) val = 'vocab.json';
+            if (id === 'github-repo' && (!val || val.includes('https://'))) {
+                val = (val || 'tienhp11690/Chinese').replace(/^https?:\/\/github\.com\//i, '').replace(/^\/+|\/+$/g, '').replace(/\.git$/i, '');
+            }
+            if (id === 'github-stories-file' && !val) val = 'stories.json';
+            el.value = val || '';
+        }
     });
 
     const lastSyncEl = document.getElementById('last-sync-time');
@@ -1702,9 +1710,30 @@ window.saveGitHubConfig = function () {
     const keys = ['github-token', 'github-repo', 'github-file', 'vocab-json-url', 'github-stories-file'];
     keys.forEach(key => {
         const el = document.getElementById(key);
-        if (el) localStorage.setItem(key, el.value.trim());
+        if (el) {
+            let val = el.value.trim();
+            if (key === 'github-repo') {
+                val = val.replace(/^https?:\/\/github\.com\//i, '').replace(/^\/+|\/+$/g, '').replace(/\.git$/i, '');
+                if (!val) val = 'tienhp11690/Chinese';
+                el.value = val;
+            }
+            if (key === 'github-file') {
+                val = val.replace(/^\/+/, '');
+                if (val === 'data/vocab.json' || !val) val = 'vocab.json';
+                el.value = val;
+            }
+            if (key === 'github-stories-file') {
+                val = val.replace(/^\/+/, '');
+                if (!val) val = 'stories.json';
+                el.value = val;
+            }
+            if (key === 'github-token') {
+                val = val.replace(/^["']|["']$/g, '');
+            }
+            localStorage.setItem(key, val);
+        }
     });
-    status('💾 Đã lưu GitHub config!', 'success');
+    status('💾 Đã lưu cấu hình GitHub thành công!', 'success');
 };
 
 function updateLastSyncTime() {
@@ -1948,16 +1977,53 @@ async function syncFromGitHubFallback() { return window.syncVocabFromGitHub(true
 async function syncFromLocalVocabJson() { return window.syncVocabFromGitHub(true); }
 
 
-window.syncToGitHub = async function () {
-    const token = localStorage.getItem('github-token');
-    const repo = localStorage.getItem('github-repo') || 'tienhp11690/Chinese';
-    const file = localStorage.getItem('github-file') || 'vocab.json';
+function getCleanGitHubConfig() {
+    const rawToken = localStorage.getItem('github-token') || '';
+    const token = rawToken.trim().replace(/^["']|["']$/g, '');
 
-    if (!token) {
-        status('⚠️ Chưa cấu hình GitHub Token trong Cài đặt! Cần token có quyền "repo" để cập nhật file vocab.json.', 'error');
+    let rawRepo = (localStorage.getItem('github-repo') || 'tienhp11690/Chinese').trim();
+    rawRepo = rawRepo.replace(/^https?:\/\/github\.com\//i, '').replace(/^\/+|\/+$/g, '').replace(/\.git$/i, '');
+    const repo = rawRepo || 'tienhp11690/Chinese';
+
+    let rawFile = (localStorage.getItem('github-file') || 'vocab.json').trim().replace(/^\/+/, '');
+    if (rawFile === 'data/vocab.json' || !rawFile) rawFile = 'vocab.json';
+    const file = rawFile;
+
+    let rawStoriesFile = (localStorage.getItem('github-stories-file') || 'stories.json').trim().replace(/^\/+/, '');
+    if (!rawStoriesFile) rawStoriesFile = 'stories.json';
+    const storiesFile = rawStoriesFile;
+
+    const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+    };
+
+    return { token, repo, file, storiesFile, headers };
+}
+
+function formatGitHubErrorMessage(errData, status) {
+    const msg = (errData && errData.message) ? errData.message : '';
+    if (status === 403 || msg.toLowerCase().includes('not accessible') || msg.toLowerCase().includes('permission')) {
+        return 'Token không đủ quyền (Resource not accessible). Nếu dùng Fine-grained token: Cần chọn Repository "Chinese" và cấp quyền "Contents: Read and write". Nếu dùng Classic token: Cần chọn scope "repo".';
+    }
+    if (status === 401 || msg.toLowerCase().includes('bad credentials')) {
+        return 'Token không hợp lệ hoặc đã hết hạn (Bad credentials / 401). Vui lòng kiểm tra lại token.';
+    }
+    if (status === 404) {
+        return 'Không tìm thấy repository hoặc đường dẫn file trên GitHub (404). Kiểm tra lại tên repo và quyền token.';
+    }
+    return msg || `Lỗi GitHub HTTP ${status}`;
+}
+
+window.syncToGitHub = async function () {
+    const cfg = getCleanGitHubConfig();
+
+    if (!cfg.token) {
+        status('⚠️ Chưa cấu hình GitHub Token trong Cài đặt! Cần Personal Access Token có quyền ghi file (Contents: Read and write).', 'error');
         return;
     }
-    showLoading('Đang đẩy vocab lên GitHub...', 'Vui lòng chờ...');
+    showLoading('Đang đẩy vocab lên GitHub...', `Repo: ${cfg.repo} • File: ${cfg.file}...`);
 
     try {
         const payload = {
@@ -1967,32 +2033,52 @@ window.syncToGitHub = async function () {
         };
         const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
         let sha = null;
-        try {
-            const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
-                headers: { 'Authorization': `token ${token}` }
-            });
-            if (getRes.ok) sha = (await getRes.json()).sha;
-        } catch (e) { }
 
-        const res = await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
+        try {
+            const getRes = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/${cfg.file}`, {
+                headers: cfg.headers
+            });
+            if (getRes.ok) {
+                const data = await getRes.json();
+                sha = data.sha;
+            } else if (getRes.status === 401 || getRes.status === 403) {
+                const errData = await getRes.json().catch(() => ({}));
+                throw new Error(formatGitHubErrorMessage(errData, getRes.status));
+            }
+        } catch (e) {
+            if (e.message && (e.message.includes('Token') || e.message.includes('quyền'))) {
+                throw e;
+            }
+        }
+
+        const bodyPayload = {
+            message: `Update vocab (${vocab.length} words) [skip ci] - ${new Date().toISOString()}`,
+            content: content,
+            branch: 'main'
+        };
+        if (sha) bodyPayload.sha = sha;
+
+        const res = await fetch(`https://api.github.com/repos/${cfg.repo}/contents/${cfg.file}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
+                ...cfg.headers,
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message: `Update vocab [skip ci] - ${new Date().toISOString()}`, content, ...(sha && { sha }) })
+            body: JSON.stringify(bodyPayload)
         });
 
+        hideLoading();
+
         if (res.ok) {
-            hideLoading();
-            status(`✅ Đã lưu trạng thái ${vocab.length} từ vựng vào ${file} trên GitHub!`, 'success');
+            status(`✅ Đã lưu thành công ${vocab.length} từ vựng vào ${cfg.file} trên GitHub!`, 'success');
         } else {
-            throw new Error((await res.json()).message || 'GitHub error');
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(formatGitHubErrorMessage(errData, res.status));
         }
     } catch (e) {
         hideLoading();
-        status(`❌ Lỗi: ${e.message}`, 'error');
+        console.error('syncToGitHub error:', e);
+        status(`❌ Lỗi GitHub: ${e.message}`, 'error');
     }
 };
 
@@ -5815,9 +5901,10 @@ window.pushStoryToGitHubDb = async function (story, silent = false) {
         return false;
     }
 
-    const token = localStorage.getItem('github-token');
-    const repo = localStorage.getItem('github-repo');
-    const file = localStorage.getItem('github-stories-file') || 'stories.json';
+    const cfg = getCleanGitHubConfig();
+    const token = cfg.token;
+    const repo = cfg.repo;
+    const file = cfg.storiesFile;
 
     if (!token || !repo) {
         if (!silent) {
@@ -5834,10 +5921,7 @@ window.pushStoryToGitHubDb = async function (story, silent = false) {
 
         try {
             const getRes = await fetchWithTimeout(`https://api.github.com/repos/${repo}/contents/${file}`, {
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
+                headers: cfg.headers
             }, 8000);
 
             if (getRes.ok) {
@@ -5850,8 +5934,14 @@ window.pushStoryToGitHubDb = async function (story, silent = false) {
                         remoteStories = parsed;
                     }
                 }
+            } else if (getRes.status === 401 || getRes.status === 403) {
+                const errData = await getRes.json().catch(() => ({}));
+                throw new Error(formatGitHubErrorMessage(errData, getRes.status));
             }
         } catch (fetchErr) {
+            if (fetchErr.message && (fetchErr.message.includes('Token') || fetchErr.message.includes('quyền'))) {
+                throw fetchErr;
+            }
             console.warn('Could not fetch existing remote stories:', fetchErr);
         }
 
@@ -5887,13 +5977,13 @@ window.pushStoryToGitHubDb = async function (story, silent = false) {
         const putRes = await fetchWithTimeout(`https://api.github.com/repos/${repo}/contents/${file}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
+                ...cfg.headers,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 message: `Update story: ${story.title || 'Bài học tiếng Trung'} [skip ci] - ${new Date().toISOString()}`,
                 content: encodedContent,
+                branch: 'main',
                 ...(sha ? { sha } : {})
             })
         }, 12000);
@@ -5905,7 +5995,7 @@ window.pushStoryToGitHubDb = async function (story, silent = false) {
             return true;
         } else {
             const errData = await putRes.json().catch(() => ({}));
-            throw new Error(errData.message || `Lỗi GitHub HTTP ${putRes.status}`);
+            throw new Error(formatGitHubErrorMessage(errData, putRes.status));
         }
     } catch (err) {
         if (!silent) {
@@ -5938,9 +6028,10 @@ window.pushSingleStoryToGitHub = async function (id) {
 };
 
 window.syncAllSavedStoriesToGitHub = async function () {
-    const token = localStorage.getItem('github-token');
-    const repo = localStorage.getItem('github-repo');
-    const file = localStorage.getItem('github-stories-file') || 'stories.json';
+    const cfg = getCleanGitHubConfig();
+    const token = cfg.token;
+    const repo = cfg.repo;
+    const file = cfg.storiesFile;
 
     if (!token || !repo) {
         status('⚠️ Chưa cấu hình GitHub Token và Repo! Vào Cài đặt để cấu hình.', 'error');
@@ -5960,10 +6051,7 @@ window.syncAllSavedStoriesToGitHub = async function () {
 
         try {
             const getRes = await fetchWithTimeout(`https://api.github.com/repos/${repo}/contents/${file}`, {
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
+                headers: cfg.headers
             }, 8000);
 
             if (getRes.ok) {
@@ -5976,8 +6064,14 @@ window.syncAllSavedStoriesToGitHub = async function () {
                         remoteStories = parsed;
                     }
                 }
+            } else if (getRes.status === 401 || getRes.status === 403) {
+                const errData = await getRes.json().catch(() => ({}));
+                throw new Error(formatGitHubErrorMessage(errData, getRes.status));
             }
         } catch (e) {
+            if (e.message && (e.message.includes('Token') || e.message.includes('quyền'))) {
+                throw e;
+            }
             console.warn('Could not read existing remote stories:', e);
         }
 
@@ -5994,13 +6088,13 @@ window.syncAllSavedStoriesToGitHub = async function () {
         const putRes = await fetchWithTimeout(`https://api.github.com/repos/${repo}/contents/${file}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
+                ...cfg.headers,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 message: `Sync all ${merged.length} stories [skip ci] - ${new Date().toISOString()}`,
                 content: encodedContent,
+                branch: 'main',
                 ...(sha ? { sha } : {})
             })
         }, 15000);
@@ -6019,7 +6113,7 @@ window.syncAllSavedStoriesToGitHub = async function () {
             status(`✅ Đã đẩy thành công tất cả ${merged.length} bài lên GitHub DB (${file})!`, 'success');
         } else {
             const errData = await putRes.json().catch(() => ({}));
-            throw new Error(errData.message || `Lỗi HTTP ${putRes.status}`);
+            throw new Error(formatGitHubErrorMessage(errData, putRes.status));
         }
     } catch (err) {
         hideLoading();
