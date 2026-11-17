@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chinese-app-pwa-v10';
+const CACHE_NAME = 'chinese-app-pwa-v11';
 
 const STATIC_ASSETS = [
     './',
@@ -88,13 +88,14 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Network-First cho core code (app.js, index.html, styles.css, config.json) để đảm bảo cập nhật tức thì
+    // Network-First cho core code (app.js, index.html, styles.css, config.json, vocab.json, stories.json) để đảm bảo cập nhật tức thì
     const isCoreAppAsset = (
         url.pathname.endsWith('app.js') ||
         url.pathname.endsWith('index.html') ||
         url.pathname.endsWith('styles.css') ||
         url.pathname.endsWith('config.json') ||
         url.pathname.endsWith('stories.json') ||
+        url.pathname.endsWith('vocab.json') ||
         url.pathname === '/' ||
         url.pathname.endsWith('/')
     );

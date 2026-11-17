@@ -1437,7 +1437,7 @@ function updateConfig() {
 
     Object.entries(fields).forEach(([id, key]) => {
         const el = document.getElementById(id);
-        if (el) el.value = localStorage.getItem(key) || (id === 'github-file' ? 'data/vocab.json' : (id === 'github-stories-file' ? 'stories.json' : ''));
+        if (el) el.value = localStorage.getItem(key) || (id === 'github-file' ? 'vocab.json' : (id === 'github-stories-file' ? 'stories.json' : ''));
     });
 
     const lastSyncEl = document.getElementById('last-sync-time');
@@ -1705,53 +1705,125 @@ async function syncFromSheets(isBackground = false) {
     }
 }
 
-async function syncFromGitHubFallback() {
-    const vocabJsonUrl = localStorage.getItem('vocab-json-url');
-    const githubRepo = localStorage.getItem('github-repo');
-    const githubFile = localStorage.getItem('github-file') || 'data/vocab.json';
-    const fallbackUrl = vocabJsonUrl || (githubRepo ? `https://raw.githubusercontent.com/${githubRepo}/main/${githubFile}` : null);
+window.syncVocabFromGitHub = async function (silent = false) {
+    const token = localStorage.getItem('github-token');
+    const repo = localStorage.getItem('github-repo') || 'tienhp11690/Chinese';
+    const file = localStorage.getItem('github-file') || 'vocab.json';
+    const vocabJsonUrl = localStorage.getItem('vocab-json-url') || (repo ? `https://raw.githubusercontent.com/${repo}/main/${file}` : null);
 
-    if (!fallbackUrl) return false;
-
-    console.log('🔄 Attempting fallback: Loading from GitHub...');
-    try {
-        const response = await fetchWithTimeout(fallbackUrl, {}, 5000);
-        if (response.ok) {
-            const data = await response.json();
-            const vocabData = Array.isArray(data) ? data : data.vocab;
-            if (vocabData && vocabData.length > 0) {
-                vocab = vocabData;
-                save();
-                buildCharMap();
-                renderLibrary();
-                return true;
-            }
-        }
-    } catch (e) { console.error('⚠️ GitHub fallback failed:', e.message); }
-    return false;
-}
-
-async function syncFromLocalVocabJson() {
-    try {
-        console.log('📦 Loading vocab from local vocab.json...');
-        const response = await fetchWithTimeout('./vocab.json', {}, 3000);
-        if (response.ok) {
-            const data = await response.json();
-            const vocabData = Array.isArray(data) ? data : data.vocab;
-            if (vocabData && vocabData.length > 0) {
-                vocab = vocabData;
-                save();
-                buildCharMap();
-                renderLibrary();
-                console.log(`✅ Loaded ${vocab.length} words from local vocab.json`);
-                return true;
-            }
-        }
-    } catch (e) {
-        console.warn('⚠️ Local vocab.json fallback skipped:', e.message);
+    const timestamp = Date.now();
+    const urlsToTry = [];
+    if (vocabJsonUrl) {
+        const cleanUrl = vocabJsonUrl.split('?')[0];
+        urlsToTry.push({ type: 'direct', url: `${cleanUrl}?t=${timestamp}` });
     }
-    return false;
-}
+    if (repo && file) {
+        urlsToTry.push({ type: 'api', url: `https://api.github.com/repos/${repo}/contents/${file}` });
+        urlsToTry.push({ type: 'raw', url: `https://raw.githubusercontent.com/${repo}/main/${file}?t=${timestamp}` });
+    }
+    urlsToTry.push({ type: 'local', url: `./vocab.json?t=${timestamp}` });
+
+    if (!silent) showLoading('☁️ Đang tải từ vựng từ GitHub...', 'Vui lòng chờ...');
+
+    let loadedVocab = null;
+
+    for (const source of urlsToTry) {
+        try {
+            if (source.type === 'api' && token) {
+                const res = await fetchWithTimeout(source.url, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+                    cache: 'no-cache'
+                }, 6000);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.content) {
+                        const decoded = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ''))));
+                        const parsed = JSON.parse(decoded);
+                        const list = Array.isArray(parsed) ? parsed : (parsed.vocab || []);
+                        if (Array.isArray(list) && list.length > 0) {
+                            loadedVocab = list;
+                            console.log(`✅ Loaded ${list.length} words via GitHub API`);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                const res = await fetchWithTimeout(source.url, { cache: 'no-cache' }, 6000);
+                if (res.ok) {
+                    let text = await res.text();
+                    if (text.charCodeAt(0) === 0xFEFF) {
+                        text = text.slice(1);
+                    }
+                    const parsed = JSON.parse(text);
+                    const list = Array.isArray(parsed) ? parsed : (parsed.vocab || []);
+                    if (Array.isArray(list) && list.length > 0) {
+                        loadedVocab = list;
+                        console.log(`✅ Loaded ${list.length} words via ${source.type} (${source.url})`);
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn(`Could not sync vocab from ${source.url}:`, e.message);
+        }
+    }
+
+    if (!silent) hideLoading();
+
+    if (loadedVocab && loadedVocab.length > 0) {
+        // Giữ lại trạng thái đã học & tiến độ ôn tập của người dùng
+        const currentStatusMap = new Map();
+        vocab.forEach(v => {
+            if (v && v.chinese) {
+                currentStatusMap.set(v.chinese, {
+                    learned: v.learned,
+                    reviewCount: v.reviewCount,
+                    nextReview: v.nextReview
+                });
+            }
+        });
+
+        const mergedVocab = loadedVocab.map(item => {
+            const localStatus = currentStatusMap.get(item.chinese);
+            if (localStatus) {
+                return {
+                    ...item,
+                    learned: localStatus.learned !== undefined ? localStatus.learned : item.learned,
+                    reviewCount: localStatus.reviewCount !== undefined ? localStatus.reviewCount : item.reviewCount,
+                    nextReview: localStatus.nextReview !== undefined ? localStatus.nextReview : item.nextReview
+                };
+            }
+            return item;
+        });
+
+        // Giữ lại các từ có trên local mà remote chưa kịp có
+        const remoteSet = new Set(mergedVocab.map(v => v.chinese));
+        vocab.forEach(v => {
+            if (v && v.chinese && !remoteSet.has(v.chinese)) {
+                mergedVocab.push(v);
+            }
+        });
+
+        vocab = mergedVocab;
+        save();
+        buildCharMap();
+        renderLibrary();
+        updateLastSyncTime();
+        console.log(`🎉 Dashboard vocab updated from GitHub: ${vocab.length} words`);
+        if (!silent) {
+            status(`☁️ Đã tải thành công ${vocab.length} từ vựng từ GitHub!`, 'success');
+        }
+        return true;
+    } else {
+        if (!silent) {
+            status('⚠️ Không thể tải vocab từ GitHub. Vui lòng kiểm tra kết nối mạng!', 'error');
+        }
+        return false;
+    }
+};
+
+async function syncFromGitHubFallback() { return window.syncVocabFromGitHub(true); }
+async function syncFromLocalVocabJson() { return window.syncVocabFromGitHub(true); }
 
 
 window.syncToGitHub = async function () {
@@ -7165,33 +7237,34 @@ async function init() {
         syncStoriesFromGitHub(true)
     ];
 
-    // Synchronization logic
+    // Synchronization logic - Ưu tiên load vocab.json từ GitHub trước
     const syncAndFallback = async () => {
         const syncStrategy = localStorage.getItem('sync-strategy') || 'github-first';
         if (syncStrategy === 'github-first') {
-            console.log('🐙 Prioritizing GitHub/Local vocab database...');
-            const localSuccess = await syncFromLocalVocabJson();
-            if (!localSuccess) {
-                const ghSuccess = await syncFromGitHubFallback();
-                if (!ghSuccess) {
-                    await syncFromSheets(true);
-                }
+            console.log('🐙 Prioritizing GitHub vocab database...');
+            const ghSuccess = await window.syncVocabFromGitHub(true);
+            if (!ghSuccess) {
+                console.warn('⚠️ GitHub vocab load failed, falling back to Sheets...');
+                await syncFromSheets(true);
             }
             renderLibrary();
         } else if (syncStrategy === 'sheets-first') {
             const success = await syncFromSheets(true); // true = silent background sync
             if (!success) {
-                const ghSuccess = await syncFromGitHubFallback();
-                if (!ghSuccess && vocab.length <= 2) {
-                    await syncFromLocalVocabJson();
-                }
+                await window.syncVocabFromGitHub(true);
             }
             // Final UI update
             renderLibrary();
-        } else if (vocab.length <= 2) {
-            await syncFromLocalVocabJson();
+        } else if (vocab.length <= 100) {
+            await window.syncVocabFromGitHub(true);
         }
     };
+
+    // Nếu localStorage đang chứa ít từ (< 100 từ như bản cũ 47 từ), tải ngay từ GitHub để cập nhật dashboard lập tức
+    if (vocab.length < 100) {
+        console.log('⚡ Vocab in localStorage is under 100, eagerly syncing from GitHub...');
+        await window.syncVocabFromGitHub(true);
+    }
 
     setupTasks.push(syncAndFallback());
 
