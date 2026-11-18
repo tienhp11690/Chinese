@@ -45,13 +45,37 @@ body {
     margin-bottom: 32px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-x;
+}
+
+.nav::-webkit-scrollbar {
+    display: none;
+}
+
+.nav.is-dragging {
+    cursor: grabbing !important;
+    scroll-behavior: auto !important;
+}
+
+.nav.is-dragging .tab,
+.nav.is-dragging * {
+    cursor: grabbing !important;
+    user-select: none !important;
+    pointer-events: none;
 }
 
 .tab {
-    flex: 1;
-    min-width: 110px;
-    padding: 14px;
+    flex: 1 0 auto;
+    min-width: max-content;
+    padding: 14px 18px;
     text-align: center;
     border: none;
     border-radius: 12px;
@@ -59,6 +83,7 @@ body {
     color: var(--g6);
     cursor: pointer;
     transition: all .3s;
+    white-space: nowrap;
 }
 
 .tab.active {
@@ -2653,11 +2678,16 @@ body {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        -ms-overflow-style: none;
         gap: 6px;
         padding: 6px;
         margin-bottom: 14px;
         border-radius: 14px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        cursor: grab;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: pan-x;
     }
 
     .nav::-webkit-scrollbar {

@@ -514,8 +514,14 @@ window.switchPage = function (page, updateRoute = true) {
         document.querySelector(`.tab[onclick*="'${page}'"]`);
     if (tabEl) {
         tabEl.classList.add('active');
+        try {
+            tabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } catch (e) {}
     } else if (typeof event !== 'undefined' && event && event.target && event.target.classList.contains('tab')) {
         event.target.classList.add('active');
+        try {
+            event.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } catch (e) {}
     }
 
     if (page === 'library') renderLibrary();
@@ -8387,9 +8393,165 @@ window.exportScannerResultToGitHub = async function () {
     await syncToGitHub();
 };
 
+// ==================== HORIZONTAL DRAG-TO-SCROLL FOR NAVIGATION ====================
+
+function enableDragScroll(container) {
+    if (!container || container.dataset.dragInitialized) return;
+    container.dataset.dragInitialized = 'true';
+
+    let isDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+    let hasDragged = false;
+    let suppressClick = false;
+    let momentumId = null;
+    let lastX = 0;
+    let lastTime = 0;
+    let velocity = 0;
+
+    const stopMomentum = () => {
+        if (momentumId) {
+            cancelAnimationFrame(momentumId);
+            momentumId = null;
+        }
+    };
+
+    const onPointerDown = (e) => {
+        // Only primary mouse button (left click)
+        if (e.pointerType && e.pointerType !== 'mouse') return;
+        if (e.button !== 0) return;
+
+        stopMomentum();
+        isDown = true;
+        hasDragged = false;
+        suppressClick = false;
+        startX = e.clientX;
+        scrollStart = container.scrollLeft;
+        lastX = e.clientX;
+        lastTime = performance.now();
+        velocity = 0;
+    };
+
+    const onPointerMove = (e) => {
+        if (!isDown) return;
+        if (e.pointerType && e.pointerType !== 'mouse') return;
+
+        const currentX = e.clientX;
+        const dx = currentX - startX;
+
+        // Threshold of 4px to distinguish drag from accidental slight move during click
+        if (!hasDragged && Math.abs(dx) > 4) {
+            hasDragged = true;
+            suppressClick = true;
+            container.classList.add('is-dragging');
+        }
+
+        if (hasDragged) {
+            e.preventDefault();
+            container.scrollLeft = scrollStart - dx;
+
+            const now = performance.now();
+            const dt = now - lastTime;
+            if (dt > 0) {
+                const currentV = (currentX - lastX) / dt;
+                velocity = velocity * 0.4 + currentV * 0.6;
+            }
+            lastX = currentX;
+            lastTime = now;
+        }
+    };
+
+    const onPointerUp = (e) => {
+        if (!isDown) return;
+        if (e.pointerType && e.pointerType !== 'mouse') return;
+
+        isDown = false;
+        container.classList.remove('is-dragging');
+
+        if (hasDragged) {
+            // Inertial momentum flick
+            if (Math.abs(velocity) > 0.15) {
+                let speed = velocity * 15;
+                const step = () => {
+                    if (Math.abs(speed) < 0.3) {
+                        momentumId = null;
+                        return;
+                    }
+                    container.scrollLeft -= speed;
+                    speed *= 0.92;
+                    momentumId = requestAnimationFrame(step);
+                };
+                momentumId = requestAnimationFrame(step);
+            }
+
+            // Keep click suppressed through click event dispatching
+            setTimeout(() => {
+                suppressClick = false;
+                hasDragged = false;
+            }, 80);
+        }
+    };
+
+    if (window.PointerEvent) {
+        container.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('pointermove', onPointerMove, { passive: false });
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+    } else {
+        container.addEventListener('mousedown', onPointerDown);
+        window.addEventListener('mousemove', onPointerMove, { passive: false });
+        window.addEventListener('mouseup', onPointerUp);
+    }
+
+    // Capture phase click interceptor to prevent tab change after dragging
+    container.addEventListener('click', (e) => {
+        if (suppressClick || hasDragged) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            suppressClick = false;
+            hasDragged = false;
+        }
+    }, true);
+
+    // Prevent native drag ghosting
+    container.addEventListener('dragstart', (e) => e.preventDefault());
+
+    // Mouse wheel horizontal scrolling
+    container.addEventListener('wheel', (e) => {
+        if (container.scrollWidth > container.clientWidth) {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                stopMomentum();
+                container.scrollLeft += e.deltaY;
+            }
+        }
+    }, { passive: false });
+
+    // Handle window blur
+    window.addEventListener('blur', () => {
+        if (isDown) {
+            isDown = false;
+            hasDragged = false;
+            suppressClick = false;
+            container.classList.remove('is-dragging');
+        }
+    });
+}
+
+function initNavDrag() {
+    const nav = document.querySelector('.nav');
+    if (nav) enableDragScroll(nav);
+
+    document.querySelectorAll('.engine-tabs, .hsk-modal-tabs').forEach(el => {
+        enableDragScroll(el);
+    });
+}
+
 // ==================== INITIALIZATION (OPTIMIZED) ====================
 
 async function init() {
+    initNavDrag();
     // 1. Load local data immediately for instant display
     load();
     loadHideLearnedState();
@@ -8484,3 +8646,6 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    initNavDrag();
+}

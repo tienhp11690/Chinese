@@ -28,7 +28,7 @@
             document.write('<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"><\/script>');
         }
     </script>
-    <link rel="stylesheet" href="styles.css?v=20261117f">
+    <link rel="stylesheet" href="styles.css?v=20261118a">
     <script>
         // Phục hồi tab & page tức thì khi tải trang để không giật màn hình
         (function () {
@@ -49,6 +49,7 @@
                                 tabs.forEach(function (el) { el.classList.remove('active'); });
                                 pEl.classList.add('active');
                                 tEl.classList.add('active');
+                                try { tEl.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' }); } catch (err) { }
                             }
                         }, { once: true });
                     }
@@ -1307,12 +1308,12 @@
     <!-- Status Toast -->
     <div class="status" id="status"></div>
 
-    <script src="app.js?v=20261117f"></script>
+    <script src="app.js?v=20261118a"></script>
     <script>
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=20261117f')
+                navigator.serviceWorker.register('./sw.js?v=20261118a')
                     .then((reg) => {
                         console.log('✅ PWA Service Worker registered:', reg.scope);
                         reg.update();
